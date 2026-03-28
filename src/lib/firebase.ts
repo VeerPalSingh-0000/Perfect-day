@@ -9,12 +9,12 @@ import {
 } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "dummy-key-for-build",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "dummy-domain.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "dummy-project",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "dummy-project.appspot.com",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789:web:dummy"
 };
 
 // Initialize Firebase only once
@@ -22,17 +22,7 @@ let app;
 if (getApps().length > 0) {
   app = getApp();
 } else {
-  // During build on platforms like Netlify, env vars might be missing. 
-  // We provide dummy values so the build doesn't crash, but it will need real ones at runtime.
-  const config = firebaseConfig.apiKey ? firebaseConfig : {
-    apiKey: "dummy-key-for-build",
-    authDomain: "dummy-domain.firebaseapp.com",
-    projectId: "dummy-project",
-    storageBucket: "dummy-project.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:dummy"
-  };
-  app = initializeApp(config);
+  app = initializeApp(firebaseConfig);
 }
 
 export const auth = getAuth(app);

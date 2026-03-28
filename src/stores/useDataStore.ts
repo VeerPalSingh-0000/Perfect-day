@@ -49,11 +49,19 @@ export const useDataStore = create<DataState>((set, get) => ({
   fetchAll: async (userId, todayDateStr) => {
     if (get().isDataLoaded) return; // Already loaded, skip
     
+    // Safety fallback: if Firebase is slow, unblock the UI after 800ms
+    // so the user never gets an infinite loading screen.
+    const fallbackTimer = setTimeout(() => {
+      if (!get().isDataLoaded) set({ isDataLoaded: true });
+    }, 800);
+
     try {
       const [tasks, records] = await Promise.all([
         getTasksByDate(userId, todayDateStr),
         getDayRecords(userId, 365),
       ]);
+
+      clearTimeout(fallbackTimer);
 
       // Seed habits in background (don't block)
       getHabitTasks(userId).then((habits) => {
@@ -89,6 +97,7 @@ export const useDataStore = create<DataState>((set, get) => ({
       });
     } catch (err) {
       console.error("Error fetching data:", err);
+      clearTimeout(fallbackTimer);
       set({ isDataLoaded: true }); // Don't block the UI
     }
   },
