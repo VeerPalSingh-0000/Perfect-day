@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Perfect Day - Today Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "background": "#000000",
+              "surface": "#0A0A0A",
+              "surface-container": "#141414",
+              "primary": "#4F44E2",
+              "on-surface": "#E2E2E2",
+              "on-surface-variant": "#464555",
+              "outline": "rgba(70, 69, 85, 0.15)",
+              "accent": "#C4C0FF"
+            },
+            fontFamily: {
+              "headline": ["Plus Jakarta Sans"],
+              "body": ["Manrope"],
+              "label": ["Plus Jakarta Sans"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .premium-card {
+        background: #0A0A0A;
+        border: 1px solid rgba(70, 69, 85, 0.15);
+        transition: all 0.3s ease;
+      }
+      .premium-card:hover {
+        border-color: rgba(196, 192, 255, 0.3);
+      }
+      .progress-ring {
+        transform: rotate(-90deg);
+      }
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        min-height: 100dvh;
+        background-color: #000000;
+      }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen pb-32">
+<!-- TopAppBar from COMPONENTS_17 -->
+<header class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl dark:bg-[#000000]/80 border-b border-[#464555]/15 flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<span class="text-[#E2E2E2] font-black tracking-[0.2em] uppercase text-sm font-['Plus_Jakarta_Sans']" style="">STEALTH</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#E2E2E2] active:opacity-70 transition-opacity cursor-pointer" style="">search</span>
+</div>
+</header>
+<main class="max-w-2xl mx-auto px-6 pt-24 space-y-10">
+<!-- Welcome Header -->
+<section>
+<h1 class="font-headline font-bold text-4xl tracking-tight text-[#E2E2E2] mb-1" style="">Good Morning, Veer</h1>
+<p class="text-on-surface-variant text-sm font-medium tracking-wide uppercase" style="">Wednesday, March 26</p>
+</section>
+<!-- Stats Overview Row -->
+<section class="grid grid-cols-12 gap-4">
+<!-- Day Status Card -->
+<div class="col-span-12 premium-card rounded-xl p-8 flex justify-between items-center">
+<div class="flex flex-col gap-1">
+<span class="text-2xl mb-2" style="">✨</span>
+<h2 class="text-2xl font-headline font-bold text-[#E2E2E2]" style="">Great Day</h2>
+<p class="text-on-surface-variant text-sm font-medium" style="">4 of 5 tasks completed</p>
+</div>
+<div class="relative flex items-center justify-center">
+<svg class="progress-ring w-24 h-24">
+<circle class="text-[#141414]" cx="48" cy="48" fill="transparent" r="42" stroke="currentColor" stroke-width="6"></circle>
+<circle class="text-accent" cx="48" cy="48" fill="transparent" r="42" stroke="currentColor" stroke-dasharray="263.89" stroke-dashoffset="52.78" stroke-linecap="round" stroke-width="6"></circle>
+</svg>
+<span class="absolute font-headline font-bold text-lg text-[#E2E2E2]" style="">80%</span>
+</div>
+</div>
+<!-- Streak Card -->
+<div class="col-span-12 premium-card rounded-lg p-5 flex items-center gap-4 bg-gradient-to-r from-[#0A0A0A] to-[#111111]">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-accent text-xl" style='font-variation-settings: "FILL" 1;'>local_fire_department</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline font-bold text-3xl text-[#E2E2E2] tracking-tighter" style="">12</span>
+<span class="text-on-surface-variant text-[10px] uppercase tracking-widest font-bold" style="">Day Streak</span>
+</div>
+</div>
+</section>
+<!-- Tasks Section -->
+<section class="space-y-6">
+<div class="flex justify-between items-center px-1">
+<h3 class="font-headline font-bold text-xl text-[#E2E2E2]" style="">Tasks</h3>
+<button class="bg-[#E2E2E2] hover:opacity-90 transition-all active:scale-95 text-black font-bold px-5 py-2 rounded-full flex items-center gap-2 text-sm" style="">
+<span class="material-symbols-outlined text-[18px]" style="">add</span>
+<span class="" style="">New Task</span>
+</button>
+</div>
+<!-- Task List -->
+<div class="space-y-3">
+<!-- Task 1: Completed -->
+<div class="premium-card rounded-lg p-4 flex items-center gap-4 opacity-50">
+<div class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30">
+<span class="material-symbols-outlined text-accent text-[16px] font-bold" style="">done</span>
+</div>
+<div class="flex-grow">
+<p class="text-[#E2E2E2] font-medium line-through decoration-on-surface-variant/40" style="">Morning Meditation</p>
+</div>
+<span class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black rounded border border-[#464555]/20" style="">Mind</span>
+</div>
+<!-- Task 2: Completed -->
+<div class="premium-card rounded-lg p-4 flex items-center gap-4 opacity-50">
+<div class="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center border border-accent/30">
+<span class="material-symbols-outlined text-accent text-[16px] font-bold" style="">done</span>
+</div>
+<div class="flex-grow">
+<p class="text-[#E2E2E2] font-medium line-through decoration-on-surface-variant/40" style="">Review PRD document</p>
+</div>
+<span class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-black rounded border border-[#464555]/20" style="">Work</span>
+</div>
+<!-- Task 5: Uncompleted -->
+<div class="premium-card rounded-lg p-4 flex items-center gap-4 cursor-pointer">
+<div class="w-6 h-6 rounded-full border border-on-surface-variant transition-colors flex items-center justify-center"></div>
+<div class="flex-grow">
+<p class="text-[#E2E2E2] font-medium" style="">Journal before bed</p>
+</div>
+<span class="text-accent text-[10px] font-bold uppercase tracking-widest px-2 py-1 bg-primary/10 rounded border border-primary/20" style="">Routine</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer from COMPONENTS_17 -->
+<footer class="w-full py-12 flex flex-col items-center gap-6 bg-black border-t border-[#464555]/10 mt-12 mb-20">
+<div class="flex gap-8">
+<a class="text-[#464555] font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase hover:text-[#C4C0FF] transition-colors" href="#" style=""><br/></a>
+<a class="text-[#464555] font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase hover:text-[#C4C0FF] transition-colors" href="#" style=""><br/></a>
+<a class="text-[#464555] font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase hover:text-[#C4C0FF] transition-colors" href="#" style=""><br/></a>
+</div>
+<p class="text-[#464555] font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase" style=""><br/></p>
+</footer>
+<!-- BottomNavBar from COMPONENTS_17 -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-8 bg-[#0E0E0E] dark:bg-[#0E0E0E] shadow-[0_-4px_20px_rgba(79,68,226,0.04)] z-50 pb-safe">
+<a class="flex flex-col items-center justify-center text-white drop-shadow-[0_0_8px_rgba(196,192,255,0.8)] scale-110 transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest mt-1" style="">Focus</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">explore</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest mt-1" style="">Journey</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest mt-1" style="">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest mt-1" style="">Profile</span>
+</a>
+</nav>
+</body></html>

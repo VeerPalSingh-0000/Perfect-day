@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings — STEALTH</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background": "#000000",
+                        "surface": "#0E0E0E",
+                        "primary": "#4F44E2",
+                        "on-surface": "#E2E2E2",
+                        "on-surface-variant": "#464555",
+                        "outline-variant": "#2A2A2A"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    },
+                    borderRadius: { "DEFAULT": "0.75rem", "lg": "1.5rem", "xl": "2rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .premium-border {
+            border: 1px solid rgba(70, 69, 85, 0.2);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #000000;
+        }
+        /* Custom scrollbar for stealth look */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000000; }
+        ::-webkit-scrollbar-thumb { background: #2A2A2A; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-black text-[#E2E2E2] font-body min-h-screen pb-32">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#000000]/80 backdrop-blur-xl border-b border-[#464555]/15 flex items-center justify-between px-6 h-16">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#E2E2E2] active:opacity-70 transition-opacity cursor-pointer">arrow_back</span>
+<h1 class="font-['Plus_Jakarta_Sans'] tracking-tighter font-bold text-lg text-[#E2E2E2]">Settings</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#E2E2E2] active:opacity-70 cursor-pointer">search</span>
+</div>
+</header>
+<main class="max-w-2xl mx-auto px-6 mt-24 space-y-10">
+<!-- Account Section -->
+<section class="space-y-4">
+<h2 class="text-[10px] font-bold tracking-[0.2em] text-[#464555] uppercase pl-2">ACCOUNT</h2>
+<div class="bg-[#0E0E0E] premium-border rounded-xl p-6 space-y-6">
+<div class="flex items-center gap-4">
+<div class="relative w-14 h-14 rounded-full overflow-hidden border border-[#464555]/30">
+<img alt="Veer Pal Singh Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0snwR305xPC5Jf1lcKw1tWX4CK2bpYG3qBH7iSxi_i1XzdiTzseTLZNqzBKcW6Y2cLmHChO5yua0dSBx-yuykTiTI1wWlhowBVmWb29vAJbPSonMI3J8tu41MygaeVehwEgkCfOSg0KSBXESttEPoHE2PkpJz2r4tQ0VeCUygnln_NiqVgw2X63Sl0agfcXjvq9y8tQV3q_1WwUzB8AehxLfM1kbQBCtOa2QVZqTT0cpHwH5__Ky6gfuSA7Q4trSdwV7tBmbu4g"/>
+</div>
+<div>
+<p class="font-bold text-lg leading-tight tracking-tight">Veer Pal Singh</p>
+<p class="text-[#464555] text-sm">veer@email.com</p>
+</div>
+</div>
+<button class="w-full py-3.5 rounded-lg font-bold text-white bg-[#1A1A1A] border border-[#464555]/20 hover:bg-[#252525] transition-colors duration-300">
+                Sign Out
+            </button>
+</div>
+</section>
+<!-- Preferences Section -->
+<section class="space-y-4">
+<h2 class="text-[10px] font-bold tracking-[0.2em] text-[#464555] uppercase pl-2">PREFERENCES</h2>
+<div class="bg-[#0E0E0E] premium-border rounded-xl divide-y divide-[#464555]/10">
+<!-- Appearance Row -->
+<div class="flex items-center justify-between p-5 hover:bg-white/[0.02] transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xl">🌗</div>
+<div>
+<p class="font-semibold text-[15px]">Appearance</p>
+<p class="text-[12px] text-[#464555]">Dark theme active</p>
+</div>
+</div>
+<div class="w-11 h-6 bg-[#4F44E2] rounded-full relative cursor-pointer">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+<!-- Notifications Row -->
+<div class="flex items-center justify-between p-5 opacity-60">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xl">🔔</div>
+<div>
+<p class="font-semibold text-[15px]">Notifications</p>
+<p class="text-[12px] text-[#464555]">Daily reminders</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded-md bg-[#1A1A1A] text-[9px] font-black text-[#464555] tracking-widest uppercase">COMING SOON</span>
+</div>
+<!-- Home Screen Widget Row -->
+<div class="flex items-center justify-between p-5 opacity-60">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xl">📱</div>
+<div>
+<p class="font-semibold text-[15px]">Home Screen Widget</p>
+<p class="text-[12px] text-[#464555]">Android only</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded-md bg-[#1A1A1A] text-[9px] font-black text-[#464555] tracking-widest uppercase">COMING SOON</span>
+</div>
+</div>
+</section>
+<!-- About Section -->
+<section class="space-y-4">
+<h2 class="text-[10px] font-bold tracking-[0.2em] text-[#464555] uppercase pl-2">ABOUT</h2>
+<div class="bg-[#0E0E0E] premium-border rounded-xl divide-y divide-[#464555]/10">
+<div class="flex items-center justify-between p-5 cursor-pointer group hover:bg-white/[0.02] transition-colors">
+<div class="flex items-center gap-4">
+<div class="text-lg opacity-80 group-hover:scale-110 transition-transform">🛡️</div>
+<p class="font-semibold text-[15px]">Privacy Policy</p>
+</div>
+<span class="material-symbols-outlined text-[#464555]">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-5">
+<div class="flex items-center gap-4">
+<div class="w-6"></div>
+<p class="font-semibold text-[15px] text-[#464555]">Version</p>
+</div>
+<p class="font-mono text-[11px] text-[#E2E2E2] bg-[#1A1A1A] border border-[#464555]/20 px-2 py-0.5 rounded">1.0.0-BETA</p>
+</div>
+</div>
+</section>
+<!-- Footer Component -->
+<footer class="flex flex-col items-center gap-6 w-full py-12 border-t border-[#464555]/10 mt-12 mb-8">
+<div class="flex gap-8">
+<a class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase text-[#464555] hover:text-[#C4C0FF] transition-colors" href="#">Privacy</a>
+<a class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase text-[#464555] hover:text-[#C4C0FF] transition-colors" href="#">Terms</a>
+<a class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase text-[#464555] hover:text-[#C4C0FF] transition-colors" href="#">Support</a>
+</div>
+<p class="font-['Plus_Jakarta_Sans'] text-[10px] font-medium tracking-[0.1rem] uppercase text-[#464555]">© 2024 STEALTH ARCHITECT. ALL RIGHTS RESERVED.</p>
+</footer>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-[#0E0E0E] shadow-[0_-4px_20px_rgba(79,68,226,0.04)] flex justify-around items-center h-20 px-8 md:hidden">
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] active:scale-90 duration-200 transition-all" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] active:scale-90 duration-200 transition-all" href="#">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest">Explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] active:scale-90 duration-200 transition-all" href="#">
+<span class="material-symbols-outlined mb-1">notifications</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white drop-shadow-[0_0_8px_rgba(196,192,255,0.8)] scale-110 active:scale-90 duration-200 transition-all" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] uppercase tracking-widest">Profile</span>
+</a>
+</nav>
+<!-- Visual Background Glow -->
+<div class="fixed top-0 right-0 w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+</body></html>

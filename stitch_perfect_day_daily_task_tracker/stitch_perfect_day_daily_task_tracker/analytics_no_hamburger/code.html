@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Perfect Day Analytics - Stealth</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container": "#111111",
+                        "surface": "#000000",
+                        "on-primary-fixed-variant": "#1d0098",
+                        "primary-fixed": "#E2E2E2",
+                        "on-tertiary-fixed-variant": "#6d104c",
+                        "secondary-dim": "#6ce8de",
+                        "outline": "#464555",
+                        "error-container": "#a70138",
+                        "surface-tint": "#C4C0FF",
+                        "on-secondary": "#005c57",
+                        "tertiary-fixed-dim": "#ee7ebb",
+                        "on-tertiary": "#6c0f4c",
+                        "secondary-fixed-dim": "#6ce8de",
+                        "inverse-primary": "#5044e3",
+                        "surface-container-lowest": "#000000",
+                        "background": "#000000",
+                        "tertiary-container": "#fb88c6",
+                        "surface-variant": "#0E0E0E",
+                        "surface-dim": "#000000",
+                        "secondary": "#7cf6ec",
+                        "on-error": "#490013",
+                        "on-secondary-fixed": "#004844",
+                        "on-primary-fixed": "#E2E2E2",
+                        "surface-bright": "#1A1A1A",
+                        "error": "#ff6e84",
+                        "surface-container-high": "#161616",
+                        "secondary-container": "#006a65",
+                        "tertiary": "#ff9dd0",
+                        "primary-dim": "#675df9",
+                        "on-surface-variant": "#8E8D99",
+                        "primary-container": "#C4C0FF",
+                        "on-secondary-container": "#dbfffa",
+                        "on-primary": "#000000",
+                        "primary": "#C4C0FF",
+                        "surface-container-low": "#080808",
+                        "outline-variant": "#2A2A35",
+                        "error-dim": "#d73357",
+                        "on-tertiary-fixed": "#360023",
+                        "on-background": "#E2E2E2",
+                        "tertiary-dim": "#eb7bb8",
+                        "primary-fixed-dim": "#A6A2FF",
+                        "on-primary-container": "#000000",
+                        "surface-container-highest": "#1E1E1E",
+                        "inverse-surface": "#ffffff",
+                        "on-secondary-fixed-variant": "#006761",
+                        "tertiary-fixed": "#fe8bc9",
+                        "on-surface": "#E2E2E2",
+                        "inverse-on-surface": "#000000",
+                        "secondary-fixed": "#7cf6ec",
+                        "on-tertiary-container": "#5e0041"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    },
+                    borderRadius: {"DEFAULT": "0.75rem", "lg": "1.5rem", "xl": "2.25rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(14, 14, 14, 0.8);
+            border: 1px solid rgba(70, 69, 85, 0.2);
+        }
+        .text-glow {
+            text-shadow: 0 0 15px rgba(196, 192, 255, 0.5);
+        }
+        .bg-gradient-main {
+            background: linear-gradient(180deg, #C4C0FF 0%, #7cf6ec 100%);
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-black text-on-surface font-body min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-[#464555]/15 flex items-center justify-between px-6 h-16 w-full">
+<div class="flex items-center gap-2">
+</div>
+<h1 class="font-['Plus_Jakarta_Sans'] text-lg font-bold tracking-tighter text-[#E2E2E2]" style="">STEALTH</h1>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#E2E2E2] active:opacity-70 transition-opacity cursor-pointer" style="">search</span>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto space-y-8">
+<!-- Overview Stats: 2x2 Grid -->
+<section class="grid grid-cols-2 gap-4">
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-3xl font-headline font-extrabold text-primary text-glow" style="">87%</span>
+<span class="material-symbols-outlined text-secondary text-sm" style="">trending_up</span>
+</div>
+<p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest" style="">Avg. Completion</p>
+</div>
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-3xl font-headline font-extrabold text-tertiary" style="">12</span>
+<span class="material-symbols-outlined text-tertiary text-sm" style='font-variation-settings: "FILL" 1;'>local_fire_department</span>
+</div>
+<p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest" style="">Current Streak</p>
+</div>
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-3xl font-headline font-extrabold text-secondary" style="">23</span>
+<span class="material-symbols-outlined text-secondary text-sm" style='font-variation-settings: "FILL" 1;'>star</span>
+</div>
+<p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest" style="">Perfect Days</p>
+</div>
+<div class="glass-card p-6 rounded-lg flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-3xl font-headline font-extrabold text-[#E2E2E2]" style="">45</span>
+<span class="material-symbols-outlined text-primary-fixed text-sm" style="">task_alt</span>
+</div>
+<p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest" style="">Total Tasks Done</p>
+</div>
+</section>
+<!-- Weekly Trend -->
+<section class="glass-card p-8 rounded-xl">
+<h3 class="font-headline text-sm font-bold mb-8 flex items-center justify-between uppercase tracking-widest" style="">
+                Weekly Completion
+                <span class="text-[10px] text-on-surface-variant font-medium" style="">Mar 09 - Mar 15</span>
+</h3>
+<div class="flex items-end justify-between h-48 gap-3">
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[80%] rounded-t-full shadow-[0_0_15px_rgba(196,192,255,0.2)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">MON</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[65%] rounded-t-full shadow-[0_0_15px_rgba(196,192,255,0.2)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">TUE</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[100%] rounded-t-full shadow-[0_0_20px_rgba(196,192,255,0.4)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">WED</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[45%] rounded-t-full shadow-[0_0_15px_rgba(196,192,255,0.2)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">THU</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[90%] rounded-t-full shadow-[0_0_15px_rgba(196,192,255,0.2)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">FRI</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[75%] rounded-t-full shadow-[0_0_15px_rgba(196,192,255,0.2)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">SAT</span>
+</div>
+<div class="flex flex-col items-center gap-3 flex-1">
+<div class="w-full bg-surface-container rounded-full h-32 relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-gradient-main h-[30%] rounded-t-full shadow-[0_0_15px_rgba(196,192,255,0.2)]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold" style="">SUN</span>
+</div>
+</div>
+</section>
+<!-- Day Ratings -->
+<section class="glass-card p-8 rounded-xl">
+<h3 class="font-headline text-sm font-bold mb-6 uppercase tracking-widest" style="">Day Ratings</h3>
+<div class="h-4 w-full flex rounded-full overflow-hidden mb-8 bg-surface-container">
+<div class="h-full bg-tertiary" style="width: 25%"></div>
+<div class="h-full bg-secondary" style="width: 35%"></div>
+<div class="h-full bg-primary" style="width: 20%"></div>
+<div class="h-full bg-orange-400" style="width: 10%"></div>
+<div class="h-full bg-outline" style="width: 10%"></div>
+</div>
+<div class="grid grid-cols-2 gap-y-4">
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-[0_0_8px_#ff9dd0]"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest" style="">Perfect (8)</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_#7cf6ec]"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest" style="">Great (11)</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_#a8a4ff]"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest" style="">Good (6)</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest" style="">Okay (3)</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-outline"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest" style="">Rough (3)</span>
+</div>
+</div>
+</section>
+<!-- Monthly Heatmap -->
+<section class="glass-card p-8 rounded-xl">
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline text-sm font-bold uppercase tracking-widest" style="">March 2026</h3>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-[#E2E2E2] text-sm cursor-pointer hover:opacity-70" style="">chevron_left</span>
+<span class="material-symbols-outlined text-[#E2E2E2] text-sm cursor-pointer hover:opacity-70" style="">chevron_right</span>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-y-6 justify-items-center">
+<!-- Day Labels -->
+<span class="text-[10px] font-bold text-on-surface-variant" style="">S</span>
+<span class="text-[10px] font-bold text-on-surface-variant" style="">M</span>
+<span class="text-[10px] font-bold text-on-surface-variant" style="">T</span>
+<span class="text-[10px] font-bold text-on-surface-variant" style="">W</span>
+<span class="text-[10px] font-bold text-on-surface-variant" style="">T</span>
+<span class="text-[10px] font-bold text-on-surface-variant" style="">F</span>
+<span class="text-[10px] font-bold text-on-surface-variant" style="">S</span>
+<!-- Week 1 -->
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-secondary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-primary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-tertiary shadow-[0_0_8px_#ff9dd0]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-primary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-secondary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+<!-- Week 2 -->
+<div class="w-3.5 h-3.5 rounded-full bg-secondary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-tertiary shadow-[0_0_8px_#ff9dd0]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-tertiary shadow-[0_0_8px_#ff9dd0]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-primary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-secondary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-secondary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+<!-- Week 3 -->
+<div class="w-3.5 h-3.5 rounded-full bg-secondary shadow-[0_0_8px_#7cf6ec]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-secondary"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-primary border border-white/20"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-surface-container"></div>
+</div>
+<!-- Legend -->
+<div class="mt-8 flex justify-center gap-6 text-[9px] font-bold tracking-widest uppercase">
+<div class="flex items-center gap-2" style=""><div class="w-2 h-2 rounded-full bg-tertiary"></div> Perfect</div>
+<div class="flex items-center gap-2" style=""><div class="w-2 h-2 rounded-full bg-secondary"></div> Great</div>
+<div class="flex items-center gap-2" style=""><div class="w-2 h-2 rounded-full bg-primary"></div> Good</div>
+</div>
+</section>
+<footer class="flex flex-col items-center gap-6 w-full border-t border-[#464555]/10 py-12">
+<div class="flex gap-6 text-[10px] font-medium tracking-[0.1rem] uppercase text-[#464555]">
+<a class="hover:text-[#C4C0FF] transition-colors" href="#" style=""><br/></a>
+<a class="hover:text-[#C4C0FF] transition-colors" href="#" style=""><br/></a>
+<a class="hover:text-[#C4C0FF] transition-colors" href="#" style=""><br/></a>
+</div>
+<p class="text-[10px] font-medium tracking-[0.1rem] uppercase text-[#464555]" style=""><br/></p>
+</footer>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 pb-safe bg-[#0E0E0E] shadow-[0_-4px_20px_rgba(79,68,226,0.04)]">
+<div class="flex justify-around items-center h-20 w-full px-8">
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">explore</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white drop-shadow-[0_0_8px_rgba(196,192,255,0.8)] scale-110 transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#464555] opacity-50 hover:text-[#E2E2E2] transition-all active:scale-90 duration-200" href="#" style="">
+<span class="material-symbols-outlined" style="">person</span>
+</a>
+</div>
+</nav>
+</body></html>
