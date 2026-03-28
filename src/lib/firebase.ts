@@ -22,24 +22,40 @@ let app;
 if (getApps().length > 0) {
   app = getApp();
 } else {
-  app = initializeApp(firebaseConfig);
+  // During build on platforms like Netlify, env vars might be missing. 
+  // We provide dummy values so the build doesn't crash, but it will need real ones at runtime.
+  const config = firebaseConfig.apiKey ? firebaseConfig : {
+    apiKey: "dummy-key-for-build",
+    authDomain: "dummy-domain.firebaseapp.com",
+    projectId: "dummy-project",
+    storageBucket: "dummy-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:dummy"
+  };
+  app = initializeApp(config);
 }
 
 export const auth = getAuth(app);
 
-// Initialize Firestore with persistent local cache.
-// Reads come from local IndexedDB cache FIRST (instant),
-// then sync with server in the background.
-// If network is blocked (ad blocker, offline), the app still works.
+// Initialize Firestore
 let db: Firestore;
-try {
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager(),
-    }),
-  });
-} catch {
-  // Already initialized (e.g., hot reload) — get existing instance
+
+if (typeof window !== 'undefined') {
+  // Client-side: Initialize with persistent local cache.
+  // Reads come from local IndexedDB cache FIRST (instant),
+  // then sync with server in the background.
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch {
+    // Already initialized (e.g., hot reload) — get existing instance
+    db = getFirestore(app);
+  }
+} else {
+  // Server-side (during Next.js build): Use standard memory cache
   db = getFirestore(app);
 }
 
