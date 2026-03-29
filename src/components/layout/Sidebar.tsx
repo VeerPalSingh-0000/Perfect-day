@@ -5,27 +5,48 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 import { signOut } from "../../lib/auth";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const NAV_ITEMS = [
   { href: "/today", label: "Focus", icon: "home" },
   { href: "/history", label: "Journey", icon: "explore" },
-  { href: "/analytics", label: "Alerts", icon: "notifications" },
+  { href: "/analytics", label: "Stats", icon: "bar_chart" },
+  { href: "/habits", label: "Habits", icon: "event_repeat" },
   { href: "/settings", label: "Profile", icon: "person" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const profile = useAuthStore((s) => s.profile);
+  const user = useAuthStore((s) => s.user);
 
   return (
-    <aside className="hidden md:flex w-60 h-screen bg-black sticky top-0 px-6 py-10 flex-col border-r border-[#464555]/15">
+    <aside className="hidden md:flex w-64 h-screen bg-black sticky top-0 px-6 py-10 flex-col border-r border-[#464555]/15">
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-16 px-2">
-        <div className="w-8 h-8 rounded-lg bg-linear-to-br from-[#4F44E2] to-[#C4C0FF] flex items-center justify-center text-white font-black text-sm shadow-[0_0_15px_rgba(79,68,226,0.3)]">
-          P
-        </div>
-        <span className="font-['Plus_Jakarta_Sans'] font-black tracking-[0.2em] text-sm text-[#E2E2E2] uppercase">
-          STEALTH
+      <div className="flex items-center gap-2 mb-12 px-2">
+        <img src="/logo.png" alt="Sira Logo" className="w-12 h-12 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]" />
+        <span className="font-['Plus_Jakarta_Sans'] font-black tracking-[0.2em] text-lg text-[#E2E2E2] uppercase">
+          SIRA
         </span>
+      </div>
+
+      {/* Profile Summary */}
+      <div className="mb-10 px-2 flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full border border-white/10 overflow-hidden shrink-0 bg-white/5">
+          <img 
+            src={profile?.photoURL || "/avatars/avatar1.png"} 
+            alt="User" 
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-widest text-white truncate">
+            {profile?.displayName || user?.displayName || "Sira User"}
+          </p>
+          <p className="text-[9px] font-bold text-[#464555] uppercase tracking-tighter truncate opacity-70">
+            {profile?.email || user?.email || "architect"}
+          </p>
+        </div>
       </div>
 
       {/* Nav Links */}
@@ -52,7 +73,7 @@ export function Sidebar() {
               >
                 {item.icon}
               </span>
-              <span className="font-headline text-xs uppercase tracking-widest">
+              <span className="font-headline text-[10px] uppercase tracking-widest">
                 {item.label}
               </span>
             </Link>
@@ -76,7 +97,7 @@ export function Sidebar() {
           <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">
             logout
           </span>
-          <span className="font-headline text-xs uppercase tracking-widest">
+          <span className="font-headline text-[10px] uppercase tracking-widest">
             Sign Out
           </span>
         </button>

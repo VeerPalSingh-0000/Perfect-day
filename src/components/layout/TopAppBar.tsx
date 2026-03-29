@@ -28,9 +28,12 @@ export function TopAppBar({ variant = "brand", title, showSearch = false }: TopA
         )}
 
         {variant === "brand" ? (
-          <h1 className="font-['Plus_Jakarta_Sans'] text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-[#E2E2E2] absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
-            STEALTH
-          </h1>
+          <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 md:hidden cursor-pointer" onClick={() => router.push('/today')}>
+            <img src="/logo.png" alt="Sira Logo" className="w-8 h-8 sm:w-10 sm:h-10 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.25)]" />
+            <h1 className="font-['Plus_Jakarta_Sans'] text-base sm:text-lg font-black uppercase tracking-[0.2em] text-[#E2E2E2]">
+              SIRA
+            </h1>
+          </div>
         ) : (
           <h1 className="font-['Plus_Jakarta_Sans'] text-xs sm:text-base font-bold tracking-tighter text-[#E2E2E2]">
             {title}

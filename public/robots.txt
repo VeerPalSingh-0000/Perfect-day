@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /today
+Disallow: /habits
+Disallow: /history
+Disallow: /analytics
+Disallow: /settings
+Disallow: /login
+
+Sitemap: https://perfectday.app/sitemap.xml

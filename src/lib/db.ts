@@ -9,7 +9,96 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { Task, DayRecord } from "../types";
+import { Task, DayRecord, UserProfile } from "../types";
+import { getDoc, onSnapshot } from "firebase/firestore";
+import { calculateDayRating } from "./utils";
+import { logError, createSafeErrorMessage } from "./errorHandler";
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  retries = 3,
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt < retries - 1) {
+        await sleep(300 * (attempt + 1));
+      }
+    }
+  }
+  throw lastError;
+}
+
+// User Profile Management
+export const listenToUserProfile = (
+  userId: string,
+  callback: (profile: UserProfile | null) => void,
+): (() => void) => {
+  if (!userId) return () => {};
+
+  const userRef = doc(db, "users", userId);
+  return onSnapshot(
+    userRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.data() as UserProfile);
+      } else {
+        callback(null);
+      }
+    },
+    (error) => {
+      logError(
+        "profileOperation",
+        error,
+        createSafeErrorMessage("profileOperation"),
+      );
+    },
+  );
+};
+
+export const getUserProfile = async (
+  userId: string,
+): Promise<UserProfile | null> => {
+  if (!userId) return null;
+  try {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      return userSnap.data() as UserProfile;
+    }
+    return null;
+  } catch (error) {
+    logError(
+      "profileOperation",
+      error,
+      createSafeErrorMessage("profileOperation"),
+    );
+    return null;
+  }
+};
+
+export const updateUserProfile = async (
+  userId: string,
+  updates: Partial<UserProfile>,
+) => {
+  if (!userId) throw new Error("userId is required");
+  try {
+    const userRef = doc(db, "users", userId);
+    await withRetry(() => setDoc(userRef, updates, { merge: true }));
+  } catch (error) {
+    logError(
+      "profileOperation",
+      error,
+      createSafeErrorMessage("profileOperation"),
+    );
+    throw error;
+  }
+};
 
 export const addTask = async (task: Task) => {
   if (!task || !task.userId || !task.id) {
@@ -17,9 +106,9 @@ export const addTask = async (task: Task) => {
   }
   try {
     const taskRef = doc(db, "users", task.userId, "tasks", task.id);
-    await setDoc(taskRef, task);
+    await withRetry(() => setDoc(taskRef, task));
   } catch (error) {
-    console.error("Error adding task:", error);
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }
 };
@@ -27,16 +116,16 @@ export const addTask = async (task: Task) => {
 export const updateTask = async (
   userId: string,
   taskId: string,
-  updates: Partial<Task>
+  updates: Partial<Task>,
 ) => {
   if (!userId || !taskId) {
     throw new Error("userId and taskId are required");
   }
   try {
     const taskRef = doc(db, "users", userId, "tasks", taskId);
-    await updateDoc(taskRef, updates);
+    await withRetry(() => updateDoc(taskRef, updates));
   } catch (error) {
-    console.error("Error updating task:", error);
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }
 };
@@ -47,9 +136,9 @@ export const deleteTask = async (userId: string, taskId: string) => {
   }
   try {
     const taskRef = doc(db, "users", userId, "tasks", taskId);
-    await deleteDoc(taskRef);
+    await withRetry(() => deleteDoc(taskRef));
   } catch (error) {
-    console.error("Error deleting task:", error);
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }
 };
@@ -57,10 +146,12 @@ export const deleteTask = async (userId: string, taskId: string) => {
 // Fetch all tasks for a specific date (YYYY-MM-DD)
 export const getTasksByDate = async (
   userId: string,
-  date: string
+  date: string,
 ): Promise<Task[]> => {
   if (!userId || !date) {
-    console.warn("getTasksByDate called with missing userId or date");
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("getTasksByDate called with missing userId or date");
+    }
     return [];
   }
 
@@ -77,7 +168,7 @@ export const getTasksByDate = async (
 
     return tasks.sort((a, b) => (a.order || 0) - (b.order || 0));
   } catch (error) {
-    console.error("Error fetching tasks by date:", error);
+    logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
     return [];
   }
 };
@@ -85,7 +176,9 @@ export const getTasksByDate = async (
 // Fetch all habit tasks (for auto-seeding on new days)
 export const getHabitTasks = async (userId: string): Promise<Task[]> => {
   if (!userId) {
-    console.warn("getHabitTasks called with missing userId");
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("getHabitTasks called with missing userId");
+    }
     return [];
   }
 
@@ -97,8 +190,13 @@ export const getHabitTasks = async (userId: string): Promise<Task[]> => {
     const tasks: Task[] = [];
     const seenTitles = new Set<string>();
 
-    snapshot.forEach((docSnap) => {
-      const taskData = docSnap.data() as Task;
+    const rawTasks: Task[] = [];
+    snapshot.forEach((docSnap) => rawTasks.push(docSnap.data() as Task));
+
+    // Sort descending by date so if a user edits a habit today, we copy those newest settings.
+    rawTasks.sort((a, b) => b.date.localeCompare(a.date));
+
+    rawTasks.forEach((taskData) => {
       // Deduplicate by title+category (habits repeat daily, so many exist)
       const key = `${taskData.title}__${taskData.category}`;
       if (taskData && !seenTitles.has(key)) {
@@ -109,7 +207,7 @@ export const getHabitTasks = async (userId: string): Promise<Task[]> => {
 
     return tasks;
   } catch (error) {
-    console.error("Error fetching habit tasks:", error);
+    logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
     return [];
   }
 };
@@ -121,19 +219,21 @@ export const saveDayRecord = async (record: DayRecord) => {
   }
   try {
     const recordRef = doc(db, "users", record.userId, "dayRecords", record.id);
-    await setDoc(recordRef, record);
+    await withRetry(() => setDoc(recordRef, record));
   } catch (error) {
-    console.error("Error saving day record:", error);
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }
 };
 
 export const getDayRecords = async (
   userId: string,
-  limitDays: number = 30
+  limitDays: number = 30,
 ): Promise<DayRecord[]> => {
   if (!userId) {
-    console.warn("getDayRecords called with missing userId");
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("getDayRecords called with missing userId");
+    }
     return [];
   }
 
@@ -149,7 +249,190 @@ export const getDayRecords = async (
       .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
       .slice(0, limitDays);
   } catch (error) {
-    console.error("Error fetching day records:", error);
+    logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
     return [];
   }
+};
+
+// Recovery: rebuild dayRecords from tasks if records are missing.
+export const rebuildDayRecordsFromTasks = async (
+  userId: string,
+): Promise<number> => {
+  if (!userId) return 0;
+
+  try {
+    const tasksRef = collection(db, "users", userId, "tasks");
+    const snapshot = await getDocs(tasksRef);
+    const byDate = new Map<string, Task[]>();
+
+    snapshot.forEach((docSnap) => {
+      const task = docSnap.data() as Task;
+      if (!task?.date) return;
+      const existing = byDate.get(task.date) || [];
+      existing.push(task);
+      byDate.set(task.date, existing);
+    });
+
+    if (byDate.size === 0) return 0;
+
+    let rebuilt = 0;
+    for (const [date, tasks] of byDate.entries()) {
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter((t) => t.isCompleted).length;
+      const completionPercentage =
+        totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+      const record: DayRecord = {
+        id: `${userId}_${date}`,
+        userId,
+        date,
+        totalTasks,
+        completedTasks,
+        completionPercentage,
+        rating: calculateDayRating(completionPercentage),
+        tasks,
+        createdAt: Math.max(...tasks.map((t) => t.createdAt || 0), Date.now()),
+      };
+
+      const recordRef = doc(db, "users", userId, "dayRecords", record.id);
+      await setDoc(recordRef, record, { merge: true });
+      rebuilt++;
+    }
+
+    return rebuilt;
+  } catch (error) {
+    console.error("Error rebuilding day records:", error);
+    return 0;
+  }
+};
+
+// Production recovery: if same Gmail ended up with a different UID on another platform,
+// migrate historical data from old UID buckets to the current UID.
+export const migrateUserDataByEmail = async (
+  currentUid: string,
+  email?: string | null,
+): Promise<{ migrated: boolean; tasks: number; records: number }> => {
+  if (!currentUid || !email) return { migrated: false, tasks: 0, records: 0 };
+
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", email));
+    const usersSnap = await getDocs(q);
+
+    const sourceUids = usersSnap.docs
+      .map((d) => d.id)
+      .filter((uid) => uid && uid !== currentUid);
+
+    if (sourceUids.length === 0) {
+      return { migrated: false, tasks: 0, records: 0 };
+    }
+
+    let migratedTasks = 0;
+    let migratedRecords = 0;
+
+    for (const sourceUid of sourceUids) {
+      const sourceTasksRef = collection(db, "users", sourceUid, "tasks");
+      const sourceRecordsRef = collection(db, "users", sourceUid, "dayRecords");
+
+      const [tasksSnap, recordsSnap] = await Promise.all([
+        getDocs(sourceTasksRef),
+        getDocs(sourceRecordsRef),
+      ]);
+
+      for (const taskDoc of tasksSnap.docs) {
+        const task = taskDoc.data() as Task;
+        const targetTaskRef = doc(db, "users", currentUid, "tasks", taskDoc.id);
+        await setDoc(
+          targetTaskRef,
+          {
+            ...task,
+            userId: currentUid,
+          },
+          { merge: true },
+        );
+        migratedTasks++;
+      }
+
+      for (const recordDoc of recordsSnap.docs) {
+        const record = recordDoc.data() as DayRecord;
+        const targetRecordRef = doc(
+          db,
+          "users",
+          currentUid,
+          "dayRecords",
+          recordDoc.id,
+        );
+        await setDoc(
+          targetRecordRef,
+          {
+            ...record,
+            userId: currentUid,
+          },
+          { merge: true },
+        );
+        migratedRecords++;
+      }
+    }
+
+    return {
+      migrated: migratedTasks > 0 || migratedRecords > 0,
+      tasks: migratedTasks,
+      records: migratedRecords,
+    };
+  } catch (error) {
+    console.error("Error migrating user data by email:", error);
+    return { migrated: false, tasks: 0, records: 0 };
+  }
+};
+
+// Real-time listener for tasks — Instantly returns local cache, then syncs server!
+export const listenToTasksByDate = (
+  userId: string,
+  date: string,
+  callback: (tasks: Task[]) => void,
+) => {
+  if (!userId || !date) return () => {};
+
+  const tasksRef = collection(db, "users", userId, "tasks");
+  const q = query(tasksRef, where("date", "==", date));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const tasks: Task[] = [];
+      snapshot.forEach((docSnap) => {
+        const taskData = docSnap.data() as Task;
+        if (taskData) tasks.push(taskData);
+      });
+      callback(tasks.sort((a, b) => (a.order || 0) - (b.order || 0)));
+    },
+    (error) => {
+      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
+    },
+  );
+};
+
+// Real-time listener for records
+export const listenToDayRecords = (
+  userId: string,
+  callback: (records: DayRecord[]) => void,
+) => {
+  if (!userId) return () => {};
+
+  const recordsRef = collection(db, "users", userId, "dayRecords");
+
+  return onSnapshot(
+    recordsRef,
+    (snapshot) => {
+      const records: DayRecord[] = [];
+      snapshot.forEach((docSnap) => {
+        const recordData = docSnap.data() as DayRecord;
+        if (recordData) records.push(recordData);
+      });
+      callback(records.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
+    },
+    (error) => {
+      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
+    },
+  );
 };

@@ -166,6 +166,117 @@
     background-color: var(--primary-dim);
     color: white;
   }
+
+  /* ---------- INSTANT LIGHT MODE OVERRIDES ---------- */
+  html.light {
+    --background: #f4f4f6;
+    --surface: #ffffff;
+    --on-surface: #111111;
+    --on-surface-variant: #666666;
+    --outline: rgba(0, 0, 0, 0.1);
+  }
+
+  html.light body {
+    background-color: #f4f4f6 !important;
+    color: #111111 !important;
+  }
+  
+  html.light .bg-black {
+    background-color: #f4f4f6 !important;
+  }
+  
+  html.light .bg-\[\#0E0E0E\],
+  html.light .bg-\[\#1A1A1A\],
+  html.light .bg-\[\#0A0A0A\] {
+    background-color: #ffffff !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+  }
+  
+  html.light .bg-\[\#111111\] {
+    background-color: #f7f7f9 !important;
+  }
+
+  html.light .from-\[\#0A0A0A\] {
+    --tw-gradient-from: #ffffff !important;
+  }
+
+  html.light .to-\[\#111111\] {
+    --tw-gradient-to: #f7f7f9 !important;
+  }
+
+  html.light .bg-\[\#E2E2E2\] {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+  }
+
+  html.light .bg-\[rgba\(14\,14\,14\,0\.8\)\] {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  html.light .text-white {
+    color: #111111 !important;
+  }
+  
+  html.light .text-\[\#E2E2E2\] {
+    color: #333333 !important;
+  }
+  
+  html.light .text-\[\#464555\] {
+    color: #888888 !important;
+  }
+  
+  html.light .border-\[rgba\(70\,69\,85\,0\.2\)\] {
+    border-color: rgba(0,0,0,0.08) !important;
+  }
+  
+  html.light .border-white\/10,
+  html.light .border-white\/5 {
+    border-color: rgba(0,0,0,0.1) !important;
+  }
+  
+  html.light .bg-white\/5 {
+    background-color: rgba(0,0,0,0.03) !important;
+  }
+
+  html.light .bg-white\/20 {
+    background-color: rgba(0,0,0,0.15) !important;
+  }
+
+  html.light .bg-black\/40 {
+    background-color: rgba(0,0,0,0.04) !important;
+  }
+
+  html.light .bg-black\/50,
+  html.light .bg-black\/60,
+  html.light .bg-black\/80,
+  html.light .bg-black\/90 {
+    background-color: rgba(255,255,255,0.7) !important;
+  }
+
+  html.light .text-white\/50 {
+    color: rgba(0,0,0,0.6) !important;
+  }
+
+  html.light .shadow-\[0_5px_15px_rgba\(0\,0\,0\,0\.5\)\] {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  html.light .premium-card {
+    background: #ffffff !important;
+    border-color: rgba(0,0,0,0.08) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+  }
+  
+  html.light .tonal-card {
+    background: #ffffff !important;
+    border-color: rgba(0,0,0,0.08) !important;
+  }
+  
+  html.light .glass-card {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(0,0,0,0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  }
 }
 
 /* ---------- COMPONENT CLASSES ----------

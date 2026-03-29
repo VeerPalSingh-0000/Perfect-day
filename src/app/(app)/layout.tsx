@@ -6,19 +6,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore } from "@/stores/useDataStore";
 import { initAuthListener } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
-
-function AppSkeleton() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-black">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#4F44E2] border-t-transparent" />
-        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#464555] animate-pulse">
-          Loading
-        </span>
-      </div>
-    </div>
-  );
-}
+import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
 // Helper to get today as YYYY-MM-DD
 function getTodayStr() {
@@ -34,7 +22,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isDataLoaded = useDataStore((s) => s.isDataLoaded);
   const router = useRouter();
 
-  // Start the singleton auth listener
   useEffect(() => {
     initAuthListener();
   }, []);
@@ -49,15 +36,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Fetch ALL data once when user is available
   useEffect(() => {
     if (user && !isDataLoaded) {
-      fetchAll(user.uid, getTodayStr());
+      fetchAll(user.uid, getTodayStr(), user.email);
     }
   }, [user, isDataLoaded, fetchAll]);
 
-  if (!isInitialized) return <AppSkeleton />;
-  if (!user) return <AppSkeleton />;
+  if (!isInitialized) return <LoadingSkeleton />;
+  if (!user) return <LoadingSkeleton />;
 
   // Show skeleton only on the very first data load
-  if (!isDataLoaded) return <AppSkeleton />;
+  if (!isDataLoaded) return <LoadingSkeleton />;
 
   return (
     <div className="flex min-h-screen bg-black w-full">

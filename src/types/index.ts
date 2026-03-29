@@ -1,3 +1,5 @@
+export type HabitFrequency = 'daily' | 'mon-sat' | 'alternate' | 'weekdays' | 'weekends';
+
 export interface Task {
   id: string;
   userId: string;
@@ -5,6 +7,7 @@ export interface Task {
   category: TaskCategory;
   isCompleted: boolean;
   isHabit: boolean;
+  frequency?: HabitFrequency;
   date: string; // YYYY-MM-DD format
   order: number;
   createdAt: number; // Unix timestamp for easier sorting
@@ -20,6 +23,14 @@ export interface DayRecord {
   completionPercentage: number;
   rating: DayRating;
   tasks: Task[];
+  createdAt: number;
+}
+
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL: string;
   createdAt: number;
 }
 

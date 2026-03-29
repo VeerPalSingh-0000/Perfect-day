@@ -1,3 +1,5 @@
 {
-  "css.lint.unknownAtRules": "ignore"
+  "css.lint.unknownAtRules": "ignore",
+  "java.jdt.ls.java.home": "C:/Program Files/Eclipse Adoptium/jdk-17.0.18.8-hotspot",
+  "java.import.gradle.java.home": "C:/Program Files/Eclipse Adoptium/jdk-17.0.18.8-hotspot"
 }

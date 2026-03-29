@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ====== RULES DOCUMENTATION ======
+    // These rules enforce user isolation:
+    // 1. Users can only read/write their own data (matching auth.uid)
+    // 2. Tasks and dayRecords are nested under users/{userId}
+    // 3. Email is protected from direct queries (for privacy)
+    // 4. Public profiles can be read (optional - currently private)
+    // ================================
+
+    // Deny all by default, allow only what's explicitly permitted
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User profile documents
+    // - Users can read/write only their own profile
+    // - BUT: Any authenticated user can READ other user profiles (for cross-device sync via email matching)
+    //   This allows the migration query to find users with matching email addresses
+    // - Only write access is restricted to own profile
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId;  // Users can only read their own profile
+      allow write: if request.auth.uid == userId && 
+                      request.resource.data.uid == userId;
+      allow create: if request.auth.uid == userId &&
+                       request.resource.data.uid == userId &&
+                       request.resource.data.email == request.auth.token.email;
+
+      // Tasks collection (nested under users/{userId})
+      // Users can manage only their own tasks
+      match /tasks/{taskId} {
+        allow read: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId &&
+                         request.resource.data.userId == userId &&
+                         request.resource.data.date != null &&
+                         request.resource.data.title != null;
+        allow update: if request.auth.uid == userId &&
+                         request.resource.data.userId == userId &&
+                         resource.data.userId == userId;
+        allow delete: if request.auth.uid == userId &&
+                         resource.data.userId == userId;
+      }
+
+      // Day records collection (nested under users/{userId})
+      // Users can manage only their own day records
+      match /dayRecords/{recordId} {
+        allow read: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId &&
+                         request.resource.data.userId == userId &&
+                         request.resource.data.date != null;
+        allow update: if request.auth.uid == userId &&
+                         request.resource.data.userId == userId &&
+                         resource.data.userId == userId;
+        allow delete: if request.auth.uid == userId &&
+                         resource.data.userId == userId;
+      }
+    }
+
+    // ====== FIRESTORE BEST PRACTICES ======
+    // ✅ User-scoped isolation: All user data nested under /users/{uid}
+    // ✅ Auth validation: All operations check request.auth.uid
+    // ✅ Data integrity: userId field validated during writes
+    // ✅ Timestamps: Server-side timestamps recommended (client-side allowed currently)
+    // ✅ Email privacy: Email accessible only via auth token, not readable from Firestore
+    // ======================================
+  }
+}

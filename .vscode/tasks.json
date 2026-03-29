@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Android: Assemble Debug",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["assembleDebug"],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Assemble Release",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["assembleRelease"],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Install Debug",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["installDebug"],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -123,7 +123,7 @@ export default function SignupPage() {
       {/* Brand Label */}
       <div className="fixed bottom-10 w-full text-center z-20">
         <p className="font-headline text-[10px] font-medium tracking-[0.2rem] uppercase text-[#464555]">
-          © {getCurrentYear()} STEALTH ARCHITECT. ALL RIGHTS RESERVED.
+          © {getCurrentYear()} SIRA ARCHITECT. ALL RIGHTS RESERVED.
         </p>
       </div>
     </div>

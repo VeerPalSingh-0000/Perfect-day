@@ -1,35 +1,132 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import React, { useState } from "react";
 import { getCurrentYear } from "@/lib/utils";
+import { Modal } from "@/components/ui/Modal";
 
 export function StealthFooter() {
+  const [modalContent, setModalContent] = useState<"privacy" | "terms" | "support" | null>(null);
+
   return (
-    <footer className="mt-8 sm:mt-12 flex w-full flex-col items-center gap-4 sm:gap-6 border-t border-[#464555]/10 py-8 sm:py-12 pb-24 md:pb-12">
-      <div className="flex gap-4 sm:gap-8">
-        <Link
+    <footer className="mt-8 sm:mt-12 flex w-full flex-col items-center gap-4 sm:gap-6 border-t border-[#464555]/10 py-8 sm:py-12 pb-24 md:pb-12 text-[#E2E2E2]">
+      <div className="flex gap-4 sm:gap-8 cursor-pointer">
+        <button
+          onClick={() => setModalContent("privacy")}
           className="font-['Plus_Jakarta_Sans'] text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.1rem] text-[#464555] transition-colors hover:text-[#C4C0FF]"
-          href="#"
         >
           Privacy
-        </Link>
-        <Link
+        </button>
+        <button
+          onClick={() => setModalContent("terms")}
           className="font-['Plus_Jakarta_Sans'] text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.1rem] text-[#464555] transition-colors hover:text-[#C4C0FF]"
-          href="#"
         >
           Terms
-        </Link>
-        <Link
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            setModalContent("support");
+          }}
           className="font-['Plus_Jakarta_Sans'] text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.1rem] text-[#464555] transition-colors hover:text-[#C4C0FF]"
-          href="#"
         >
           Support
-        </Link>
+        </button>
       </div>
       <p className="font-['Plus_Jakarta_Sans'] text-[8px] sm:text-[10px] font-medium uppercase tracking-[0.1rem] text-[#464555] text-center px-2">
-        © {getCurrentYear()} STEALTH ARCHITECT. ALL RIGHTS RESERVED.
+        © {getCurrentYear()} SIRA ARCHITECT. ALL RIGHTS RESERVED.
       </p>
+
+      <Modal
+         isOpen={modalContent !== null}
+         onClose={() => setModalContent(null)}
+         title={
+           modalContent === "privacy" ? "PRIVACY PROTOCOL" : 
+           modalContent === "terms" ? "TERMS OF SERVICE" : 
+           "SYSTEM SUPPORT"
+         }
+      >
+         <div className="space-y-6 text-[#E2E2E2]">
+          <div className="flex items-center gap-4 border-b border-[#464555]/20 pb-4">
+            <div className="h-12 w-12 rounded-xl bg-[#4F44E2]/10 border border-[#4F44E2]/20 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[#4F44E2] text-2xl">
+                {modalContent === "privacy" ? "visibility_off" : 
+                 modalContent === "terms" ? "gavel" : 
+                 "support_agent"}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold tracking-wide">
+                {modalContent === "privacy" ? "Data Obfuscation Active" : 
+                 modalContent === "terms" ? "Architect Agreement" : 
+                 "Direct Communication Channel"}
+              </h3>
+              <p className="text-[11px] text-[#464555] mt-1">
+                {modalContent === "support" ? "Ready to assist" : `Last updated: ${getCurrentYear()}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-xs leading-relaxed text-[#888890] max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+            {modalContent === "privacy" ? (
+               <>
+                  <p>
+                    All localized and synchronized data is heavily encrypted. We monitor absolute zero
+                    telemetry unprompted. SIRA architect protocols operate strictly under blackout conditions.
+                  </p>
+                  <p>
+                    Biometrics, geolocation, and cognitive logging data is completely decoupled from any personal identifier.
+                  </p>
+               </>
+            ) : modalContent === "terms" ? (
+               <>
+                  <p>
+                    By activating your SIRA instance, you agree to optimize your daily routines.
+                    Failure to adhere to personal directives is solely on the Architect (you).
+                  </p>
+                  <p>
+                    We guarantee 99.9% uptime on synchronized targets, providing node verification
+                    is maintained. Disconnects resulting from local interference are not covered under warranty.
+                  </p>
+               </>
+            ) : (
+               <div className="flex flex-col items-center justify-center py-4 space-y-4">
+                 <p className="text-center">
+                   If you are experiencing system synchronization errors, need architectural guidance, or want to submit an anomaly report, please contact our support desk:
+                 </p>
+                 <button 
+                    onClick={() => {
+                        navigator.clipboard.writeText("sveerpal7727@gmail.com");
+                        alert("Email copied to clipboard!");
+                    }}
+                    className="p-4 rounded-xl border border-white/10 bg-[#0A0A0A] w-full text-center group transition-colors hover:bg-white/5 active:bg-white/10 cursor-pointer"
+                    title="Click to copy"
+                 >
+                    <p className="font-mono text-sm font-bold text-[#E2E2E2] group-hover:text-[#4F44E2] transition-colors">sveerpal7727@gmail.com</p>
+                    <p className="text-[10px] text-[#464555] mt-1 font-bold tracking-widest uppercase">Tap to copy</p>
+                 </button>
+                 <a 
+                   href="mailto:sveerpal7727@gmail.com"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   className="mt-2 inline-flex items-center gap-2 rounded-lg bg-[#4F44E2]/20 border border-[#4F44E2]/50 px-4 py-2 text-xs font-bold text-[#C4C0FF] hover:bg-[#4F44E2]/30 transition-colors"
+                 >
+                   <span className="material-symbols-outlined text-[16px]">send</span>
+                   Compose Message
+                 </a>
+               </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-[#464555]/20">
+            <button
+              onClick={() => setModalContent(null)}
+              className="w-full py-3 rounded-lg bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors"
+            >
+              Acknowledge
+            </button>
+          </div>
+        </div>
+      </Modal>
     </footer>
   );
 }

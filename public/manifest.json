@@ -1,21 +1,25 @@
 {
-  "name": "Perfect Day",
-  "short_name": "PerfectDay",
-  "description": "Daily task tracker and day rater.",
+  "name": "Perfect Day – Daily Habit Tracker",
+  "short_name": "Perfect Day",
+  "description": "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
   "start_url": "/today",
   "display": "standalone",
-  "background_color": "#0F1123",
-  "theme_color": "#6C63FF",
+  "background_color": "#000000",
+  "theme_color": "#4F44E2",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "lifestyle", "utilities"],
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/logo.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
