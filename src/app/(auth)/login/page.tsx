@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { signInWithGoogle } from "@/lib/auth";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -21,9 +22,13 @@ export default function LoginPage() {
     }
   }, [user, isLoading, isInitialized, router]);
 
-  // Show loading skeleton while checking auth state
-  if (!isInitialized || isLoading) {
-    return <LoadingSkeleton />;
+  // Show nothing or skeleton while checking auth state or redirecting
+  if (!isInitialized || isLoading || user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-2 border-white/5 border-t-white/40 animate-spin" />
+      </div>
+    );
   }
 
   const handleGoogleSignIn = async () => {
@@ -47,10 +52,11 @@ export default function LoginPage() {
       {/* TopAppBar */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-[#464555]/15 flex items-center px-6 h-16 justify-center">
         <div className="flex items-center gap-2">
-          <img
+          <OptimizedImage
             src="/logo.png"
             alt="Sira Logo"
             className="w-8 h-8 sm:w-10 sm:h-10 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+            priority
           />
           <span className="text-[#E2E2E2] font-black tracking-[0.2em] uppercase text-base sm:text-lg font-headline">
             SIRA

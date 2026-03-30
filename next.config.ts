@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
+const isStaticExport =
+  process.env.NEXT_OUTPUT !== "server" && process.env.NODE_ENV === "production";
+
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(isStaticExport ? { output: "export" as const } : {}),
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },

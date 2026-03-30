@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { StealthFooter } from "@/components/layout/StealthFooter";
 import { updateUserProfile } from "@/lib/db";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const AVATARS = [
   "/avatars/avatar1.png",
@@ -179,9 +180,9 @@ export default function SettingsPage() {
                 className="relative h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-full border-2 border-[#4F44E2]/30 ring-4 ring-[#4F44E2]/10 shrink-0"
                 style={{ backgroundColor: "#000000" }}
               >
-                <img
+                <OptimizedImage
                   alt="User Avatar"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full"
                   src={profile?.photoURL || "/avatars/avatar1.png"}
                 />
                 {isUpdating && (
@@ -263,10 +264,10 @@ export default function SettingsPage() {
                           : "border-transparent grayscale hover:grayscale-0 opacity-60 hover:opacity-100 hover:border-white/20",
                       )}
                     >
-                      <img
+                      <OptimizedImage
                         src={avatar}
                         alt={`Avatar ${idx + 1}`}
-                        className="absolute h-full w-full object-cover pointer-events-none"
+                        className="absolute h-full w-full pointer-events-none"
                       />
                       {profile?.photoURL === avatar && (
                         <div className="absolute top-1 right-1 sm:top-2 sm:right-2 h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-[#4F44E2] flex items-center justify-center shadow-[0_0_10px_rgba(79,68,226,0.8)] z-10">

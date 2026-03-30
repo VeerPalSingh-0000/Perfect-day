@@ -1,0 +1,27 @@
+# Enable URL rewriting
+RewriteEngine On
+
+# Redirect errors to Next.js 404 generated HTML
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html
+
+# Force HTTPS (optional but good for production)
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^[^\.]+\.[^\.]+$
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Handle Next.js Export with trailingSlash: true
+# Next.js will generate folders with index.html inside
+# Apache will automatically try to serve index.html when a folder is requested.
+
+# If the request doesn't end in a slash, and it maps to a directory, append a slash
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteCond %{REQUEST_URI} !/$
+RewriteRule ^(.*)$ /$1/ [L,R=301]
+
+# If the requested file doesn't exist...
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Try to serve it as an HTML file anyway (in case trailingSlash is ever off)
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.*)$ /$1.html [L]

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 import { signOut } from "../../lib/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const NAV_ITEMS = [
   { href: "/today", label: "Focus", icon: "home" },
@@ -24,7 +25,12 @@ export function Sidebar() {
     <aside className="hidden md:flex w-64 h-screen bg-black sticky top-0 px-6 py-10 flex-col border-r border-[#464555]/15">
       {/* Logo */}
       <div className="flex items-center gap-2 mb-12 px-2">
-        <img src="/logo.png" alt="Sira Logo" className="w-12 h-12 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]" />
+        <OptimizedImage
+          src="/logo.png"
+          alt="Sira Logo"
+          className="w-12 h-12 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+          priority
+        />
         <span className="font-['Plus_Jakarta_Sans'] font-black tracking-[0.2em] text-lg text-[#E2E2E2] uppercase">
           SIRA
         </span>
@@ -33,10 +39,10 @@ export function Sidebar() {
       {/* Profile Summary */}
       <div className="mb-10 px-2 flex items-center gap-3">
         <div className="h-10 w-10 rounded-full border border-white/10 overflow-hidden shrink-0 bg-white/5">
-          <img 
-            src={profile?.photoURL || "/avatars/avatar1.png"} 
-            alt="User" 
-            className="h-full w-full object-cover"
+          <OptimizedImage
+            src={profile?.photoURL || "/avatars/avatar1.png"}
+            alt="User"
+            className="h-full w-full"
           />
         </div>
         <div className="min-w-0">

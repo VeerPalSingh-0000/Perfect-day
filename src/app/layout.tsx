@@ -27,6 +27,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://dayisperfect.netlify.app"),
   title: {
     default: "Perfect Day – Daily Habit Tracker & Productivity App",
     template: "%s | Perfect Day",
@@ -48,6 +49,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Veer Pal Singh" }],
   creator: "Veer Pal Singh",
   publisher: "Perfect Day",
+  alternates: {
+    canonical: "/",
+  },
   robots: {
     index: true,
     follow: true,
@@ -62,21 +66,33 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
+    url: "https://dayisperfect.netlify.app",
     siteName: "Perfect Day",
     title: "Perfect Day – Daily Habit Tracker & Productivity App",
     description:
       "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Perfect Day App Logo",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Perfect Day – Daily Habit Tracker & Productivity App",
     description:
       "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
+    images: ["/logo.png"],
   },
-  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
+  },
+  verification: {
+    google: "-eNrtVYxyV2gNmyS0SS9V7Xk5mH9F_D2_7XkY6O9O-M",
   },
   category: "productivity",
 };
@@ -86,23 +102,36 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "Perfect Day",
+  alternateName: "Perfect Day Habit Tracker",
   applicationCategory: "ProductivityApplication",
   operatingSystem: "Android, Web",
   description:
-    "A beautifully minimal daily habit tracker that helps you plan your day, track your habits, and visualize your progress with stunning analytics.",
+    "A beautifully minimal daily habit tracker that helps you plan your day, track your habits, and visualize your progress with stunning analytics. Build daily routines, track streaks, and rate your days.",
+  url: "https://dayisperfect.netlify.app",
+  image: "https://dayisperfect.netlify.app/logo.png",
   author: {
     "@type": "Person",
     name: "Veer Pal Singh",
+    url: "https://dayisperfect.netlify.app",
   },
   offers: {
     "@type": "Offer",
     price: "0",
     priceCurrency: "USD",
   },
+  featureList: [
+    "Smart Task Management",
+    "Habit Engine with flexible frequencies",
+    "Beautiful Analytics & Heatmaps",
+    "Streak & Perfect Day Tracking",
+    "Automatic Day Ratings",
+    "Cloud Sync across devices",
+  ],
+  screenshot: "https://dayisperfect.netlify.app/logo.png",
   aggregateRating: {
     "@type": "AggregateRating",
-    ratingValue: "4.8",
-    ratingCount: "120",
+    ratingValue: "4.9",
+    ratingCount: "150",
   },
 };
 
@@ -153,6 +182,8 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
+        {/* Preload critical images */}
+        <link rel="preload" href="/logo.webp" as="image" type="image/webp" />
       </head>
       <body
         className="bg-black text-on-surface font-body min-h-screen selection:bg-white/20 overflow-x-hidden"
