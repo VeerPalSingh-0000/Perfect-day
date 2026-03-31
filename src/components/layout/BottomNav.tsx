@@ -6,11 +6,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 
 const navItems = [
-  { id: "focus", label: "Focus", icon: "home", href: "/today/" },
-  { id: "journey", label: "Journey", icon: "explore", href: "/history/" },
-  { id: "stats", label: "Stats", icon: "bar_chart", href: "/analytics/" },
-  { id: "habits", label: "Habits", icon: "event_repeat", href: "/habits/" },
-  { id: "profile", label: "Profile", icon: "person", href: "/settings/" },
+  { id: "focus", label: "Focus", icon: "home", href: "/today" },
+  { id: "journey", label: "Journey", icon: "explore", href: "/history" },
+  { id: "stats", label: "Stats", icon: "bar_chart", href: "/analytics" },
+  { id: "habits", label: "Habits", icon: "event_repeat", href: "/habits" },
+  { id: "profile", label: "Profile", icon: "person", href: "/settings" },
 ];
 
 export function BottomNav() {
@@ -21,12 +21,12 @@ export function BottomNav() {
       <div className="mx-auto flex max-w-md items-center justify-between px-2 pb-2">
         {navItems.map((item) => {
           const isActive =
-            pathname === item.href || pathname === item.href.replace(/\/$/, "");
+            pathname === item.href || pathname === item.href + "/";
           return (
             <Link
               key={item.href}
               href={item.href}
-              prefetch={true}
+              prefetch={false}
               className={cn(
                 "flex flex-col items-center justify-center transition-all duration-200 active:scale-90 p-1 sm:p-2",
                 isActive

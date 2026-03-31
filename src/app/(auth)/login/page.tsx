@@ -18,7 +18,7 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (isInitialized && !isLoading && user) {
-      router.replace("/today/");
+      router.replace("/today");
     }
   }, [user, isLoading, isInitialized, router]);
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
       setError(null);
       setIsSigningIn(true);
       const signInUser = await signInWithGoogle();
-      if (signInUser) router.push("/today/");
+      if (signInUser) router.push("/today");
     } catch (err: unknown) {
       const message =
         err instanceof Error

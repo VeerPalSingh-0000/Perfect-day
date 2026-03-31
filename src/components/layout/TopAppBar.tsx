@@ -35,7 +35,7 @@ export function TopAppBar({
         {variant === "brand" ? (
           <div
             className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 md:hidden cursor-pointer"
-            onClick={() => router.push("/today/")}
+            onClick={() => router.push("/today")}
           >
             <OptimizedImage
               src="/logo.png"

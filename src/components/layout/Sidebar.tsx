@@ -9,11 +9,11 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const NAV_ITEMS = [
-  { href: "/today/", label: "Focus", icon: "home" },
-  { href: "/history/", label: "Journey", icon: "explore" },
-  { href: "/analytics/", label: "Stats", icon: "bar_chart" },
-  { href: "/habits/", label: "Habits", icon: "event_repeat" },
-  { href: "/settings/", label: "Profile", icon: "person" },
+  { href: "/today", label: "Focus", icon: "home" },
+  { href: "/history", label: "Journey", icon: "explore" },
+  { href: "/analytics", label: "Stats", icon: "bar_chart" },
+  { href: "/habits", label: "Habits", icon: "event_repeat" },
+  { href: "/settings", label: "Profile", icon: "person" },
 ];
 
 export function Sidebar() {
@@ -59,12 +59,12 @@ export function Sidebar() {
       <nav className="flex-1 flex flex-col gap-2">
         {NAV_ITEMS.map((item) => {
           const isActive =
-            pathname === item.href || pathname === item.href.replace(/\/$/, "");
+            pathname === item.href || pathname === item.href + "/";
           return (
             <Link
               key={item.href}
               href={item.href}
-              prefetch={true}
+              prefetch={false}
               className={cn(
                 "flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300",
                 isActive

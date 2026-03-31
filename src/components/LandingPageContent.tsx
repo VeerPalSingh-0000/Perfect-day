@@ -48,7 +48,7 @@ export function LandingPageContent() {
   // Immediate redirect logic
   useEffect(() => {
     if (isInitialized && !isLoading && user) {
-      router.replace("/today/");
+      router.replace("/today");
     }
   }, [user, isLoading, isInitialized, router]);
 

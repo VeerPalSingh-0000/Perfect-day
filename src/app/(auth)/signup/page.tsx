@@ -15,7 +15,7 @@ export default function SignupPage() {
       setError(null);
       const user = await signInWithGoogle();
       if (user) {
-        router.push("/today/");
+        router.push("/today");
       }
     } catch (err: unknown) {
       const errorMessage =
