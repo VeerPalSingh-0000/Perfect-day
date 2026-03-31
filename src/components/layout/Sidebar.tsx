@@ -27,7 +27,7 @@ export function Sidebar() {
       <div className="flex items-center gap-2 mb-12 px-2">
         <OptimizedImage
           src="/logo.png"
-          alt="Sira Logo"
+          alt="SIRA Logo"
           className="w-12 h-12 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
           priority
         />
@@ -40,14 +40,14 @@ export function Sidebar() {
       <div className="mb-10 px-2 flex items-center gap-3">
         <div className="h-10 w-10 rounded-full border border-white/10 overflow-hidden shrink-0 bg-white/5">
           <OptimizedImage
-            src={profile?.photoURL || "/avatars/avatar1.png"}
+            src={profile?.photoURL || "/avatars/avatar1.webp"}
             alt="User"
             className="h-full w-full"
           />
         </div>
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-widest text-white truncate">
-            {profile?.displayName || user?.displayName || "Sira User"}
+            {profile?.displayName || user?.displayName || "Sira Architect"}
           </p>
           <p className="text-[9px] font-bold text-[#464555] uppercase tracking-tighter truncate opacity-70">
             {profile?.email || user?.email || "architect"}

@@ -40,6 +40,7 @@ interface DataState {
   // Loading
   isDataLoaded: boolean;
   isRefreshing: boolean;
+  todayFocus: string; // 3D. Daily Intention
 
   // Subscriptions
   unsubTasks: (() => void) | null;
@@ -51,6 +52,7 @@ interface DataState {
   deleteTask: (taskId: string) => void;
   toggleTaskCompletion: (taskId: string) => void;
   setRecords: (records: DayRecord[]) => void;
+  setTodayFocus: (word: string) => void;
   reset: () => void;
 
   // Listeners
@@ -69,6 +71,7 @@ export const useDataStore = create<DataState>()(
       records: [],
       isDataLoaded: false,
       isRefreshing: false,
+      todayFocus: "",
       unsubTasks: null,
       unsubRecords: null,
 
@@ -87,6 +90,8 @@ export const useDataStore = create<DataState>()(
         })),
 
       setRecords: (records) => set({ records }),
+
+      setTodayFocus: (word) => set({ todayFocus: word }),
 
       reset: () => {
         const { unsubTasks, unsubRecords } = get();
@@ -198,6 +203,7 @@ export const useDataStore = create<DataState>()(
       partialize: (state) => ({
         tasks: state.tasks,
         records: state.records,
+        todayFocus: state.todayFocus,
       }),
     },
   ),

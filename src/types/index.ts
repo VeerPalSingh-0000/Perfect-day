@@ -24,6 +24,7 @@ export interface DayRecord {
   rating: DayRating;
   tasks: Task[];
   createdAt: number;
+  focusWord?: string; // Daily Intention
 }
 
 export interface UserProfile {
@@ -37,3 +38,13 @@ export interface UserProfile {
 export type DayRating = 'perfect' | 'great' | 'good' | 'okay' | 'rough' | 'none';
 
 export type TaskCategory = 'health' | 'work' | 'personal' | 'learning' | 'fitness' | 'other';
+
+export interface Achievement {
+  id: string;
+  type: 'milestone' | 'streak' | 'stat';
+  title: string;
+  description: string;
+  icon: string;
+  unlockedAt: number;
+  isViewed: boolean;
+}

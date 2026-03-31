@@ -40,7 +40,7 @@ export function StealthFooter() {
          isOpen={modalContent !== null}
          onClose={() => setModalContent(null)}
          title={
-           modalContent === "privacy" ? "PRIVACY PROTOCOL" : 
+           modalContent === "privacy" ? "PRIVACY POLICY" : 
            modalContent === "terms" ? "TERMS OF SERVICE" : 
            "SYSTEM SUPPORT"
          }
@@ -49,16 +49,16 @@ export function StealthFooter() {
           <div className="flex items-center gap-4 border-b border-[#464555]/20 pb-4">
             <div className="h-12 w-12 rounded-xl bg-[#4F44E2]/10 border border-[#4F44E2]/20 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[#4F44E2] text-2xl">
-                {modalContent === "privacy" ? "visibility_off" : 
+                {modalContent === "privacy" ? "policy" : 
                  modalContent === "terms" ? "gavel" : 
                  "support_agent"}
               </span>
             </div>
             <div>
               <h3 className="text-sm font-bold tracking-wide">
-                {modalContent === "privacy" ? "Data Obfuscation Active" : 
-                 modalContent === "terms" ? "Architect Agreement" : 
-                 "Direct Communication Channel"}
+                {modalContent === "privacy" ? "Data Privacy" : 
+                 modalContent === "terms" ? "Terms of Use" : 
+                 "Support & Feedback"}
               </h3>
               <p className="text-[11px] text-[#464555] mt-1">
                 {modalContent === "support" ? "Ready to assist" : `Last updated: ${getCurrentYear()}`}
@@ -70,22 +70,23 @@ export function StealthFooter() {
             {modalContent === "privacy" ? (
                <>
                   <p>
-                    All localized and synchronized data is heavily encrypted. We monitor absolute zero
-                    telemetry unprompted. SIRA architect protocols operate strictly under blackout conditions.
+                    Your data is strictly yours. Tasks, habits, and progress records are tied 
+                    directly to your account.
                   </p>
                   <p>
-                    Biometrics, geolocation, and cognitive logging data is completely decoupled from any personal identifier.
+                    Data is synced securely to enable cross-device functionality. We do not sell your 
+                    data to third parties or run intrusive analytics.
                   </p>
                </>
             ) : modalContent === "terms" ? (
                <>
                   <p>
-                    By activating your SIRA instance, you agree to optimize your daily routines.
-                    Failure to adhere to personal directives is solely on the Architect (you).
+                    By using SIRA, you agree to use the service for its intended purpose: 
+                    building habits and tracking personal tasks.
                   </p>
                   <p>
-                    We guarantee 99.9% uptime on synchronized targets, providing node verification
-                    is maintained. Disconnects resulting from local interference are not covered under warranty.
+                    While we strive for perfect uptime and cross-device sync, we are not liable for 
+                    any data loss. Please ensure you have a stable network connection to sync changes.
                   </p>
                </>
             ) : (

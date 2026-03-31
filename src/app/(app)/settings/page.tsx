@@ -10,13 +10,22 @@ import { StealthFooter } from "@/components/layout/StealthFooter";
 import { updateUserProfile } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
+import { useAchievementStore } from "@/stores/useAchievementStore";
+
+const ACHIEVEMENT_LIST = [
+  { id: "first_perfect", title: "Perfect Day", icon: "🌟", desc: "Finish 100% of tasks" },
+  { id: "streak_7", title: "Relentless", icon: "🔥", desc: "7-day streak" },
+  { id: "streak_30", title: "Unstoppable", icon: "💎", desc: "30-day streak" },
+  { id: "tasks_100", title: "Century", icon: "🏆", desc: "100 tasks completed" },
+  { id: "early_bird", title: "Early Bird", icon: "🐦", desc: "Finish before noon" },
+];
 
 const AVATARS = [
-  "/avatars/avatar1.png",
-  "/avatars/avatar2.png",
-  "/avatars/avatar3.png",
-  "/avatars/avatar4.png",
-  "/avatars/avatar5.png",
+  "/avatars/avatar1.webp",
+  "/avatars/avatar2.webp",
+  "/avatars/avatar3.webp",
+  "/avatars/avatar4.webp",
+  "/avatars/avatar5.webp",
 ];
 
 import { Modal } from "@/components/ui/Modal";
@@ -30,6 +39,8 @@ export default function SettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [isDataProtocolsOpen, setIsDataProtocolsOpen] = useState(false);
+  
+  const unlockedAchievements = useAchievementStore((state) => state.achievements);
 
   // Theme state from store
   const theme = useThemeStore((state) => state.theme);
@@ -124,8 +135,8 @@ export default function SettingsPage() {
         localStorage.setItem("push_enabled", "true");
         // Create a test notification
         new Notification("Notifications Enabled", {
-          body: "You will now receive encrypted alerts.",
-          icon: "/avatars/avatar1.png",
+          body: "You will now receive reminders.",
+          icon: "/avatars/avatar1.webp",
         });
       } else {
         alert(
@@ -168,6 +179,35 @@ export default function SettingsPage() {
       <TopAppBar variant="title" title="Settings" />
 
       <main className="mx-auto w-full max-w-2xl space-y-6 sm:space-y-10 px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 pb-4">
+        {/* 3A. Achievements Section */}
+        <section className="space-y-4">
+          <h2 className="pl-0 sm:pl-2 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#464555]">
+            ACHIEVEMENTS & MILESTONES
+          </h2>
+          <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
+            {ACHIEVEMENT_LIST.map((ach) => {
+              const isUnlocked = unlockedAchievements.some((a) => a.id === ach.id);
+              return (
+                <div 
+                  key={ach.id}
+                  className={cn(
+                    "flex min-w-[100px] flex-col items-center gap-2 rounded-xl border p-4 transition-all",
+                    isUnlocked 
+                      ? "border-[#C4C0FF]/30 bg-[#C4C0FF]/10 shadow-[0_0_20px_rgba(196,192,255,0.1)]" 
+                      : "border-white/5 bg-[#0A0A0A] opacity-40 grayscale"
+                  )}
+                >
+                  <span className="text-2xl">{ach.icon}</span>
+                  <div className="text-center">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#E2E2E2]">{ach.title}</p>
+                    <p className="text-[7px] font-medium text-[#464555] mt-0.5 leading-tight">{ach.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Account Section */}
         <section className="space-y-3 sm:space-y-4">
           <h2 className="pl-0 sm:pl-2 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#464555]">
@@ -183,7 +223,7 @@ export default function SettingsPage() {
                 <OptimizedImage
                   alt="User Avatar"
                   className="h-full w-full"
-                  src={profile?.photoURL || "/avatars/avatar1.png"}
+                  src={profile?.photoURL || "/avatars/avatar1.webp"}
                 />
                 {isUpdating && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -358,7 +398,7 @@ export default function SettingsPage() {
                   <p className="text-[10px] sm:text-[11px] font-medium text-[#464555] uppercase tracking-wide transition-colors duration-300">
                     {isNotificationsEnabled
                       ? "Alerts enabled"
-                      : "Encrypted alerts"}
+                      : "Reminders only"}
                   </p>
                 </div>
               </div>
@@ -510,40 +550,36 @@ export default function SettingsPage() {
       <Modal
         isOpen={isDataProtocolsOpen}
         onClose={() => setIsDataProtocolsOpen(false)}
-        title="DATA PROTOCOLS"
+        title="DATA PRIVACY"
       >
         <div className="space-y-6 text-[#E2E2E2]">
           <div className="flex items-center gap-4 border-b border-[#464555]/20 pb-4">
             <div className="h-12 w-12 rounded-xl bg-[#4F44E2]/10 border border-[#4F44E2]/20 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[#4F44E2] text-2xl">
-                shield_lock
+                security
               </span>
             </div>
             <div>
               <h3 className="text-sm font-bold tracking-wide">
-                End-to-End Encryption
+                Your Data Safety
               </h3>
               <p className="text-[11px] text-[#464555] mt-1">
-                Status: Active & Verified
+                Transparent and secure
               </p>
             </div>
           </div>
 
           <div className="space-y-4 text-xs leading-relaxed text-[#888890]">
             <p>
-              Your data is secured using AES-256 military-grade encryption
-              protocols. All incoming and outgoing streams are routed through
-              secure, non-traceable tunnels.
+              SIRA is designed to respect your privacy. All your tasks, habits, and daily records are securely tied to your personalized account.
             </p>
             <p>
-              Telemetry data is permanently scrubbed every 24 hours. The local
-              cache maintains a lightweight footprint to preserve battery and
-              device performance.
+              We automatically sync your data using industry-standard secure cloud infrastructure to ensure your information is safe and accessible across your devices.
             </p>
             <ul className="list-disc pl-4 space-y-2 mt-2">
-              <li>Biometric hashing locked</li>
-              <li>Network obfuscation running</li>
-              <li>No third-party trackers injected</li>
+              <li>No sensitive telemetry collection</li>
+              <li>Secure authentication powered by Google</li>
+              <li>No third-party tracking or advertisements</li>
             </ul>
           </div>
 

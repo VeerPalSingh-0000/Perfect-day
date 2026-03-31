@@ -21,6 +21,9 @@ import {
   getTimeBasedGreeting,
   getTodayDateString,
 } from "@/lib/utils";
+import { getQuoteOfDay } from "@/lib/quotes";
+import { useAchievementStore } from "@/stores/useAchievementStore";
+import { AchievementCelebration } from "@/components/ui/AchievementCelebration";
 
 export default function TodayPage() {
   const user = useAuthStore((s) => s.user);
@@ -28,7 +31,9 @@ export default function TodayPage() {
 
   const tasks = useDataStore((s) => s.tasks);
   const records = useDataStore((s) => s.records);
-  const { addTask, deleteTask, toggleTaskCompletion } = useDataStore.getState();
+  const todayFocus = useDataStore((s) => s.todayFocus);
+  const { addTask, deleteTask, toggleTaskCompletion, setTodayFocus } = useDataStore.getState();
+  const unlockAchievement = useAchievementStore((s) => s.unlockAchievement);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -45,6 +50,8 @@ export default function TodayPage() {
     day: "numeric",
   });
   const greeting = getTimeBasedGreeting();
+  const quote = getQuoteOfDay();
+  const [localFocus, setLocalFocus] = useState(todayFocus);
 
   // Derived state
   const completedTasks = tasks.filter((t) => t.isCompleted).length;
@@ -85,6 +92,70 @@ export default function TodayPage() {
   const displayPerfectDays =
     completionPercentage === 100 ? perfectDays + 1 : perfectDays;
 
+  // --- 3A. Achievement Monitoring ---
+  useEffect(() => {
+    // 1. One Hundred Club
+    const totalLifetimeTasks = records.reduce((acc, r) => acc + r.completedTasks, 0) + completedTasks;
+    if (totalLifetimeTasks >= 100) {
+      unlockAchievement({
+        id: "tasks_100",
+        title: "Century Club",
+        description: "You've crushed 100 tasks. Consistency is your middle name.",
+        icon: "🏆",
+        type: "stat"
+      });
+    }
+
+    // 2. Early Bird (All tasks done before noon)
+    if (totalTasks > 0 && completionPercentage === 100) {
+      const allDoneBeforeNoon = tasks.every(t => {
+        if (!t.completedAt) return false;
+        const hour = new Date(t.completedAt).getHours();
+        return hour < 12;
+      });
+      if (allDoneBeforeNoon) {
+        unlockAchievement({
+          id: "early_bird",
+          title: "Early Bird",
+          description: "Finished your entire day before noon? Incredible.",
+          icon: "🐦",
+          type: "milestone"
+        });
+      }
+    }
+
+    // 3. Streaks
+    if (displayStreak >= 7) {
+      unlockAchievement({
+        id: "streak_7",
+        title: "Relentless Week",
+        description: "A full week of 80%+ performance. You're on fire.",
+        icon: "🔥",
+        type: "streak"
+      });
+    }
+    if (displayStreak >= 30) {
+      unlockAchievement({
+        id: "streak_30",
+        title: "Unstoppable Month",
+        description: "30 days of excellence. This isn't a fluke, it's a lifestyle.",
+        icon: "💎",
+        type: "streak"
+      });
+    }
+
+    // 4. First Perfect Day
+    if (completionPercentage === 100) {
+      unlockAchievement({
+        id: "first_perfect",
+        title: "The Perfect Day",
+        description: "You finished every single task on your list. 100% absolute power.",
+        icon: "🌟",
+        type: "milestone"
+      });
+    }
+  }, [completionPercentage, completedTasks, totalTasks, displayStreak, records, tasks, unlockAchievement]);
+
   // Debounced auto-save
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -102,6 +173,7 @@ export default function TodayPage() {
         rating: calculateDayRating(completionPercentage),
         tasks,
         createdAt: Date.now(),
+        focusWord: localFocus,
       };
       saveDayRecord(record).catch((error) => {
         console.error("Failed to save day record:", error);
@@ -118,7 +190,13 @@ export default function TodayPage() {
     totalTasks,
     completedTasks,
     completionPercentage,
+    localFocus,
   ]);
+
+  const handleFocusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalFocus(e.target.value);
+    setTodayFocus(e.target.value);
+  };
 
   const handleSubmitTask = async (taskData: Partial<Task> & { id?: string }) => {
     if (!user) return;
@@ -270,13 +348,39 @@ export default function TodayPage() {
       <TopAppBar variant="brand" />
 
       <main className="mx-auto w-full max-w-4xl space-y-6 sm:space-y-8 md:space-y-10 px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 pb-4">
-        <section>
-          <h1 className="mb-1 font-headline text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#E2E2E2]">
-            {greeting}, {firstName}
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base font-medium uppercase tracking-wide text-[#464555]">
-            {todayDisplay}
-          </p>
+        <section className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div>
+              <h1 className="mb-1 font-headline text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter text-[#E2E2E2]">
+                {greeting}, {firstName}
+              </h1>
+              <p className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-[0.2em] text-[#464555]">
+                {todayDisplay}
+              </p>
+            </div>
+          </div>
+          
+          {/* 3D. Daily Focus Intention */}
+          <div className="mt-6 sm:mt-8 relative group">
+             <input 
+               type="text" 
+               value={localFocus}
+               onChange={handleFocusChange}
+               placeholder="Set your daily intention..." 
+               className="w-full bg-transparent border-none p-0 font-headline text-lg sm:text-2xl font-bold text-[#C4C0FF] placeholder:text-[#464555] focus:outline-none focus:ring-0"
+             />
+             <div className="h-px w-full bg-[#464555]/20 group-focus-within:bg-[#C4C0FF]/50 transition-all mt-1" />
+          </div>
+
+          {/* 3B. Motivational Quote */}
+          <div className="mt-8 rounded-xl border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-4 sm:p-5 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                <span className="material-symbols-outlined text-4xl">format_quote</span>
+             </div>
+             <p className="font-medium text-xs sm:text-sm text-[#8E8D99] italic leading-relaxed">
+               {quote}
+             </p>
+          </div>
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -517,6 +621,7 @@ export default function TodayPage() {
         initialData={editingTask}
       />
       <BottomNav />
+      <AchievementCelebration />
     </div>
   );
 }

@@ -116,7 +116,7 @@ export const initAuthListener = () => {
               uid: user.uid,
               displayName: user.displayName || "User",
               email: user.email || "",
-              photoURL: "/avatars/avatar1.png", // Default avatar
+              photoURL: "/avatars/avatar1.webp", // Default avatar
               createdAt: Date.now(),
             };
             updateUserProfile(user.uid, newProfile).then(() => {

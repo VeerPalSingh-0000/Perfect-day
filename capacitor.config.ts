@@ -5,11 +5,18 @@ const config: CapacitorConfig = {
   appName: "Perfect Day",
   webDir: "out",
   server: {
-    androidScheme: "https",
+    androidScheme: "http",
+    hostname: "localhost",
+    cleartext: true,
+    allowNavigation: [
+      "*.firebaseapp.com",
+      "*.googleapis.com",
+      "*.gstatic.com",
+    ],
   },
   plugins: {
     FirebaseAuthentication: {
-      skipNativeAuth: false,
+      skipNativeAuth: true,
       providers: ["google.com"],
     },
   },

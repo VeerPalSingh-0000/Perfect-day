@@ -32,7 +32,7 @@ export function TopAppBar({ variant = "brand", title, showSearch = false }: TopA
           <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 md:hidden cursor-pointer" onClick={() => router.push('/today')}>
             <OptimizedImage
               src="/logo.png"
-              alt="Sira Logo"
+              alt="SIRA Logo"
               className="w-8 h-8 sm:w-10 sm:h-10 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.25)]"
               priority
             />

@@ -3,6 +3,8 @@ import { Plus_Jakarta_Sans, Manrope } from "next/font/google";
 import "./globals.css";
 import ThemeInit from "@/components/ui/ThemeInit";
 import { AuthInitializer } from "@/components/AuthInitializer";
+import { InstallPWA } from "@/components/ui/InstallPWA";
+import { NotificationCenter } from "@/components/ui/NotificationCenter";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -29,26 +31,26 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://dayisperfect.netlify.app"),
   title: {
-    default: "Perfect Day – Daily Habit Tracker & Productivity App",
-    template: "%s | Perfect Day",
+    default: "SIRA – Daily Routine & Aesthetic Productivity App",
+    template: "%s | SIRA",
   },
   description:
-    "Build powerful daily routines with Perfect Day. Track habits, rate your days, analyze your productivity with beautiful analytics, and build unstoppable streaks. Free and open.",
+    "Build unstoppable daily routines with SIRA. Track habits, rate your days, and analyze your productivity with a beautiful stealth interface.",
   keywords: [
+    "sira",
     "habit tracker",
     "daily planner",
     "productivity app",
-    "perfect day",
-    "daily task tracker",
+    "sira architect",
+    "stealth task tracker",
     "routine builder",
     "streak tracker",
     "day rating app",
-    "daily routine app",
     "task management",
   ],
   authors: [{ name: "Veer Pal Singh" }],
   creator: "Veer Pal Singh",
-  publisher: "Perfect Day",
+  publisher: "SIRA",
   alternates: {
     canonical: "/",
   },
@@ -67,24 +69,24 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://dayisperfect.netlify.app",
-    siteName: "Perfect Day",
-    title: "Perfect Day – Daily Habit Tracker & Productivity App",
+    siteName: "SIRA",
+    title: "SIRA – Daily Routine & Aesthetic Productivity App",
     description:
-      "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
+      "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "Perfect Day App Logo",
+        alt: "SIRA App Logo",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Perfect Day – Daily Habit Tracker & Productivity App",
+    title: "SIRA – Daily Routine & Aesthetic Productivity App",
     description:
-      "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
+      "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
     images: ["/logo.png"],
   },
   icons: {
@@ -101,12 +103,12 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Perfect Day",
-  alternateName: "Perfect Day Habit Tracker",
+  name: "SIRA",
+  alternateName: "Sira Architect",
   applicationCategory: "ProductivityApplication",
   operatingSystem: "Android, Web",
   description:
-    "A beautifully minimal daily habit tracker that helps you plan your day, track your habits, and visualize your progress with stunning analytics. Build daily routines, track streaks, and rate your days.",
+    "A sleek and minimal aesthetic habit tracker that helps you plan your day, track your routines, and visualize your progress with stunning analytics. Developed for peak performance.",
   url: "https://dayisperfect.netlify.app",
   image: "https://dayisperfect.netlify.app/logo.png",
   author: {
@@ -120,9 +122,9 @@ const jsonLd = {
     priceCurrency: "USD",
   },
   featureList: [
-    "Smart Task Management",
-    "Habit Engine with flexible frequencies",
-    "Beautiful Analytics & Heatmaps",
+    "SIRA Task Management",
+    "Routine Engine with flexible frequencies",
+    "Stealth Analytics & Heatmaps",
     "Streak & Perfect Day Tracking",
     "Automatic Day Ratings",
     "Cloud Sync across devices",
@@ -177,11 +179,28 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        {/* Load Material Symbols with display=swap so text renders immediately */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        {/* Load Material Symbols asynchronously so it never blocks page render (critical for Android WebView) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var link = document.createElement('link');
+                  link.rel = 'stylesheet';
+                  link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
+                  link.crossOrigin = 'anonymous';
+                  document.head.appendChild(link);
+                } catch(e) {}
+              })();
+            `,
+          }}
         />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          />
+        </noscript>
         {/* Preload critical images */}
         <link rel="preload" href="/logo.webp" as="image" type="image/webp" />
       </head>
@@ -191,6 +210,8 @@ export default function RootLayout({
       >
         <ThemeInit />
         <AuthInitializer />
+        <NotificationCenter />
+        <InstallPWA />
         {children}
       </body>
     </html>

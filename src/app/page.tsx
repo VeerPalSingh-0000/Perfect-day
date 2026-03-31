@@ -1,15 +1,15 @@
 import { LandingPageContent } from "@/components/LandingPageContent";
 
 export const metadata = {
-  title: "Perfect Day – Daily Habit Tracker & Productivity App",
+  title: "SIRA – Daily Routine & Aesthetic Productivity App",
   description:
-    "Build powerful daily routines with Perfect Day. Track habits, rate your days, analyze your productivity with beautiful analytics, and build unstoppable streaks. Free, elegant, and powerful.",
+    "Build unstoppable daily routines with SIRA. Track habits, rate your days, and master your productivity with beautiful stealth analytics.",
   keywords: [
+    "sira",
     "habit tracker",
     "daily planner",
     "productivity app",
-    "perfect day",
-    "daily task tracker",
+    "sira architect",
     "routine builder",
     "streak tracker",
     "day rating app",
@@ -18,27 +18,27 @@ export const metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Perfect Day – Daily Habit Tracker & Productivity App",
+    title: "SIRA – Daily Routine & Aesthetic Productivity App",
     description:
-      "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
+      "Build unstoppable daily routines. Track habits, rate your days, and master your time.",
     type: "website",
     url: "https://dayisperfect.netlify.app",
     locale: "en_US",
-    siteName: "Perfect Day",
+    siteName: "SIRA",
     images: [
       {
         url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: "Perfect Day App Dashboard",
+        alt: "SIRA App Dashboard",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Perfect Day – Daily Habit Tracker & Productivity App",
+    title: "SIRA – Daily Routine & Aesthetic Productivity App",
     description:
-      "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
+      "Build unstoppable daily routines. Track habits, rate your days, and master your time.",
     images: ["/logo.png"],
   },
 };

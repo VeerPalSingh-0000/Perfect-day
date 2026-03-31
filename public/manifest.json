@@ -1,8 +1,8 @@
 {
-  "name": "Perfect Day – Daily Habit Tracker",
-  "short_name": "Perfect Day",
-  "description": "Build powerful daily routines. Track habits, rate your days, and build unstoppable streaks.",
-  "start_url": "/today",
+  "name": "SIRA – Daily Routine Tracker",
+  "short_name": "SIRA",
+  "description": "Build unstoppable daily routines. Track habits, rate your days, and master your time.",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#4F44E2",

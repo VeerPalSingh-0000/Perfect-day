@@ -54,8 +54,8 @@ export default function LoginPage() {
         <div className="flex items-center gap-2">
           <OptimizedImage
             src="/logo.png"
-            alt="Sira Logo"
-            className="w-8 h-8 sm:w-10 sm:h-10 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+            alt="SIRA Logo"
+            className="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
             priority
           />
           <span className="text-[#E2E2E2] font-black tracking-[0.2em] uppercase text-base sm:text-lg font-headline">

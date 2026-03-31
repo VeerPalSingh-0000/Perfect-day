@@ -72,7 +72,7 @@ export function LandingPageContent() {
             <source srcSet="/logo.webp" type="image/webp" />
             <img
               src="/logo.png"
-              alt="Perfect Day Logo"
+              alt="SIRA Logo"
               className="w-8 h-8 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
               width={32}
               height={32}
@@ -110,7 +110,7 @@ export function LandingPageContent() {
           </h1>
 
           <p className="mt-6 max-w-xl text-sm sm:text-base md:text-lg text-[#8E8D99] leading-relaxed font-medium">
-            Perfect Day is a beautifully minimal daily habit tracker that helps
+            SIRA is a sleek and minimal aesthetic habit tracker that helps
             you plan your day, track your habits, and visualize your progress
             with stunning analytics.
           </p>
@@ -160,7 +160,7 @@ export function LandingPageContent() {
               <span className="text-[#C4C0FF]">Win the Day</span>
             </h2>
             <p className="mt-4 text-sm sm:text-base text-[#8E8D99] max-w-lg mx-auto">
-              Designed for focus. Built for consistency. Perfect Day gives you
+              Designed for focus. Built for consistency. SIRA gives you
               the tools to show up every single day.
             </p>
           </div>
@@ -200,7 +200,7 @@ export function LandingPageContent() {
             <div className="pointer-events-none absolute top-0 right-0 h-[300px] w-[300px] rounded-full bg-[#4F44E2]/5 blur-[120px]" />
             <h2 className="font-headline text-2xl sm:text-3xl font-black tracking-tighter relative z-10">
               Start Building Your{" "}
-              <span className="text-[#7cf6ec]">Perfect Day</span>
+              <span className="text-[#7cf6ec]">Routine</span>
             </h2>
             <p className="mt-4 text-sm text-[#8E8D99] relative z-10">
               Join thousands who are transforming their daily routines. It takes
@@ -210,7 +210,7 @@ export function LandingPageContent() {
               href="/login"
               className="mt-8 inline-block rounded-full bg-[#E2E2E2] px-8 py-3.5 text-sm font-bold text-black uppercase tracking-widest hover:bg-white transition-all active:scale-95 relative z-10"
             >
-              Launch Perfect Day
+              Launch SIRA
             </Link>
           </div>
         </section>
@@ -218,7 +218,7 @@ export function LandingPageContent() {
         {/* Footer */}
         <footer className="border-t border-[#464555]/10 py-10 px-6 text-center">
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
-            © {new Date().getFullYear()} Perfect Day by Veer Pal Singh. All
+            © {new Date().getFullYear()} SIRA by Veer Pal Singh. All
             Rights Reserved.
           </p>
         </footer>
