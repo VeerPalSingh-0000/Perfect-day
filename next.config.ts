@@ -8,8 +8,8 @@ const isStaticExport =
 
 const nextConfig: NextConfig = {
   ...(isStaticExport ? { output: "export" as const } : {}),
-  // On Netlify, trailingSlash can conflict with pure App Router unless properly rewritten
-  trailingSlash: isStaticExport,
+  // Ensure we don't use trailing slashes for Capacitor to prevent folder routing 404s
+  trailingSlash: false,
   images: {
     unoptimized: true,
   },
