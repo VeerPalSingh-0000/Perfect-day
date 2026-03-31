@@ -15,11 +15,13 @@ export default function SignupPage() {
       setError(null);
       const user = await signInWithGoogle();
       if (user) {
-        router.push("/today");
+        router.push("/today/");
       }
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to sign up. Please try again.";
+        err instanceof Error
+          ? err.message
+          : "Failed to sign up. Please try again.";
       setError(errorMessage);
       console.error("Signup error:", err);
     }
@@ -36,7 +38,10 @@ export default function SignupPage() {
         <div className="glass-card rounded-xl p-10 flex flex-col items-center shadow-2xl border-white/5 bg-[#0A0A0A]/80">
           {/* Icon Header */}
           <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(255,255,255,0.15)] group hover:scale-110 transition-transform duration-500">
-            <span className="material-symbols-outlined text-black text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span
+              className="material-symbols-outlined text-black text-3xl"
+              style={{ fontVariationSettings: "'FILL' 1" }}
+            >
               star
             </span>
           </div>

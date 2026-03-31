@@ -9,11 +9,11 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 const NAV_ITEMS = [
-  { href: "/today", label: "Focus", icon: "home" },
-  { href: "/history", label: "Journey", icon: "explore" },
-  { href: "/analytics", label: "Stats", icon: "bar_chart" },
-  { href: "/habits", label: "Habits", icon: "event_repeat" },
-  { href: "/settings", label: "Profile", icon: "person" },
+  { href: "/today/", label: "Focus", icon: "home" },
+  { href: "/history/", label: "Journey", icon: "explore" },
+  { href: "/analytics/", label: "Stats", icon: "bar_chart" },
+  { href: "/habits/", label: "Habits", icon: "event_repeat" },
+  { href: "/settings/", label: "Profile", icon: "person" },
 ];
 
 export function Sidebar() {
@@ -58,7 +58,8 @@ export function Sidebar() {
       {/* Nav Links */}
       <nav className="flex-1 flex flex-col gap-2">
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive =
+            pathname === item.href || pathname === item.href.replace(/\/$/, "");
           return (
             <Link
               key={item.href}

@@ -48,11 +48,11 @@ export function LandingPageContent() {
   // Immediate redirect logic
   useEffect(() => {
     if (isInitialized && !isLoading && user) {
-      router.replace("/today");
+      router.replace("/today/");
     }
   }, [user, isLoading, isInitialized, router]);
 
-  // Prevent flash: If initialized and user exists, or if not initialized yet, 
+  // Prevent flash: If initialized and user exists, or if not initialized yet,
   // show a clean dark background to hide content flickering.
   if (!isInitialized || isLoading || user) {
     return (
@@ -110,9 +110,9 @@ export function LandingPageContent() {
           </h1>
 
           <p className="mt-6 max-w-xl text-sm sm:text-base md:text-lg text-[#8E8D99] leading-relaxed font-medium">
-            SIRA is a sleek and minimal aesthetic habit tracker that helps
-            you plan your day, track your habits, and visualize your progress
-            with stunning analytics.
+            SIRA is a sleek and minimal aesthetic habit tracker that helps you
+            plan your day, track your habits, and visualize your progress with
+            stunning analytics.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
@@ -160,8 +160,8 @@ export function LandingPageContent() {
               <span className="text-[#C4C0FF]">Win the Day</span>
             </h2>
             <p className="mt-4 text-sm sm:text-base text-[#8E8D99] max-w-lg mx-auto">
-              Designed for focus. Built for consistency. SIRA gives you
-              the tools to show up every single day.
+              Designed for focus. Built for consistency. SIRA gives you the
+              tools to show up every single day.
             </p>
           </div>
 
@@ -218,8 +218,8 @@ export function LandingPageContent() {
         {/* Footer */}
         <footer className="border-t border-[#464555]/10 py-10 px-6 text-center">
           <p className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
-            © {new Date().getFullYear()} SIRA by Veer Pal Singh. All
-            Rights Reserved.
+            © {new Date().getFullYear()} SIRA by Veer Pal Singh. All Rights
+            Reserved.
           </p>
         </footer>
       </main>

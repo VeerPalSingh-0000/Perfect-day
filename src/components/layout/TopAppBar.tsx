@@ -10,7 +10,11 @@ interface TopAppBarProps {
   showSearch?: boolean;
 }
 
-export function TopAppBar({ variant = "brand", title, showSearch = false }: TopAppBarProps) {
+export function TopAppBar({
+  variant = "brand",
+  title,
+  showSearch = false,
+}: TopAppBarProps) {
   const router = useRouter();
 
   return (
@@ -29,7 +33,10 @@ export function TopAppBar({ variant = "brand", title, showSearch = false }: TopA
         )}
 
         {variant === "brand" ? (
-          <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 md:hidden cursor-pointer" onClick={() => router.push('/today')}>
+          <div
+            className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2 md:hidden cursor-pointer"
+            onClick={() => router.push("/today/")}
+          >
             <OptimizedImage
               src="/logo.png"
               alt="SIRA Logo"
