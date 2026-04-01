@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useTrackerStore } from "@/stores/useTrackerStore";
 import { Modal } from "./Modal";
-import { Task, TaskCategory, HabitFrequency } from "@/types";
-
+import { Task, TaskCategory, HabitFrequency, TaskPriority } from "@/types";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { cn } from "@/lib/utils";
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,6 +27,12 @@ export function AddTaskModal({ isOpen, onClose, onSubmit, initialData }: AddTask
   const [category, setCategory] = useState<TaskCategory>("work");
   const [isHabit, setIsHabit] = useState(false);
   const [frequency, setFrequency] = useState<HabitFrequency>("daily");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
+  const [targetTime, setTargetTime] = useState<number>(0);
+  const [selectedTrackItIds, setSelectedTrackItIds] = useState<string[]>([]);
+  
+  const priorityMode = useSettingsStore((s) => s.priorityMode);
+  const { projects, topics, fetchTrackItData, isLinked: isTrackerLinked } = useTrackerStore();
 
   React.useEffect(() => {
     if (isOpen) {
@@ -33,14 +41,28 @@ export function AddTaskModal({ isOpen, onClose, onSubmit, initialData }: AddTask
         setCategory(initialData.category);
         setIsHabit(initialData.isHabit);
         setFrequency(initialData.frequency || "daily");
+        setPriority(initialData.priority || "medium");
+        setFrequency(initialData.frequency || "daily");
+        setPriority(initialData.priority || "medium");
+        setTargetTime(initialData.targetTime || 0);
+        setSelectedTrackItIds(initialData.linkedTrackItIds || []);
       } else {
         setTitle("");
         setCategory("work");
         setIsHabit(false);
         setFrequency("daily");
+        setPriority("medium");
+        setTargetTime(0);
+        setSelectedTrackItIds([]);
+      }
+      
+      if (isTrackerLinked) {
+        fetchTrackItData();
       }
     }
-  }, [isOpen, initialData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData, isTrackerLinked]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,15 +73,21 @@ export function AddTaskModal({ isOpen, onClose, onSubmit, initialData }: AddTask
       title: title.trim(),
       category,
       isHabit,
+      priority: priorityMode === 'advanced' ? priority : undefined,
+      targetTime: targetTime > 0 ? targetTime : undefined,
       frequency: isHabit ? frequency : undefined,
+      linkedTrackItIds: selectedTrackItIds.length > 0 ? selectedTrackItIds : undefined,
     });
     
     setTitle("");
     setCategory("work");
     setIsHabit(false);
     setFrequency("daily");
+    setPriority("medium");
+    setTargetTime(0);
     onClose();
   };
+
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={initialData ? "EDIT TASK" : "NEW TASK"}>
@@ -142,7 +170,123 @@ export function AddTaskModal({ isOpen, onClose, onSubmit, initialData }: AddTask
           )}
         </div>
 
+        {priorityMode === 'advanced' && (
+          <div className="space-y-3">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
+              Task Priority
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { id: "critical", label: "Critical", icon: "🔴", classes: "border-red-500/50 bg-red-500/10 text-red-100 hover:border-red-500 hover:bg-red-500/20" },
+                { id: "high", label: "High", icon: "🟠", classes: "border-orange-500/50 bg-orange-500/10 text-orange-100 hover:border-orange-500 hover:bg-orange-500/20" },
+                { id: "medium", label: "Medium", icon: "🟡", classes: "border-yellow-500/50 bg-yellow-500/10 text-yellow-100 hover:border-yellow-500 hover:bg-yellow-500/20" },
+                { id: "low", label: "Low", icon: "🔵", classes: "border-blue-500/50 bg-blue-500/10 text-blue-100 hover:border-blue-500 hover:bg-blue-500/20" },
+              ].map((p) => {
+                 const isSelected = priority === p.id;
+                 return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setPriority(p.id as TaskPriority)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors",
+                      isSelected 
+                        ? p.classes
+                        : "border-[rgba(70,69,85,0.2)] bg-[#0A0A0A] text-[#464555] hover:bg-[#111111] hover:text-[#8E8D99]"
+                    )}
+                  >
+                    <span className="text-xl">{p.icon}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider">{p.label}</span>
+                  </button>
+                 );
+              })}
+            </div>
+          </div>
+        )}
+
+
+
+        <div className="space-y-3">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
+            Minimum Focus Goal (Minutes)
+          </label>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min="0"
+              value={targetTime === 0 ? "" : targetTime}
+              onChange={(e) => setTargetTime(parseInt(e.target.value) || 0)}
+              placeholder="e.g. 60"
+              className="w-24 rounded-lg border border-[rgba(70,69,85,0.2)] bg-[#0A0A0A] p-3 text-sm font-bold text-[#E2E2E2] focus:border-[#4F44E2] focus:outline-none"
+            />
+            <span className="text-[10px] font-bold text-[#464555] uppercase tracking-widest">
+              Minutes to completion
+            </span>
+          </div>
+          <span className="text-[9px] text-[#464555] italic">Set to 0 or leave empty for "Any duration"</span>
+        </div>
+
+        {isTrackerLinked && (projects.length > 0 || topics.length > 0) && (
+          <div className="space-y-3">
+             <div className="flex flex-col">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[#4F44E2]">
+                Link FocusFlow
+              </label>
+              <span className="text-[9px] font-medium text-[#464555]">Auto-complete when tracked in FocusFlow</span>
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+              {projects.map((p: any) => (
+                <button
+                  key={`proj-${p.id}`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTrackItIds(prev => 
+                      prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                    );
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition-all",
+                    selectedTrackItIds.includes(p.id)
+                      ? "border-[#4F44E2] bg-[#4F44E2]/20 text-white"
+                      : "border-[rgba(70,69,85,0.2)] bg-[#0A0A0A] text-[#464555] hover:border-[#464555]"
+                  )}
+                >
+                  <span className="material-symbols-outlined text-[12px]">folder</span>
+                  {p.name}
+                </button>
+              ))}
+              {topics.map((t: any) => (
+                <button
+                  key={`${t.type}-${t.id}`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTrackItIds(prev => 
+                      prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id]
+                    );
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition-all",
+                    selectedTrackItIds.includes(t.id)
+                      ? t.type === "subtopic" 
+                        ? "border-[#F6C87C] bg-[#F6C87C]/10 text-white"
+                        : "border-[#7CF6EC] bg-[#7CF6EC]/10 text-white"
+                      : "border-[rgba(70,69,85,0.2)] bg-[#0A0A0A] text-[#464555] hover:border-[#464555]"
+                  )}
+                >
+                  <span className="material-symbols-outlined text-[12px]">
+                    {t.type === "subtopic" ? "subdirectory_arrow_right" : "topic"}
+                  </span>
+                  {t.type === "subtopic" 
+                    ? `${t.topicName} › ${t.name}` 
+                    : `${t.projectName} › ${t.name}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
+
           type="submit"
           disabled={!title.trim()}
           className="w-full rounded-lg bg-[#E2E2E2] py-4 text-xs font-bold uppercase tracking-widest text-black transition-all hover:bg-white active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"

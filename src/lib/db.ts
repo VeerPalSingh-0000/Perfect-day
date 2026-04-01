@@ -7,12 +7,14 @@ import {
   where,
   getDocs,
   updateDoc,
+  getDoc,
+  onSnapshot
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Task, DayRecord, UserProfile } from "../types";
-import { getDoc, onSnapshot } from "firebase/firestore";
 import { calculateDayRating } from "./utils";
 import { logError, createSafeErrorMessage } from "./errorHandler";
+import { trackerDb } from "./tracker-db";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -435,4 +437,81 @@ export const listenToDayRecords = (
       logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
     },
   );
+};
+
+// Listen to TrackIT sessions for a specific user ID
+export const listenToTrackItSessions = (
+  trackerUid: string,
+  onNewSession: (session: any) => void
+) => {
+  if (!trackerUid) return () => {};
+
+  // Track the last processed session time to only react to NEW sessions
+  // We use a small 2-second buffer to make sure we don't skip sessions 
+  // that were saved right as the listener was starting.
+  let lastProcessedTime = Date.now() - 2000;
+
+  const sessionsRef = collection(trackerDb, "sessions");
+  const q = query(
+    sessionsRef,
+    where("userId", "==", trackerUid)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    snapshot.docChanges().forEach((change) => {
+      if (change.type === "added") {
+        const session = change.doc.data();
+        const sessionTime = session.createdAt?.toMillis() || Date.now();
+        
+        console.log("TrackIT Session Detected:", session.projectName, "IDs:", [session.projectId, session.topicId, session.subTopicId].filter(Boolean));
+        
+        // Only trigger for sessions added AFTER we started listening
+        if (sessionTime > lastProcessedTime) {
+          onNewSession(session);
+        }
+      }
+    });
+  });
+};
+
+// Fetch ALL linkable items from TrackIT (projects + nested topics + subtopics)
+// TrackIT stores topics/subtopics as nested arrays INSIDE each project document.
+// Structure: project.topics = [{ id, name, subTopics: [{ id, name }] }]
+export const getTrackItProjects = async (trackerUid: string) => {
+  if (!trackerUid) return [];
+  const projectsRef = collection(trackerDb, "projects");
+  const q = query(projectsRef, where("userId", "==", trackerUid));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+};
+
+// Extract topics + subtopics from project docs (they are nested, not a separate collection)
+export const getTrackItTopics = async (trackerUid: string) => {
+  if (!trackerUid) return [];
+  const projects = await getTrackItProjects(trackerUid);
+  const items: any[] = [];
+  projects.forEach((proj: any) => {
+    if (proj.topics && Array.isArray(proj.topics)) {
+      proj.topics.forEach((topic: any) => {
+        items.push({
+          id: topic.id,
+          name: topic.name,
+          type: "topic",
+          projectName: proj.name,
+        });
+        if (topic.subTopics && Array.isArray(topic.subTopics)) {
+          topic.subTopics.forEach((sub: any) => {
+            items.push({
+              id: sub.id,
+              name: sub.name,
+              type: "subtopic",
+              projectName: proj.name,
+              topicName: topic.name,
+            });
+          });
+        }
+      });
+    }
+  });
+  return items;
 };

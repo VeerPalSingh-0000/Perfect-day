@@ -7,6 +7,7 @@ import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore } from "@/stores/useDataStore";
+import { useTrackerStore } from "@/stores/useTrackerStore";
 import { initAuthListener } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
@@ -23,11 +24,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isLoading = useAuthStore((s) => s.isLoading);
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const fetchAll = useDataStore((s) => s.fetchAll);
+  const startTrackerSync = useDataStore((s) => s.startTrackerSync);
   const isDataLoaded = useDataStore((s) => s.isDataLoaded);
+  
+  const trackerUser = useTrackerStore((s) => s.trackerUser);
+  const isTrackerLinked = useTrackerStore((s) => s.isLinked);
+  const initTrackerAuth = useTrackerStore((s) => s.initTrackerAuth);
 
   useEffect(() => {
     initAuthListener();
-  }, []);
+    initTrackerAuth();
+  }, [initTrackerAuth]);
 
   // Redirect to login only once we know auth state
   useEffect(() => {
@@ -42,6 +49,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       fetchAll(user.uid, getTodayStr(), user.email);
     }
   }, [user, isDataLoaded, fetchAll]);
+
+  // Start Tracker Sync when linked
+  useEffect(() => {
+    if (user && isTrackerLinked && trackerUser) {
+      startTrackerSync(user.uid, trackerUser.uid);
+    }
+  }, [user, isTrackerLinked, trackerUser, startTrackerSync]);
 
   // Refresh data when app returns to foreground or tab becomes visible.
   useEffect(() => {

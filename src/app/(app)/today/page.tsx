@@ -3,10 +3,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore, isHabitValidForDate } from "@/stores/useDataStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
+import { TaskTimer } from "@/components/ui/TaskTimer";
+import { useTrackerStore } from "@/stores/useTrackerStore";
+import { trackerDb } from "@/lib/tracker-db";
+import { collection, query as fsQuery, where as fsWhere, onSnapshot } from "firebase/firestore";
 import {
   addTask as dbAddTask,
   updateTask,
@@ -20,6 +25,7 @@ import {
   getRatingDetails,
   getTimeBasedGreeting,
   getTodayDateString,
+  calculateCompletionPercentage,
 } from "@/lib/utils";
 import { getQuoteOfDay } from "@/lib/quotes";
 import { useAchievementStore } from "@/stores/useAchievementStore";
@@ -52,12 +58,19 @@ export default function TodayPage() {
   const greeting = getTimeBasedGreeting();
   const quote = getQuoteOfDay();
   const [localFocus, setLocalFocus] = useState(todayFocus);
+  
+  // Ref to always have latest tasks in the FocusFlow background listener without dependency loops
+  const tasksRef = useRef(tasks);
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
+  const priorityMode = useSettingsStore((s) => s.priorityMode);
 
   // Derived state
   const completedTasks = tasks.filter((t) => t.isCompleted).length;
   const totalTasks = tasks.length;
-  const completionPercentage =
-    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+  const completionPercentage = calculateCompletionPercentage(tasks, priorityMode);
 
   const rating = calculateDayRating(
     totalTasks === 0 ? 0 : completionPercentage,
@@ -208,11 +221,29 @@ export default function TodayPage() {
         category: taskData.category,
         isHabit: taskData.isHabit,
       };
+      
+      if (taskData.priority) {
+        updates.priority = taskData.priority;
+      }
+
+      if ('targetTime' in taskData) {
+        if (taskData.targetTime) {
+          updates.targetTime = taskData.targetTime;
+        } else {
+          updates.targetTime = deleteField();
+        }
+      }
 
       if (taskData.isHabit && taskData.frequency) {
         updates.frequency = taskData.frequency;
       } else {
         updates.frequency = deleteField();
+      }
+
+      if (taskData.linkedTrackItIds) {
+        updates.linkedTrackItIds = taskData.linkedTrackItIds;
+      } else {
+        updates.linkedTrackItIds = [];
       }
 
       const originalTask = tasks.find((t) => t.id === taskData.id);
@@ -266,9 +297,20 @@ export default function TodayPage() {
         order: tasks.length,
         createdAt: Date.now(),
       };
+      
+      if (taskData.priority) {
+        newTask.priority = taskData.priority;
+      }
+      if (taskData.targetTime) {
+        newTask.targetTime = taskData.targetTime;
+      }
 
       if (taskData.isHabit && taskData.frequency) {
         newTask.frequency = taskData.frequency;
+      }
+
+      if (taskData.linkedTrackItIds) {
+        newTask.linkedTrackItIds = taskData.linkedTrackItIds;
       }
       
       let newDateStr = todayDateStr;
@@ -319,6 +361,119 @@ export default function TodayPage() {
       toggleTaskCompletion(task.id);
     }
   };
+
+  // FocusFlow Background Tracker Sync
+  const trackerStore = useTrackerStore();
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      trackerStore.initTrackerAuth();
+    }
+  }, []); // Run ONCE on mount
+
+  useEffect(() => {
+    if (!trackerStore.isLinked || !trackerStore.trackerUser || !user) return;
+
+    const q = fsQuery(
+      collection(trackerDb, "sessions"),
+      fsWhere("userId", "==", trackerStore.trackerUser.uid)
+    );
+
+    // This listener fires on initial load with ALL existing sessions,
+    // and then again whenever a new session is added.
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      // Get ALL session docs (not just changes) to aggregate total time
+      const allSessions = snapshot.docs.map(d => d.data());
+      
+      // Filter to today's sessions only
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const todayMs = startOfToday.getTime();
+      
+      const todaySessions = allSessions.filter(s => {
+        const t = s.createdAt?.toMillis() || s.startTime || 0;
+        return t >= todayMs;
+      });
+
+      // Build a map: ID -> total duration in minutes
+      const durationMap: Record<string, number> = {};
+      todaySessions.forEach(s => {
+        const durationMin = (s.duration || 0) / 60000;
+        const ids = [s.projectId, s.topicId, s.subTopicId].filter(Boolean);
+        ids.forEach(id => {
+          durationMap[id] = (durationMap[id] || 0) + durationMin;
+        });
+      });
+
+      console.log("[FocusFlow Sync] Today's total durations:", durationMap);
+
+      // Check each uncompleted task with linked IDs
+      const currentTasks = tasksRef.current;
+      
+      currentTasks.forEach(task => {
+        if (task.isCompleted || !task.linkedTrackItIds || task.linkedTrackItIds.length === 0) return;
+
+        // Find the max accumulated duration across all linked IDs
+        let maxDuration = 0;
+        task.linkedTrackItIds.forEach((id: string) => {
+          if (durationMap[id] && durationMap[id] > maxDuration) {
+            maxDuration = durationMap[id];
+          }
+        });
+
+        const targetMinutes = task.targetTime || 0;
+
+        if (maxDuration > 0) {
+          console.log(`[FocusFlow Sync] "${task.title}": Total=${Math.round(maxDuration)}m, Goal=${targetMinutes}m`);
+        }
+
+        if (maxDuration > 0 && (targetMinutes === 0 || maxDuration >= targetMinutes)) {
+          console.log(`[FocusFlow Sync] ✅ Auto-completing "${task.title}"!`);
+          handleToggleTask(task);
+        }
+      });
+
+      // Aggregate total focus time today across all unique sessions
+      const sessionKeysProcessed = new Set<string>();
+      let totalFocusMinutes = 0;
+      
+      todaySessions.forEach(s => {
+        // Use multiple fields as a unique key since s.id might be missing in raw data
+        const skey = s.id || `${s.projectName}_${s.startTime || s.createdAt?.toMillis()}_${s.duration}`;
+        if (!sessionKeysProcessed.has(skey)) {
+          sessionKeysProcessed.add(skey);
+          totalFocusMinutes += (s.duration || 0) / 60000;
+        }
+      });
+
+      console.log(`[FocusFlow Sync] Total combined minutes for history:`, totalFocusMinutes);
+
+      // Save to dayRecord for history
+      if (totalFocusMinutes > 0) {
+        const todayDateStr = new Date().toLocaleDateString("en-CA");
+        const recordId = `${user.uid}_${todayDateStr}`;
+        const totalTasksCount = currentTasks.length;
+        const completedTasksCount = currentTasks.filter(t => t.isCompleted).length;
+        const completionPercentage = totalTasksCount === 0 ? 0 : Math.round((completedTasksCount / totalTasksCount) * 100);
+
+        const record: DayRecord = {
+          id: recordId,
+          userId: user.uid,
+          date: todayDateStr,
+          totalTasks: totalTasksCount,
+          completedTasks: completedTasksCount,
+          completionPercentage,
+          rating: calculateDayRating(completionPercentage),
+          tasks: currentTasks,
+          createdAt: Date.now(),
+          totalFocusTime: totalFocusMinutes
+        };
+        
+        saveDayRecord(record).catch(e => console.error("History sync failed:", e));
+      }
+    }, (error) => console.error("FocusFlow Sync Error:", error));
+    return () => unsubscribe();
+  }, [trackerStore.isLinked, trackerStore.trackerUser, user]); // Removed tasks from deps to prevent trigger loop, using state ref logic or handleToggleTask closure safely
 
   const handleDeleteTask = async (task: Task) => {
     if (!user) return;
@@ -536,9 +691,14 @@ export default function TodayPage() {
                     )}
                   </button>
                   <div
-                    className="grow min-w-0 cursor-pointer"
+                    className="grow min-w-0 flex items-center gap-2 cursor-pointer"
                     onClick={() => handleToggleTask(task)}
                   >
+                    {priorityMode === 'advanced' && (
+                      <span className="text-xs shrink-0" title={`${task.priority || 'medium'} priority`}>
+                        {task.priority === 'critical' ? '🔴' : task.priority === 'high' ? '🟠' : task.priority === 'low' ? '🔵' : '🟡'}
+                      </span>
+                    )}
                     <p
                       className={`font-medium text-sm transition-all ${task.isCompleted ? "text-[#E2E2E2] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
                     >

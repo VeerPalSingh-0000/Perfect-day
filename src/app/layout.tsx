@@ -89,10 +89,7 @@ export const metadata: Metadata = {
       "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
     images: ["/logo.png"],
   },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
+  // icons auto-detected from src/app/icon.png by Next.js App Router
   verification: {
     google: "-eNrtVYxyV2gNmynl2ofvHkBfBw5BRMyxGHhGuq_0-U",
   },
@@ -201,8 +198,7 @@ export default function RootLayout({
             href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           />
         </noscript>
-        {/* Preload critical images */}
-        <link rel="preload" href="/logo.webp" as="image" type="image/webp" />
+
       </head>
       <body
         className="bg-black text-on-surface font-body min-h-screen selection:bg-white/20 overflow-x-hidden"

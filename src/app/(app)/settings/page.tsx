@@ -30,6 +30,8 @@ const AVATARS = [
 
 import { Modal } from "@/components/ui/Modal";
 import { useThemeStore } from "@/stores/useThemeStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useTrackerStore } from "@/stores/useTrackerStore";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -39,6 +41,7 @@ export default function SettingsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [isDataProtocolsOpen, setIsDataProtocolsOpen] = useState(false);
+  const [isPriorityInfoOpen, setIsPriorityInfoOpen] = useState(false);
   
   const unlockedAchievements = useAchievementStore((state) => state.achievements);
 
@@ -47,11 +50,21 @@ export default function SettingsPage() {
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const isDarkMode = theme === "dark";
 
+  // Priority Mode state
+  const priorityMode = useSettingsStore((state) => state.priorityMode);
+  const togglePriorityMode = useSettingsStore((state) => state.togglePriorityMode);
+
   // Notifications state
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
 
   // Haptics state
   const [isHapticsEnabled, setIsHapticsEnabled] = useState(true);
+
+  const trackerStore = useTrackerStore();
+
+  React.useEffect(() => {
+    trackerStore.initTrackerAuth();
+  }, [trackerStore.initTrackerAuth]);
 
   React.useEffect(() => {
     // Check initial notification preference
@@ -324,6 +337,85 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Task Configuration Section */}
+        <section className="space-y-3 sm:space-y-4">
+          <h2 className="pl-0 sm:pl-2 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#464555]">
+            TASK CONFIGURATION
+          </h2>
+          <div className="divide-y divide-[#464555]/10 rounded-lg sm:rounded-xl border border-[rgba(70,69,85,0.2)] bg-[#0E0E0E]">
+            <div className="w-full flex items-center justify-between p-4 sm:p-5 gap-3 transition-colors hover:bg-white/5">
+              <button
+                onClick={() => {
+                  triggerHaptic();
+                  togglePriorityMode();
+                }}
+                className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1 text-left"
+              >
+                <div
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-lg border shrink-0 transition-colors",
+                    priorityMode === 'advanced'
+                      ? "border-[#4F44E2]/50 bg-[#4F44E2]/20"
+                      : "border-white/10 bg-white/5",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "material-symbols-outlined text-base",
+                      priorityMode === 'advanced' ? "text-[#4F44E2]" : "text-white",
+                    )}
+                  >
+                    stars
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-bold uppercase tracking-wider text-white transition-colors duration-300">
+                    {priorityMode === 'advanced' ? "Advanced Mode" : "Basic Mode"}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] font-medium text-[#464555] uppercase tracking-wide transition-colors duration-300">
+                    {priorityMode === 'advanced'
+                      ? "Tasks have varying priority weights"
+                      : "All tasks have equal importance"}
+                  </p>
+                </div>
+              </button>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPriorityInfoOpen(true);
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors shrink-0"
+                  title="What is Advanced Mode?"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-white/70">info</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    triggerHaptic();
+                    togglePriorityMode();
+                  }}
+                  className={cn(
+                    "relative h-5 w-10 shrink-0 rounded-full transition-colors duration-300",
+                    priorityMode === 'advanced'
+                      ? "bg-[#4F44E2] shadow-[0_0_10px_rgba(79,68,226,0.3)]"
+                      : "bg-white/20",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "absolute top-1 h-3 w-3 rounded-full bg-white transition-all duration-300",
+                      priorityMode === 'advanced' ? "right-1" : "left-1",
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Preferences Section */}
         <section className="space-y-3 sm:space-y-4">
           <h2 className="pl-0 sm:pl-2 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#464555]">
@@ -546,6 +638,136 @@ export default function SettingsPage() {
 
       {/* Background Glow */}
       <div className="pointer-events-none fixed right-0 top-0 -z-10 h-[40%] w-[40%] rounded-full bg-[#4F44E2]/5 blur-[120px]" />
+
+      <Modal
+        isOpen={isPriorityInfoOpen}
+        onClose={() => setIsPriorityInfoOpen(false)}
+        title="PRIORITY MODES"
+      >
+        <div className="space-y-6 text-[#E2E2E2]">
+          <div className="flex items-center gap-4 border-b border-[#464555]/20 pb-4">
+            <div className="h-12 w-12 rounded-xl bg-[#4F44E2]/10 border border-[#4F44E2]/20 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-[#4F44E2] text-2xl">
+                stars
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold tracking-wide">
+                Task Weighting
+              </h3>
+              <p className="text-[11px] text-[#464555] mt-1">
+                How completion is calculated
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-xs leading-relaxed text-[#888890]">
+            <div>
+              <span className="font-bold text-[#E2E2E2]">Basic Mode</span>
+              <p className="mt-1">
+                Every task has equal importance. If you have 4 tasks and finish 2, your day is 50% complete.
+              </p>
+            </div>
+            <div>
+              <span className="font-bold text-[#E2E2E2]">Advanced Mode</span>
+              <p className="mt-1 mb-2">
+                Tasks carry different mathematical weights. Doing harder things yields higher percentage gains for the day.
+              </p>
+              <ul className="list-none space-y-2">
+                <li className="flex items-center gap-2"><span className="text-red-400">🔴 Critical</span> (4x Weight)</li>
+                <li className="flex items-center gap-2"><span className="text-orange-400">🟠 High</span> (3x Weight)</li>
+                <li className="flex items-center gap-2"><span className="text-yellow-400">🟡 Medium</span> (2x Weight)</li>
+                <li className="flex items-center gap-2"><span className="text-blue-400">🔵 Low</span> (1x Weight)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-[#464555]/20 mt-4 mb-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-9 w-9 rounded-lg bg-[#4F44E2]/15 border border-[#4F44E2]/25 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#4F44E2] text-lg">link</span>
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-[#E2E2E2]">FocusFlow Integration</h4>
+                <p className="text-[10px] text-[#464555] mt-0.5">Connect your TrackIT study timer</p>
+              </div>
+            </div>
+
+            <a
+              href="https://justtrackit.netlify.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 w-full py-3 px-3.5 rounded-lg bg-white/[0.03] border border-[#464555]/15 mb-4 hover:bg-white/[0.06] hover:border-[#4F44E2]/30 transition-all group"
+            >
+              <span className="material-symbols-outlined text-[#4F44E2] text-lg group-hover:scale-110 transition-transform">open_in_new</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-[#E2E2E2]">Open TrackIT App</p>
+                <p className="text-[10px] text-[#464555] truncate">justtrackit.netlify.app</p>
+              </div>
+              <span className="material-symbols-outlined text-[#464555] text-sm group-hover:text-[#4F44E2] transition-colors">arrow_forward</span>
+            </a>
+
+            <div className="rounded-lg bg-white/[0.03] border border-[#464555]/15 p-3 mb-4">
+              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">✨ What does this do?</p>
+              <p className="text-[11px] text-[#888890] leading-relaxed">
+                When you study using the <span className="text-[#E2E2E2] font-medium">TrackIT</span> app, SIRA automatically marks your tasks as <span className="text-green-400 font-medium">done</span> once you hit your time goal. No manual ticking needed!
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-white/[0.03] border border-[#464555]/15 p-3 mb-4">
+              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">📋 How to use it</p>
+              <ol className="space-y-2 text-[11px] text-[#888890] leading-relaxed list-decimal list-inside">
+                <li><span className="text-[#E2E2E2]">Link your Google account</span> below</li>
+                <li>When adding a task, tap <span className="text-[#E2E2E2]">"Link TrackIT Project"</span> and pick your project</li>
+                <li>Set a <span className="text-[#E2E2E2]">Focus Goal</span> (e.g. 60 min)</li>
+                <li>Study in TrackIT — task auto-completes when goal is reached! ✅</li>
+              </ol>
+            </div>
+
+            <div className="rounded-lg bg-white/[0.03] border border-[#464555]/15 p-3 mb-4">
+              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">📊 Bonus: Focus History</p>
+              <p className="text-[11px] text-[#888890] leading-relaxed">
+                Your total study time from TrackIT shows up in the <span className="text-[#E2E2E2] font-medium">Journey</span> tab. See how many hours you focused each day!
+              </p>
+            </div>
+
+            {trackerStore.isLinked ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5 py-2.5 px-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <span className="material-symbols-outlined text-green-400 text-base">check_circle</span>
+                  <div>
+                    <p className="text-[11px] text-green-400 font-bold">Connected</p>
+                    <p className="text-[10px] text-green-400/60">{trackerStore.trackerUser?.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={trackerStore.unlinkTrackerAccount}
+                  className="w-full py-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-500/20 transition-colors"
+                >
+                  Unlink Account
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={trackerStore.linkTrackerAccount}
+                disabled={trackerStore.isLinking}
+                className="w-full py-3 rounded-lg bg-[#4F44E2]/20 border border-[#4F44E2]/50 text-xs font-bold uppercase tracking-widest text-[#C4C0FF] hover:bg-[#4F44E2]/30 transition-colors disabled:opacity-50"
+              >
+                {trackerStore.isLinking ? "Connecting..." : "🔗 Link Google Account"}
+              </button>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-[#464555]/20">
+            <button
+              onClick={() => setIsPriorityInfoOpen(false)}
+              className="w-full py-3 rounded-lg bg-white/5 border border-white/10 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-colors"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         isOpen={isDataProtocolsOpen}

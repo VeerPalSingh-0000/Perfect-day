@@ -69,7 +69,6 @@ export function LandingPageContent() {
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-[#464555]/15 flex items-center px-6 h-16 justify-between max-w-screen">
         <div className="flex items-center gap-2">
           <picture>
-            <source srcSet="/logo.webp" type="image/webp" />
             <img
               src="/logo.png"
               alt="SIRA Logo"

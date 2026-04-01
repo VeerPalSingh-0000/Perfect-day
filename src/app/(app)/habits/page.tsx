@@ -81,6 +81,18 @@ export default function HabitsPage() {
         frequency: taskData.frequency,
       };
 
+      if (taskData.priority !== undefined) {
+        updates.priority = taskData.priority;
+      }
+
+      if (taskData.targetTime !== undefined) {
+        updates.targetTime = taskData.targetTime;
+      }
+
+      if (taskData.linkedTrackItIds !== undefined) {
+        updates.linkedTrackItIds = taskData.linkedTrackItIds;
+      }
+
       await updateTask(user.uid, taskData.id, updates);
       await loadHabits();
     } catch (e) {

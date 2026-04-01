@@ -9,6 +9,8 @@ import {
   listenToDayRecords,
   migrateUserDataByEmail,
   rebuildDayRecordsFromTasks,
+  listenToTrackItSessions,
+  updateTask as dbUpdateTask,
 } from "@/lib/db";
 
 export const isHabitValidForDate = (habit: Task, dateStr: string) => {
@@ -51,6 +53,7 @@ interface DataState {
   // Subscriptions
   unsubTasks: (() => void) | null;
   unsubRecords: (() => void) | null;
+  unsubTracker: (() => void) | null;
 
   // Actions
   setTasks: (tasks: Task[]) => void;
@@ -69,6 +72,7 @@ interface DataState {
     forceResubscribe?: boolean,
   ) => Promise<void>;
   refreshTasks: (userId: string, todayDateStr: string) => Promise<void>;
+  startTrackerSync: (userId: string, trackerUid: string) => void;
 }
 
 export const useDataStore = create<DataState>()(
@@ -82,6 +86,7 @@ export const useDataStore = create<DataState>()(
       currentDateStr: null,
       unsubTasks: null,
       unsubRecords: null,
+      unsubTracker: null,
 
       setTasks: (tasks) => set({ tasks }),
 
@@ -102,9 +107,10 @@ export const useDataStore = create<DataState>()(
       setTodayFocus: (word) => set({ todayFocus: word }),
 
       reset: () => {
-        const { unsubTasks, unsubRecords } = get();
+        const { unsubTasks, unsubRecords, unsubTracker } = get();
         if (unsubTasks) unsubTasks();
         if (unsubRecords) unsubRecords();
+        if (unsubTracker) unsubTracker();
         set({
           tasks: [],
           records: [],
@@ -113,6 +119,7 @@ export const useDataStore = create<DataState>()(
           currentDateStr: null,
           unsubTasks: null,
           unsubRecords: null,
+          unsubTracker: null,
         });
       },
 
@@ -132,6 +139,9 @@ export const useDataStore = create<DataState>()(
         // If date changed (or stale listeners exist), clean up and resubscribe.
         if (unsubTasks) unsubTasks();
         if (unsubRecords) unsubRecords();
+        // unsubTracker is user-based, not date-based, but we'll reset it to be safe 
+        // if this is a force reload.
+        if (forceResubscribe && get().unsubTracker) get().unsubTracker?.();
 
         set({
           isDataLoaded: false,
@@ -170,21 +180,25 @@ export const useDataStore = create<DataState>()(
                     isHabitValidForDate(h, todayDateStr),
                 );
                 if (newHabits.length > 0) {
-                  const newTasks: Task[] = newHabits.map((habit, i) => ({
-                    id:
-                      Date.now().toString(36) +
-                      Math.random().toString(36).substring(2) +
-                      i,
-                    userId,
-                    title: habit.title,
-                    category: habit.category,
-                    isCompleted: false,
-                    isHabit: true,
-                    frequency: habit.frequency,
-                    date: todayDateStr,
-                    order: currentTasks.length + i,
-                    createdAt: Date.now(),
-                  }));
+                  const newTasks: Task[] = newHabits.map((habit, i) => {
+                    const task: Task = {
+                      id:
+                        Date.now().toString(36) +
+                        Math.random().toString(36).substring(2) +
+                        i,
+                      userId,
+                      title: habit.title,
+                      category: habit.category,
+                      isCompleted: false,
+                      isHabit: true,
+                      date: todayDateStr,
+                      order: currentTasks.length + i,
+                      createdAt: Date.now(),
+                    };
+                    if (habit.frequency) task.frequency = habit.frequency;
+                    if (habit.priority) task.priority = habit.priority;
+                    return task;
+                  });
                   newTasks.forEach((t) => dbAddTask(t).catch(() => {}));
                 }
               })
@@ -220,6 +234,49 @@ export const useDataStore = create<DataState>()(
       },
 
       refreshTasks: async () => {}, // Handled automatically by listeners now
+
+      startTrackerSync: (userId, trackerUid) => {
+        const { unsubTracker } = get();
+        if (unsubTracker) unsubTracker();
+
+        console.log("Starting TrackIT Sync for UID:", trackerUid);
+        
+        const nextUnsubTracker = listenToTrackItSessions(trackerUid, (session) => {
+          const currentTasks = get().tasks;
+          
+          // Collect ALL IDs from the session (a session has projectId, topicId, subTopicId)
+          const sessionIds = [
+            session.projectId,
+            session.topicId,
+            session.subTopicId,
+          ].filter(Boolean);
+          
+          // Find any SIRA task whose linkedTrackItIds overlaps with ANY session ID
+          const matchingTasks = currentTasks.filter(t => 
+            !t.isCompleted && 
+            t.linkedTrackItIds?.some((id: string) => sessionIds.includes(id))
+          );
+
+          matchingTasks.forEach(task => {
+            const sessionDurationMinutes = (session.duration || 0) / 60000;
+            const targetMinutes = task.targetTime || 0;
+
+            console.log(`Checking Goal for "${task.title}": Focus was ${Math.round(sessionDurationMinutes)}m, Target is ${targetMinutes}m`);
+
+            // Only auto-complete if session meets or exceeds target (if a target is set)
+            if (targetMinutes === 0 || sessionDurationMinutes >= targetMinutes) {
+              console.log("Auto-completing SIRA Task:", task.title, "due to FocusFlow session");
+              get().toggleTaskCompletion(task.id);
+              dbUpdateTask(userId, task.id, { isCompleted: true, completedAt: Date.now() })
+                .catch(e => console.error("Auto-complete failed:", e));
+            } else {
+              console.log(`Session too short for "${task.title}". Required ${targetMinutes}m, got ${Math.round(sessionDurationMinutes)}m.`);
+            }
+          });
+        });
+
+        set({ unsubTracker: nextUnsubTracker });
+      },
     }),
     {
       name: "perfect-day-data-store",

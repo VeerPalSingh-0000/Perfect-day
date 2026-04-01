@@ -1,4 +1,5 @@
 export type HabitFrequency = 'daily' | 'mon-sat' | 'alternate' | 'weekdays' | 'weekends';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical';
 
 export interface Task {
   id: string;
@@ -8,10 +9,16 @@ export interface Task {
   isCompleted: boolean;
   isHabit: boolean;
   frequency?: HabitFrequency;
+  priority?: TaskPriority;
+  targetTime?: number; // Target duration in minutes
+  timeSpent?: number; // Total time spent in seconds
+  isRunning?: boolean; // Timer status
+  lastStartedAt?: number; // Unix timestamp for timer
   date: string; // YYYY-MM-DD format
   order: number;
   createdAt: number; // Unix timestamp for easier sorting
   completedAt?: number;
+  linkedTrackItIds?: string[]; // IDs from TrackIT (projects, topics, subtopics)
 }
 
 export interface DayRecord {
@@ -25,6 +32,7 @@ export interface DayRecord {
   tasks: Task[];
   createdAt: number;
   focusWord?: string; // Daily Intention
+  totalFocusTime?: number; // Total minutes spent across all FocusFlow sessions today
 }
 
 export interface UserProfile {

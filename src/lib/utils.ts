@@ -1,6 +1,29 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { DayRating } from "../types";
+import { DayRating, Task, TaskPriority } from "../types";
+
+export const PRIORITY_WEIGHTS: Record<TaskPriority, number> = {
+  critical: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
+
+export function calculateCompletionPercentage(tasks: Task[], mode: 'basic' | 'advanced'): number {
+  if (!tasks.length) return 0;
+  
+  if (mode === 'basic') {
+    const completedTasks = tasks.filter((t) => t.isCompleted).length;
+    return Math.round((completedTasks / tasks.length) * 100);
+  }
+
+  // Advanced mode
+  const totalWeight = tasks.reduce((acc, t) => acc + PRIORITY_WEIGHTS[t.priority || 'medium'], 0);
+  const completedWeight = tasks.filter(t => t.isCompleted).reduce((acc, t) => acc + PRIORITY_WEIGHTS[t.priority || 'medium'], 0);
+  
+  if (totalWeight === 0) return 0;
+  return Math.round((completedWeight / totalWeight) * 100);
+}
 
 export type { DayRating };
 
