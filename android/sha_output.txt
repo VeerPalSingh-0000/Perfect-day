@@ -1,0 +1,15 @@
+﻿Alias name: androiddebugkey
+Creation date: Mar 11, 2026
+Entry type: PrivateKeyEntry
+Certificate chain length: 1
+Certificate[1]:
+Owner: C=US, O=Android, CN=Android Debug
+Issuer: C=US, O=Android, CN=Android Debug
+Serial number: 1
+Valid from: Wed Mar 11 22:20:54 IST 2026 until: Fri Mar 03 22:20:54 IST 2056
+Certificate fingerprints:
+	 SHA1: 92:1C:B8:BD:B2:89:22:10:47:EF:8D:6B:86:96:DB:44:BA:70:76:C9
+	 SHA256: C7:ED:AE:33:8D:C6:28:AF:4C:0E:32:10:91:BC:46:F8:AA:1E:82:61:B9:A8:E0:FE:E3:2D:34:F7:28:C0:E1:24
+Signature algorithm name: SHA256withRSA
+Subject Public Key Algorithm: 2048-bit RSA key
+Version: 1

@@ -1,7 +1,10 @@
+// src/app/(app)/layout.tsx
 "use client";
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore } from "@/stores/useDataStore";
 import { initAuthListener } from "@/lib/auth";
@@ -15,12 +18,12 @@ function getTodayStr() {
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
   const isInitialized = useAuthStore((s) => s.isInitialized);
   const fetchAll = useDataStore((s) => s.fetchAll);
   const isDataLoaded = useDataStore((s) => s.isDataLoaded);
-  const router = useRouter();
 
   useEffect(() => {
     initAuthListener();
@@ -39,6 +42,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       fetchAll(user.uid, getTodayStr(), user.email);
     }
   }, [user, isDataLoaded, fetchAll]);
+
+  // Refresh data when app returns to foreground or tab becomes visible.
+  useEffect(() => {
+    if (!user) return;
+
+    const reloadData = () => {
+      fetchAll(user.uid, getTodayStr(), user.email, true);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        reloadData();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    let removeAppStateListener: (() => void) | undefined;
+    if (Capacitor.isNativePlatform()) {
+      App.addListener(
+        "appStateChange",
+        ({ isActive }: { isActive: boolean }) => {
+          if (isActive) reloadData();
+        },
+      ).then((listener: { remove: () => void }) => {
+        removeAppStateListener = () => listener.remove();
+      });
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      removeAppStateListener?.();
+    };
+  }, [user, fetchAll]);
 
   if (!isInitialized) return <LoadingSkeleton />;
   if (!user) return <LoadingSkeleton />;

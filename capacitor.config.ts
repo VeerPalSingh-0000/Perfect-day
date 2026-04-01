@@ -1,4 +1,5 @@
 import { CapacitorConfig } from "@capacitor/cli";
+
 const config: CapacitorConfig = {
   appId: "com.veerpal.perfectday",
   appName: "Perfect Day",
@@ -6,7 +7,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "http",
     cleartext: true,
-    allowNavigation: ["*.firebaseapp.com", "*.googleapis.com", "*.gstatic.com"]
+    allowNavigation: ["*.firebaseapp.com", "*.googleapis.com", "*.gstatic.com"],
+    // url: "http://192.168.1.9:3000"
   },
   plugins: {
     FirebaseAuthentication: {
@@ -15,4 +17,5 @@ const config: CapacitorConfig = {
     },
   },
 };
+
 export default config;

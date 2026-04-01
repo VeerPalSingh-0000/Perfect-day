@@ -4,5 +4,4 @@
     <string name="title_activity_main">Perfect Day</string>
     <string name="package_name">com.veerpal.perfectday</string>
     <string name="custom_url_scheme">com.veerpal.perfectday</string>
-    <string name="default_web_client_id">568326474806-gi6oa9lc0dkbjmv8eqhgkqq2gvgnttl1.apps.googleusercontent.com</string>
 </resources>

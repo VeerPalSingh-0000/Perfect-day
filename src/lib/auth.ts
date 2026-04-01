@@ -134,5 +134,14 @@ export const initAuthListener = () => {
     }
   });
 
-  return _unsubscribe;
+  return () => {
+    if (_unsubscribe) {
+      _unsubscribe();
+      _unsubscribe = null;
+    }
+    if (_unsubscribeProfile) {
+      _unsubscribeProfile();
+      _unsubscribeProfile = null;
+    }
+  };
 };
