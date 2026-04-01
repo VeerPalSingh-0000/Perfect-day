@@ -22,32 +22,43 @@ export function NotificationCenter() {
   }, []);
 
   useEffect(() => {
-    if (!user || Notification.permission !== "granted") return;
+    const hasNotification =
+      typeof window !== "undefined" && "Notification" in window;
+
+    if (
+      !user ||
+      !hasNotification ||
+      window.Notification.permission !== "granted"
+    )
+      return;
 
     // Smart logic: Check every hour for "Incomplete Tasks" reminders
-    const interval = setInterval(() => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentDay = now.toLocaleDateString("en-CA");
+    const interval = setInterval(
+      () => {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentDay = now.toLocaleDateString("en-CA");
 
-      // Only run reminder between 5 PM and 8 PM
-      if (currentHour >= 17 && currentHour <= 20) {
-        // Only run once per day
-        const lastCheckKey = `last_reminder_${user.uid}_${currentDay}`;
-        const hasRemindedToday = localStorage.getItem(lastCheckKey);
+        // Only run reminder between 5 PM and 8 PM
+        if (currentHour >= 17 && currentHour <= 20) {
+          // Only run once per day
+          const lastCheckKey = `last_reminder_${user.uid}_${currentDay}`;
+          const hasRemindedToday = localStorage.getItem(lastCheckKey);
 
-        if (!hasRemindedToday) {
-          const incomplete = tasks.filter((t) => !t.isCompleted).length;
-          if (incomplete > 0) {
-            new Notification("SIRA: Daily Progress", {
-              body: `You still have ${incomplete} tasks to finish today. You can do it! 🔥`,
-              icon: "/logo.png",
-            });
-            localStorage.setItem(lastCheckKey, "true");
+          if (!hasRemindedToday) {
+            const incomplete = tasks.filter((t) => !t.isCompleted).length;
+            if (incomplete > 0) {
+              new window.Notification("SIRA: Daily Progress", {
+                body: `You still have ${incomplete} tasks to finish today. You can do it! 🔥`,
+                icon: "/logo.png",
+              });
+              localStorage.setItem(lastCheckKey, "true");
+            }
           }
         }
-      }
-    }, 1000 * 60 * 60); // Check once an hour
+      },
+      1000 * 60 * 60,
+    ); // Check once an hour
 
     return () => clearInterval(interval);
   }, [user, tasks]);

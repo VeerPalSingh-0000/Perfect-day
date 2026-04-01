@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: "Perfect Day",
   webDir: "out",
   server: {
-    androidScheme: "http",
+    androidScheme: "https",
+    hostname: "localhost",
     cleartext: true,
     allowNavigation: ["*.firebaseapp.com", "*.googleapis.com", "*.gstatic.com"],
     // url: "http://192.168.1.9:3000"
