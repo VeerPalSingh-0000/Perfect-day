@@ -821,10 +821,9 @@ export default function SettingsPage() {
                   </span>
                   <div>
                     <p className="text-[11px] text-green-400 font-bold">
-                      Connected
-                    </p>
-                    <p className="text-[10px] text-green-400/60">
-                      {trackerStore.trackerUser?.email}
+                      {trackerStore.trackerUser?.email
+                        ? `Connected with ${trackerStore.trackerUser.email}`
+                        : "Connected"}
                     </p>
                   </div>
                 </div>

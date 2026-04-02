@@ -148,6 +148,33 @@ export async function POST(request: Request) {
 
     const trackerAdminAuth = getTrackerAdminAuth();
 
+    // If the selected Gmail already exists in tracker auth, reuse its real tracker UID.
+    if (trackerEmail) {
+      try {
+        const existingTrackerUser =
+          await trackerAdminAuth.getUserByEmail(trackerEmail);
+        trackerUid = existingTrackerUser.uid;
+      } catch {
+        // Ignore "user-not-found" here; fallback to token subject below.
+      }
+    }
+
+    // Ensure tracker user record has email for UI display and rule compatibility.
+    if (trackerEmail) {
+      try {
+        await trackerAdminAuth.updateUser(trackerUid, {
+          email: trackerEmail,
+          emailVerified: trackerEmailVerified ?? false,
+        });
+      } catch {
+        await trackerAdminAuth.createUser({
+          uid: trackerUid,
+          email: trackerEmail,
+          emailVerified: trackerEmailVerified ?? false,
+        });
+      }
+    }
+
     const customClaims: Record<string, string | boolean> = {
       linkedByPrimaryUid: decoded.uid,
     };
@@ -165,10 +192,6 @@ export async function POST(request: Request) {
 
     if (typeof trackerEmailVerified === "boolean") {
       customClaims.email_verified = trackerEmailVerified;
-    }
-
-    if (typeof trackerEmail === "string" && trackerEmail.length > 0) {
-      customClaims.trackerEmail = trackerEmail;
     }
 
     const trackerCustomToken = await trackerAdminAuth.createCustomToken(
