@@ -14,6 +14,7 @@ import { trackerAuth } from "@/lib/tracker-db";
 import { getTrackItProjects, getTrackItTopics } from "@/lib/db";
 
 const FOCUSFLOW_LINK_TOKEN_PATH = "/api/focusflow/link-token";
+let trackerRestoreInFlight = false;
 
 const getFocusflowLinkTokenUrl = () => {
   const bridgeBaseUrl =
@@ -99,6 +100,33 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
   return "Could not connect FocusFlow account right now. Please try again.";
 };
 
+const requestFocusflowCustomToken = async (
+  primaryIdToken: string,
+  body: Record<string, unknown> = {},
+) => {
+  const response = await fetch(getFocusflowLinkTokenUrl(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${primaryIdToken}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const payload = await response
+    .json()
+    .catch(() => ({ message: "Unknown server response" }));
+
+  if (!response.ok || !payload?.customToken) {
+    throw new Error(
+      payload?.message ||
+        `FocusFlow link token request failed (${response.status})`,
+    );
+  }
+
+  return payload as { customToken: string; trackerEmail?: string | null };
+};
+
 interface TrackerStore {
   trackerUser: User | null;
   isLinking: boolean;
@@ -132,6 +160,23 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         isLinking: false,
         linkError: null,
       });
+
+      if (!user && auth.currentUser && !trackerRestoreInFlight) {
+        trackerRestoreInFlight = true;
+        (async () => {
+          try {
+            const primaryIdToken = await auth.currentUser!.getIdToken();
+            const payload = await requestFocusflowCustomToken(primaryIdToken, {
+              restoreOnly: true,
+            });
+            await signInWithCustomToken(trackerAuth, payload.customToken);
+          } catch {
+            // No persisted link or restore failed; user can relink manually.
+          } finally {
+            trackerRestoreInFlight = false;
+          }
+        })();
+      }
     });
   },
 
@@ -145,25 +190,7 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         }
 
         const primaryIdToken = await primaryUser.getIdToken();
-        const response = await fetch(getFocusflowLinkTokenUrl(), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${primaryIdToken}`,
-          },
-          body: JSON.stringify({}),
-        });
-
-        const payload = await response
-          .json()
-          .catch(() => ({ message: "Unknown server response" }));
-
-        if (!response.ok || !payload?.customToken) {
-          throw new Error(
-            payload?.message ||
-              `FocusFlow link token request failed (${response.status})`,
-          );
-        }
+        const payload = await requestFocusflowCustomToken(primaryIdToken, {});
 
         const trackerUserCredential = await signInWithCustomToken(
           trackerAuth,
@@ -222,25 +249,9 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         }
 
         const primaryIdToken = await primaryUser.getIdToken();
-        const response = await fetch(getFocusflowLinkTokenUrl(), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${primaryIdToken}`,
-          },
-          body: JSON.stringify({ trackerGoogleIdToken }),
+        const payload = await requestFocusflowCustomToken(primaryIdToken, {
+          trackerGoogleIdToken,
         });
-
-        const payload = await response
-          .json()
-          .catch(() => ({ message: "Unknown server response" }));
-
-        if (!response.ok || !payload?.customToken) {
-          throw new Error(
-            payload?.message ||
-              `FocusFlow link token request failed (${response.status})`,
-          );
-        }
 
         const trackerUserCredential = await signInWithCustomToken(
           trackerAuth,
@@ -280,6 +291,16 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
 
   unlinkTrackerAccount: async () => {
     try {
+      const primaryUser = auth.currentUser;
+      if (primaryUser) {
+        const primaryIdToken = await primaryUser.getIdToken();
+        await fetch(getFocusflowLinkTokenUrl(), {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${primaryIdToken}`,
+          },
+        }).catch(() => undefined);
+      }
       await signOut(trackerAuth);
       set({ trackerUser: null, isLinked: false, linkError: null });
     } catch (error) {

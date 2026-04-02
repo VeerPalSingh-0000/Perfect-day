@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getPrimaryAdminAuth,
+  getPrimaryAdminDb,
   getTrackerAdminAuth,
 } from "@/lib/server/firebaseAdmin";
 
@@ -19,6 +20,13 @@ const allowedOrigins = new Set([
   "capacitor://localhost",
 ]);
 
+const FOCUSFLOW_LINKS_COLLECTION = "focusflowLinks";
+
+type FocusflowLinkBody = {
+  trackerGoogleIdToken?: string;
+  restoreOnly?: boolean;
+};
+
 const isAllowedOrigin = (origin: string | null): origin is string => {
   if (!origin) return false;
   if (allowedOrigins.has(origin)) return true;
@@ -32,7 +40,7 @@ const corsHeadersFor = (request: Request): HeadersInit => {
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
     Vary: "Origin",
   };
@@ -97,13 +105,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request
-      .json()
-      .catch(() => ({}) as { trackerGoogleIdToken?: string });
+    const body = await request.json().catch(() => ({}) as FocusflowLinkBody);
 
     let trackerUid = decoded.uid;
     let trackerEmail: string | undefined;
     let trackerEmailVerified: boolean | undefined;
+    const restoreOnly = body?.restoreOnly === true;
+
+    const primaryAdminDb = getPrimaryAdminDb();
+    const linkRef = primaryAdminDb
+      .collection(FOCUSFLOW_LINKS_COLLECTION)
+      .doc(decoded.uid);
+    const linkSnap = await linkRef.get();
 
     const trackerGoogleIdToken =
       typeof body?.trackerGoogleIdToken === "string"
@@ -144,6 +157,27 @@ export async function POST(request: Request) {
           ? tokenInfo.email
           : undefined;
       trackerEmailVerified = tokenInfo.email_verified === "true";
+    } else if (linkSnap.exists) {
+      const linkData = linkSnap.data() as
+        | {
+            trackerUid?: string;
+            trackerEmail?: string;
+          }
+        | undefined;
+
+      if (typeof linkData?.trackerUid === "string" && linkData.trackerUid) {
+        trackerUid = linkData.trackerUid;
+      }
+      if (typeof linkData?.trackerEmail === "string" && linkData.trackerEmail) {
+        trackerEmail = linkData.trackerEmail;
+      }
+    } else if (restoreOnly) {
+      return error(
+        request,
+        404,
+        "No FocusFlow link found for this account.",
+        "focusflow_not_linked",
+      );
     }
 
     const trackerAdminAuth = getTrackerAdminAuth();
@@ -175,6 +209,21 @@ export async function POST(request: Request) {
       }
     }
 
+    // Persist link so other devices can restore silently.
+    await linkRef.set(
+      {
+        primaryUid: decoded.uid,
+        primaryEmail:
+          typeof decoded.email === "string" && decoded.email.length > 0
+            ? decoded.email
+            : null,
+        trackerUid,
+        trackerEmail: trackerEmail ?? null,
+        updatedAt: Date.now(),
+      },
+      { merge: true },
+    );
+
     const customClaims: Record<string, string | boolean> = {
       linkedByPrimaryUid: decoded.uid,
     };
@@ -203,6 +252,8 @@ export async function POST(request: Request) {
       {
         success: true,
         customToken: trackerCustomToken,
+        trackerEmail: trackerEmail ?? null,
+        trackerUid,
       },
       { status: 200, headers: corsHeadersFor(request) },
     );
@@ -210,5 +261,55 @@ export async function POST(request: Request) {
     const message =
       e instanceof Error ? e.message : "Failed to create link token.";
     return error(request, 500, message, "link_token_failed");
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const authHeader = request.headers.get("authorization") || "";
+    const bearerPrefix = "Bearer ";
+
+    if (!authHeader.startsWith(bearerPrefix)) {
+      return error(
+        request,
+        401,
+        "Missing bearer token.",
+        "missing_bearer_token",
+      );
+    }
+
+    const primaryIdToken = authHeader.slice(bearerPrefix.length).trim();
+    if (!primaryIdToken) {
+      return error(request, 401, "Empty bearer token.", "empty_bearer_token");
+    }
+
+    const primaryAdminAuth = getPrimaryAdminAuth();
+    const decoded = await primaryAdminAuth.verifyIdToken(primaryIdToken, true);
+
+    if (!decoded?.uid) {
+      return error(
+        request,
+        401,
+        "Invalid primary auth token.",
+        "invalid_primary_token",
+      );
+    }
+
+    const primaryAdminDb = getPrimaryAdminDb();
+    await primaryAdminDb
+      .collection(FOCUSFLOW_LINKS_COLLECTION)
+      .doc(decoded.uid)
+      .delete();
+
+    return NextResponse.json(
+      {
+        success: true,
+      },
+      { status: 200, headers: corsHeadersFor(request) },
+    );
+  } catch (e: unknown) {
+    const message =
+      e instanceof Error ? e.message : "Failed to unlink FocusFlow account.";
+    return error(request, 500, message, "focusflow_unlink_failed");
   }
 }
