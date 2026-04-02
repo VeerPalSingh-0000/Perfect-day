@@ -8,7 +8,6 @@ import { App } from "@capacitor/app";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore } from "@/stores/useDataStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
-import { initAuthListener } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
@@ -26,13 +25,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const fetchAll = useDataStore((s) => s.fetchAll);
   const startTrackerSync = useDataStore((s) => s.startTrackerSync);
   const isDataLoaded = useDataStore((s) => s.isDataLoaded);
-  
+
   const trackerUser = useTrackerStore((s) => s.trackerUser);
   const isTrackerLinked = useTrackerStore((s) => s.isLinked);
   const initTrackerAuth = useTrackerStore((s) => s.initTrackerAuth);
 
   useEffect(() => {
-    initAuthListener();
     initTrackerAuth();
   }, [initTrackerAuth]);
 

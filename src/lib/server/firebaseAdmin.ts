@@ -14,7 +14,18 @@ const requireEnv = (name: string): string => {
   return value;
 };
 
-const normalizePrivateKey = (raw: string): string => raw.replace(/\\n/g, "\n");
+const normalizePrivateKey = (raw: string): string => {
+  const trimmed = raw.trim();
+
+  // Support values saved with surrounding quotes in env providers.
+  const unquoted =
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+      ? trimmed.slice(1, -1)
+      : trimmed;
+
+  return unquoted.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n");
+};
 
 const getOrInitAdminApp = (
   name: string,

@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL("https://dayisperfect.netlify.app"),
   title: {
-    default: "SIRA – Daily Routine & Aesthetic Productivity App",
+    default: "SIRA - Daily Routine and Aesthetic Productivity App",
     template: "%s | SIRA",
   },
   description:
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://dayisperfect.netlify.app",
     siteName: "SIRA",
-    title: "SIRA – Daily Routine & Aesthetic Productivity App",
+    title: "SIRA - Daily Routine and Aesthetic Productivity App",
     description:
       "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
     images: [
@@ -84,12 +84,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SIRA – Daily Routine & Aesthetic Productivity App",
+    title: "SIRA - Daily Routine and Aesthetic Productivity App",
     description:
       "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
     images: ["/logo.png"],
   },
-  // icons auto-detected from src/app/icon.png by Next.js App Router
   verification: {
     google: "-eNrtVYxyV2gNmynl2ofvHkBfBw5BRMyxGHhGuq_0-U",
   },
@@ -151,24 +150,6 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('theme');
-                  if (theme === 'light') {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.classList.add('light');
-                  } else {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                  }
-                } catch (_) {}
-              })();
-            `,
-          }}
-        />
         {/* Preconnect to Google Fonts CDN for faster font loading */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -176,28 +157,11 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-        {/* Load Material Symbols asynchronously so it never blocks page render (critical for Android WebView) */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var link = document.createElement('link');
-                  link.rel = 'stylesheet';
-                  link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
-                  link.crossOrigin = 'anonymous';
-                  document.head.appendChild(link);
-                } catch(e) {}
-              })();
-            `,
-          }}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          crossOrigin="anonymous"
         />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          />
-        </noscript>
       </head>
       <body
         className="bg-black text-on-surface font-body min-h-screen selection:bg-white/20 overflow-x-hidden"

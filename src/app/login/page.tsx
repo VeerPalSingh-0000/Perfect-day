@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { signInWithGoogle } from "@/lib/auth";
-import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 
 export default function LoginPage() {
@@ -15,14 +14,12 @@ export default function LoginPage() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const isInitialized = useAuthStore((s) => s.isInitialized);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (isInitialized && !isLoading && user) {
       router.replace("/today");
     }
   }, [user, isLoading, isInitialized, router]);
 
-  // Show nothing or skeleton while checking auth state or redirecting
   if (!isInitialized || isLoading || user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -49,7 +46,6 @@ export default function LoginPage() {
 
   return (
     <div className="bg-black text-[#E2E2E2] font-body min-h-screen selection:bg-white/20 overflow-x-hidden overflow-y-auto">
-      {/* TopAppBar */}
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-[#464555]/15 flex items-center px-6 h-16 justify-center">
         <div className="flex items-center gap-2">
           <OptimizedImage
@@ -63,17 +59,13 @@ export default function LoginPage() {
           </span>
         </div>
       </nav>
-      {/* Main Content Canvas */}
       <main className="relative z-10 h-dvh w-full flex flex-col items-center justify-center pt-20 pb-8 px-6 bg-black overflow-hidden">
-        {/* Login Card */}
         <div className="glass-card w-full max-w-md rounded-xl p-6 sm:p-10 flex flex-col items-center premium-shadow max-h-[90vh] overflow-y-auto">
-          {/* Icon Header */}
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white flex items-center justify-center mb-6 sm:mb-8 shadow-[0_0_30px_rgba(255,255,255,0.1)]">
             <span className="material-symbols-outlined text-black text-2xl sm:text-3xl">
               lock
             </span>
           </div>
-          {/* Typography Header */}
           <div className="text-center mb-6 sm:mb-10 space-y-1 sm:space-y-2">
             <h1 className="font-headline text-2xl sm:text-3xl font-bold tracking-[0.05em] text-[#E2E2E2] uppercase">
               System Access
@@ -89,9 +81,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Actions Container */}
           <div className="w-full space-y-3 sm:space-y-4">
-            {/* Google Sign-In Button */}
             <button
               onClick={handleGoogleSignIn}
               disabled={isSigningIn}
@@ -128,7 +118,6 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-            {/* Divider */}
             <div className="relative py-4 sm:py-6 flex items-center">
               <div className="grow vanish-divider h-px" />
               <span className="shrink mx-4 text-[9px] sm:text-[10px] font-bold text-[#464555] uppercase tracking-[0.3em]">
@@ -136,7 +125,6 @@ export default function LoginPage() {
               </span>
               <div className="grow vanish-divider h-px" />
             </div>
-            {/* Email Button (Coming Soon) */}
             <button
               disabled
               className="w-full flex items-center justify-center gap-3 py-3.5 sm:py-4 px-6 bg-transparent border border-[#464555]/30 text-[#464555] rounded-lg cursor-not-allowed opacity-50"
@@ -149,7 +137,6 @@ export default function LoginPage() {
               </span>
             </button>
           </div>
-          {/* Footer Link */}
           <div className="mt-6 sm:mt-10 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
             <span className="text-[#464555]">Unauthorized user? </span>
             <a

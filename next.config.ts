@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
   // Static export for mobile bundle, server mode for Vercel API routes.
   output: isServerOutput ? undefined : "export",
 
-  // Keep old trailing slash behavior for static export only.
-  trailingSlash: !isServerOutput,
-  skipTrailingSlashRedirect: true,
+  // Avoid route payload lookups under /login/__next... in static mode.
+  trailingSlash: false,
+  skipTrailingSlashRedirect: false,
 
   images: {
     // Static export mein image optimization kaam nahi karti

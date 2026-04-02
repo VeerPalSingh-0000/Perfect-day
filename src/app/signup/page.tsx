@@ -50,14 +50,11 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-6 bg-black relative overflow-hidden">
-      {/* Atmospheric Background Blobs */}
       <div className="fixed top-0 left-0 w-[60%] h-[60%] bg-tertiary/10 rounded-full blur-[120px] -z-10 pointer-events-none opacity-50" />
       <div className="fixed bottom-0 right-0 w-[50%] h-[50%] bg-primary/5 rounded-full blur-[100px] -z-10 pointer-events-none opacity-30" />
 
-      {/* Main Content Card */}
       <main className="relative z-10 w-full max-w-md animate-fade-in-up">
         <div className="glass-card rounded-xl p-10 flex flex-col items-center shadow-2xl border-white/5 bg-[#0A0A0A]/80">
-          {/* Icon Header */}
           <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-8 shadow-[0_0_30px_rgba(255,255,255,0.15)] group hover:scale-110 transition-transform duration-500">
             <span
               className="material-symbols-outlined text-black text-3xl"
@@ -67,7 +64,6 @@ export default function SignupPage() {
             </span>
           </div>
 
-          {/* Typography Header */}
           <div className="text-center mb-10 space-y-2">
             <h1 className="font-headline text-3xl font-black tracking-[0.05em] text-[#E2E2E2] uppercase">
               Request Access
@@ -77,16 +73,13 @@ export default function SignupPage() {
             </p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="w-full p-4 mb-6 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold rounded-lg text-center uppercase tracking-widest">
               {error}
             </div>
           )}
 
-          {/* Actions Container */}
           <div className="w-full space-y-4">
-            {/* Google Sign-In Button */}
             <button
               onClick={handleGoogleSignIn}
               disabled={isSigningIn}
@@ -124,7 +117,6 @@ export default function SignupPage() {
               )}
             </button>
 
-            {/* Divider */}
             <div className="relative py-4 flex items-center">
               <div className="grow vanish-divider h-px" />
               <span className="shrink mx-4 text-[9px] font-black text-[#464555] uppercase tracking-[0.3em]">
@@ -133,7 +125,6 @@ export default function SignupPage() {
               <div className="grow vanish-divider h-px" />
             </div>
 
-            {/* Email Button (Coming Soon) — now properly disabled */}
             <button
               disabled
               className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-transparent border border-[#464555]/30 text-[#464555] rounded-lg cursor-not-allowed opacity-50"
@@ -145,7 +136,6 @@ export default function SignupPage() {
             </button>
           </div>
 
-          {/* Footer Link */}
           <div className="mt-10 text-[10px] font-bold uppercase tracking-widest">
             <span className="text-[#464555]">Already authorized? </span>
             <Link
@@ -158,7 +148,6 @@ export default function SignupPage() {
         </div>
       </main>
 
-      {/* Brand Label */}
       <div className="fixed bottom-10 w-full text-center z-20">
         <p className="font-headline text-[10px] font-medium tracking-[0.2rem] uppercase text-[#464555]">
           © {getCurrentYear()} SIRA ARCHITECT. ALL RIGHTS RESERVED.
