@@ -6,6 +6,13 @@ import {
 
 export const runtime = "nodejs";
 
+type GoogleTokenInfo = {
+  sub: string;
+  email?: string;
+  email_verified?: string;
+  exp?: string;
+};
+
 const allowedOrigins = new Set([
   "https://localhost",
   "http://localhost",
@@ -90,15 +97,65 @@ export async function POST(request: Request) {
       );
     }
 
+    const body = await request
+      .json()
+      .catch(() => ({}) as { trackerGoogleIdToken?: string });
+
+    let trackerUid = decoded.uid;
+    let trackerEmail: string | undefined;
+
+    const trackerGoogleIdToken =
+      typeof body?.trackerGoogleIdToken === "string"
+        ? body.trackerGoogleIdToken.trim()
+        : "";
+
+    if (trackerGoogleIdToken.length > 0) {
+      const tokenInfoResponse = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(trackerGoogleIdToken)}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        },
+      );
+
+      if (!tokenInfoResponse.ok) {
+        return error(
+          request,
+          400,
+          "Selected Google account token is invalid or expired.",
+          "invalid_tracker_google_token",
+        );
+      }
+
+      const tokenInfo = (await tokenInfoResponse.json()) as GoogleTokenInfo;
+      if (!tokenInfo?.sub) {
+        return error(
+          request,
+          400,
+          "Selected Google account is missing identity subject.",
+          "missing_tracker_google_sub",
+        );
+      }
+
+      trackerUid = tokenInfo.sub;
+      trackerEmail =
+        typeof tokenInfo.email === "string" && tokenInfo.email.length > 0
+          ? tokenInfo.email
+          : undefined;
+    }
+
     const trackerAdminAuth = getTrackerAdminAuth();
-    const trackerUid = decoded.uid;
 
     const customClaims: Record<string, string> = {
-      primaryUid: decoded.uid,
+      linkedByPrimaryUid: decoded.uid,
     };
 
     if (typeof decoded.email === "string" && decoded.email.length > 0) {
-      customClaims.email = decoded.email;
+      customClaims.primaryEmail = decoded.email;
+    }
+
+    if (typeof trackerEmail === "string" && trackerEmail.length > 0) {
+      customClaims.trackerEmail = trackerEmail;
     }
 
     const trackerCustomToken = await trackerAdminAuth.createCustomToken(

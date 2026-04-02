@@ -846,6 +846,13 @@ export default function SettingsPage() {
                     ? "Connecting..."
                     : "🔗 Link Google Account"}
                 </button>
+                <button
+                  onClick={trackerStore.linkDifferentTrackerAccount}
+                  disabled={trackerStore.isLinking}
+                  className="w-full py-2.5 rounded-lg bg-white/5 border border-white/15 text-[10px] font-bold uppercase tracking-widest text-[#E2E2E2] hover:bg-white/10 transition-colors disabled:opacity-50"
+                >
+                  Use Different Google Account
+                </button>
                 {trackerStore.linkError && (
                   <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
                     <p className="text-[10px] leading-relaxed text-amber-200">
