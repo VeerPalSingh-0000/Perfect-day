@@ -103,6 +103,7 @@ export async function POST(request: Request) {
 
     let trackerUid = decoded.uid;
     let trackerEmail: string | undefined;
+    let trackerEmailVerified: boolean | undefined;
 
     const trackerGoogleIdToken =
       typeof body?.trackerGoogleIdToken === "string"
@@ -142,16 +143,28 @@ export async function POST(request: Request) {
         typeof tokenInfo.email === "string" && tokenInfo.email.length > 0
           ? tokenInfo.email
           : undefined;
+      trackerEmailVerified = tokenInfo.email_verified === "true";
     }
 
     const trackerAdminAuth = getTrackerAdminAuth();
 
-    const customClaims: Record<string, string> = {
+    const customClaims: Record<string, string | boolean> = {
       linkedByPrimaryUid: decoded.uid,
     };
 
     if (typeof decoded.email === "string" && decoded.email.length > 0) {
       customClaims.primaryEmail = decoded.email;
+    }
+
+    if (typeof trackerEmail === "string" && trackerEmail.length > 0) {
+      customClaims.email = trackerEmail;
+      customClaims.trackerEmail = trackerEmail;
+    } else if (typeof decoded.email === "string" && decoded.email.length > 0) {
+      customClaims.email = decoded.email;
+    }
+
+    if (typeof trackerEmailVerified === "boolean") {
+      customClaims.email_verified = trackerEmailVerified;
     }
 
     if (typeof trackerEmail === "string" && trackerEmail.length > 0) {

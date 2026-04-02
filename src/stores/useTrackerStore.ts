@@ -85,6 +85,13 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
     return "FocusFlow backend token bridge failed. Check server deployment/env vars and try again.";
   }
 
+  if (
+    code === "permission-denied" ||
+    lower.includes("insufficient permissions")
+  ) {
+    return "Connected account does not have permission to read FocusFlow projects/sessions. Use the same Google account that owns TrackIT data, or update tracker Firestore rules.";
+  }
+
   if (lower.includes("missing next_public_focusflow_bridge_url")) {
     return "FocusFlow backend URL is missing in app config. Add NEXT_PUBLIC_FOCUSFLOW_BRIDGE_URL and rebuild Android app.";
   }
