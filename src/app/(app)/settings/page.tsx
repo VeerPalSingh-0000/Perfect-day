@@ -13,11 +13,26 @@ import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useAchievementStore } from "@/stores/useAchievementStore";
 
 const ACHIEVEMENT_LIST = [
-  { id: "first_perfect", title: "Perfect Day", icon: "🌟", desc: "Finish 100% of tasks" },
+  {
+    id: "first_perfect",
+    title: "Perfect Day",
+    icon: "🌟",
+    desc: "Finish 100% of tasks",
+  },
   { id: "streak_7", title: "Relentless", icon: "🔥", desc: "7-day streak" },
   { id: "streak_30", title: "Unstoppable", icon: "💎", desc: "30-day streak" },
-  { id: "tasks_100", title: "Century", icon: "🏆", desc: "100 tasks completed" },
-  { id: "early_bird", title: "Early Bird", icon: "🐦", desc: "Finish before noon" },
+  {
+    id: "tasks_100",
+    title: "Century",
+    icon: "🏆",
+    desc: "100 tasks completed",
+  },
+  {
+    id: "early_bird",
+    title: "Early Bird",
+    icon: "🐦",
+    desc: "Finish before noon",
+  },
 ];
 
 const AVATARS = [
@@ -42,8 +57,10 @@ export default function SettingsPage() {
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [isDataProtocolsOpen, setIsDataProtocolsOpen] = useState(false);
   const [isPriorityInfoOpen, setIsPriorityInfoOpen] = useState(false);
-  
-  const unlockedAchievements = useAchievementStore((state) => state.achievements);
+
+  const unlockedAchievements = useAchievementStore(
+    (state) => state.achievements,
+  );
 
   // Theme state from store
   const theme = useThemeStore((state) => state.theme);
@@ -52,7 +69,9 @@ export default function SettingsPage() {
 
   // Priority Mode state
   const priorityMode = useSettingsStore((state) => state.priorityMode);
-  const togglePriorityMode = useSettingsStore((state) => state.togglePriorityMode);
+  const togglePriorityMode = useSettingsStore(
+    (state) => state.togglePriorityMode,
+  );
 
   // Notifications state
   const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
@@ -199,21 +218,27 @@ export default function SettingsPage() {
           </h2>
           <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
             {ACHIEVEMENT_LIST.map((ach) => {
-              const isUnlocked = unlockedAchievements.some((a) => a.id === ach.id);
+              const isUnlocked = unlockedAchievements.some(
+                (a) => a.id === ach.id,
+              );
               return (
-                <div 
+                <div
                   key={ach.id}
                   className={cn(
-                    "flex min-w-[100px] flex-col items-center gap-2 rounded-xl border p-4 transition-all",
-                    isUnlocked 
-                      ? "border-[#C4C0FF]/30 bg-[#C4C0FF]/10 shadow-[0_0_20px_rgba(196,192,255,0.1)]" 
-                      : "border-white/5 bg-[#0A0A0A] opacity-40 grayscale"
+                    "flex min-w-25 flex-col items-center gap-2 rounded-xl border p-4 transition-all",
+                    isUnlocked
+                      ? "border-[#C4C0FF]/30 bg-[#C4C0FF]/10 shadow-[0_0_20px_rgba(196,192,255,0.1)]"
+                      : "border-white/5 bg-[#0A0A0A] opacity-40 grayscale",
                   )}
                 >
                   <span className="text-2xl">{ach.icon}</span>
                   <div className="text-center">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#E2E2E2]">{ach.title}</p>
-                    <p className="text-[7px] font-medium text-[#464555] mt-0.5 leading-tight">{ach.desc}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#E2E2E2]">
+                      {ach.title}
+                    </p>
+                    <p className="text-[7px] font-medium text-[#464555] mt-0.5 leading-tight">
+                      {ach.desc}
+                    </p>
                   </div>
                 </div>
               );
@@ -296,7 +321,7 @@ export default function SettingsPage() {
               className={cn(
                 "transition-all duration-300 ease-in-out",
                 isAvatarDropdownOpen
-                  ? "max-h-[500px] opacity-100"
+                  ? "max-h-125 opacity-100"
                   : "max-h-0 opacity-0",
               )}
             >
@@ -354,7 +379,7 @@ export default function SettingsPage() {
                 <div
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-lg border shrink-0 transition-colors",
-                    priorityMode === 'advanced'
+                    priorityMode === "advanced"
                       ? "border-[#4F44E2]/50 bg-[#4F44E2]/20"
                       : "border-white/10 bg-white/5",
                   )}
@@ -362,7 +387,9 @@ export default function SettingsPage() {
                   <span
                     className={cn(
                       "material-symbols-outlined text-base",
-                      priorityMode === 'advanced' ? "text-[#4F44E2]" : "text-white",
+                      priorityMode === "advanced"
+                        ? "text-[#4F44E2]"
+                        : "text-white",
                     )}
                   >
                     stars
@@ -370,10 +397,12 @@ export default function SettingsPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-bold uppercase tracking-wider text-white transition-colors duration-300">
-                    {priorityMode === 'advanced' ? "Advanced Mode" : "Basic Mode"}
+                    {priorityMode === "advanced"
+                      ? "Advanced Mode"
+                      : "Basic Mode"}
                   </p>
                   <p className="text-[10px] sm:text-[11px] font-medium text-[#464555] uppercase tracking-wide transition-colors duration-300">
-                    {priorityMode === 'advanced'
+                    {priorityMode === "advanced"
                       ? "Tasks have varying priority weights"
                       : "All tasks have equal importance"}
                   </p>
@@ -389,9 +418,11 @@ export default function SettingsPage() {
                   className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors shrink-0"
                   title="What is Advanced Mode?"
                 >
-                  <span className="material-symbols-outlined text-[16px] text-white/70">info</span>
+                  <span className="material-symbols-outlined text-[16px] text-white/70">
+                    info
+                  </span>
                 </button>
-                
+
                 <button
                   onClick={() => {
                     triggerHaptic();
@@ -399,7 +430,7 @@ export default function SettingsPage() {
                   }}
                   className={cn(
                     "relative h-5 w-10 shrink-0 rounded-full transition-colors duration-300",
-                    priorityMode === 'advanced'
+                    priorityMode === "advanced"
                       ? "bg-[#4F44E2] shadow-[0_0_10px_rgba(79,68,226,0.3)]"
                       : "bg-white/20",
                   )}
@@ -407,7 +438,7 @@ export default function SettingsPage() {
                   <div
                     className={cn(
                       "absolute top-1 h-3 w-3 rounded-full bg-white transition-all duration-300",
-                      priorityMode === 'advanced' ? "right-1" : "left-1",
+                      priorityMode === "advanced" ? "right-1" : "left-1",
                     )}
                   />
                 </button>
@@ -665,19 +696,29 @@ export default function SettingsPage() {
             <div>
               <span className="font-bold text-[#E2E2E2]">Basic Mode</span>
               <p className="mt-1">
-                Every task has equal importance. If you have 4 tasks and finish 2, your day is 50% complete.
+                Every task has equal importance. If you have 4 tasks and finish
+                2, your day is 50% complete.
               </p>
             </div>
             <div>
               <span className="font-bold text-[#E2E2E2]">Advanced Mode</span>
               <p className="mt-1 mb-2">
-                Tasks carry different mathematical weights. Doing harder things yields higher percentage gains for the day.
+                Tasks carry different mathematical weights. Doing harder things
+                yields higher percentage gains for the day.
               </p>
               <ul className="list-none space-y-2">
-                <li className="flex items-center gap-2"><span className="text-red-400">🔴 Critical</span> (4x Weight)</li>
-                <li className="flex items-center gap-2"><span className="text-orange-400">🟠 High</span> (3x Weight)</li>
-                <li className="flex items-center gap-2"><span className="text-yellow-400">🟡 Medium</span> (2x Weight)</li>
-                <li className="flex items-center gap-2"><span className="text-blue-400">🔵 Low</span> (1x Weight)</li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-400">🔴 Critical</span> (4x Weight)
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-orange-400">🟠 High</span> (3x Weight)
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-yellow-400">🟡 Medium</span> (2x Weight)
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-400">🔵 Low</span> (1x Weight)
+                </li>
               </ul>
             </div>
           </div>
@@ -685,11 +726,17 @@ export default function SettingsPage() {
           <div className="pt-4 border-t border-[#464555]/20 mt-4 mb-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-9 w-9 rounded-lg bg-[#4F44E2]/15 border border-[#4F44E2]/25 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#4F44E2] text-lg">link</span>
+                <span className="material-symbols-outlined text-[#4F44E2] text-lg">
+                  link
+                </span>
               </div>
               <div>
-                <h4 className="text-xs font-bold text-[#E2E2E2]">FocusFlow Integration</h4>
-                <p className="text-[10px] text-[#464555] mt-0.5">Connect your TrackIT study timer</p>
+                <h4 className="text-xs font-bold text-[#E2E2E2]">
+                  FocusFlow Integration
+                </h4>
+                <p className="text-[10px] text-[#464555] mt-0.5">
+                  Connect your TrackIT study timer
+                </p>
               </div>
             </div>
 
@@ -697,47 +744,88 @@ export default function SettingsPage() {
               href="https://justtrackit.netlify.app/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 w-full py-3 px-3.5 rounded-lg bg-white/[0.03] border border-[#464555]/15 mb-4 hover:bg-white/[0.06] hover:border-[#4F44E2]/30 transition-all group"
+              className="flex items-center gap-3 w-full py-3 px-3.5 rounded-lg bg-white/3 border border-[#464555]/15 mb-4 hover:bg-white/6 hover:border-[#4F44E2]/30 transition-all group"
             >
-              <span className="material-symbols-outlined text-[#4F44E2] text-lg group-hover:scale-110 transition-transform">open_in_new</span>
+              <span className="material-symbols-outlined text-[#4F44E2] text-lg group-hover:scale-110 transition-transform">
+                open_in_new
+              </span>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-[#E2E2E2]">Open TrackIT App</p>
-                <p className="text-[10px] text-[#464555] truncate">justtrackit.netlify.app</p>
+                <p className="text-[11px] font-bold text-[#E2E2E2]">
+                  Open TrackIT App
+                </p>
+                <p className="text-[10px] text-[#464555] truncate">
+                  justtrackit.netlify.app
+                </p>
               </div>
-              <span className="material-symbols-outlined text-[#464555] text-sm group-hover:text-[#4F44E2] transition-colors">arrow_forward</span>
+              <span className="material-symbols-outlined text-[#464555] text-sm group-hover:text-[#4F44E2] transition-colors">
+                arrow_forward
+              </span>
             </a>
 
-            <div className="rounded-lg bg-white/[0.03] border border-[#464555]/15 p-3 mb-4">
-              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">✨ What does this do?</p>
+            <div className="rounded-lg bg-white/3 border border-[#464555]/15 p-3 mb-4">
+              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">
+                ✨ What does this do?
+              </p>
               <p className="text-[11px] text-[#888890] leading-relaxed">
-                When you study using the <span className="text-[#E2E2E2] font-medium">TrackIT</span> app, SIRA automatically marks your tasks as <span className="text-green-400 font-medium">done</span> once you hit your time goal. No manual ticking needed!
+                When you study using the{" "}
+                <span className="text-[#E2E2E2] font-medium">TrackIT</span> app,
+                SIRA automatically marks your tasks as{" "}
+                <span className="text-green-400 font-medium">done</span> once
+                you hit your time goal. No manual ticking needed!
               </p>
             </div>
 
-            <div className="rounded-lg bg-white/[0.03] border border-[#464555]/15 p-3 mb-4">
-              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">📋 How to use it</p>
+            <div className="rounded-lg bg-white/3 border border-[#464555]/15 p-3 mb-4">
+              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">
+                📋 How to use it
+              </p>
               <ol className="space-y-2 text-[11px] text-[#888890] leading-relaxed list-decimal list-inside">
-                <li><span className="text-[#E2E2E2]">Link your Google account</span> below</li>
-                <li>When adding a task, tap <span className="text-[#E2E2E2]">"Link TrackIT Project"</span> and pick your project</li>
-                <li>Set a <span className="text-[#E2E2E2]">Focus Goal</span> (e.g. 60 min)</li>
-                <li>Study in TrackIT — task auto-completes when goal is reached! ✅</li>
+                <li>
+                  <span className="text-[#E2E2E2]">
+                    Link your Google account
+                  </span>{" "}
+                  below
+                </li>
+                <li>
+                  When adding a task, tap{" "}
+                  <span className="text-[#E2E2E2]">"Link TrackIT Project"</span>{" "}
+                  and pick your project
+                </li>
+                <li>
+                  Set a <span className="text-[#E2E2E2]">Focus Goal</span> (e.g.
+                  60 min)
+                </li>
+                <li>
+                  Study in TrackIT — task auto-completes when goal is reached!
+                  ✅
+                </li>
               </ol>
             </div>
 
-            <div className="rounded-lg bg-white/[0.03] border border-[#464555]/15 p-3 mb-4">
-              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">📊 Bonus: Focus History</p>
+            <div className="rounded-lg bg-white/3 border border-[#464555]/15 p-3 mb-4">
+              <p className="text-[11px] font-semibold text-[#C4C0FF] mb-2">
+                📊 Bonus: Focus History
+              </p>
               <p className="text-[11px] text-[#888890] leading-relaxed">
-                Your total study time from TrackIT shows up in the <span className="text-[#E2E2E2] font-medium">Journey</span> tab. See how many hours you focused each day!
+                Your total study time from TrackIT shows up in the{" "}
+                <span className="text-[#E2E2E2] font-medium">Journey</span> tab.
+                See how many hours you focused each day!
               </p>
             </div>
 
             {trackerStore.isLinked ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-2.5 py-2.5 px-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <span className="material-symbols-outlined text-green-400 text-base">check_circle</span>
+                  <span className="material-symbols-outlined text-green-400 text-base">
+                    check_circle
+                  </span>
                   <div>
-                    <p className="text-[11px] text-green-400 font-bold">Connected</p>
-                    <p className="text-[10px] text-green-400/60">{trackerStore.trackerUser?.email}</p>
+                    <p className="text-[11px] text-green-400 font-bold">
+                      Connected
+                    </p>
+                    <p className="text-[10px] text-green-400/60">
+                      {trackerStore.trackerUser?.email}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -748,13 +836,24 @@ export default function SettingsPage() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={trackerStore.linkTrackerAccount}
-                disabled={trackerStore.isLinking}
-                className="w-full py-3 rounded-lg bg-[#4F44E2]/20 border border-[#4F44E2]/50 text-xs font-bold uppercase tracking-widest text-[#C4C0FF] hover:bg-[#4F44E2]/30 transition-colors disabled:opacity-50"
-              >
-                {trackerStore.isLinking ? "Connecting..." : "🔗 Link Google Account"}
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={trackerStore.linkTrackerAccount}
+                  disabled={trackerStore.isLinking}
+                  className="w-full py-3 rounded-lg bg-[#4F44E2]/20 border border-[#4F44E2]/50 text-xs font-bold uppercase tracking-widest text-[#C4C0FF] hover:bg-[#4F44E2]/30 transition-colors disabled:opacity-50"
+                >
+                  {trackerStore.isLinking
+                    ? "Connecting..."
+                    : "🔗 Link Google Account"}
+                </button>
+                {trackerStore.linkError && (
+                  <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
+                    <p className="text-[10px] leading-relaxed text-amber-200">
+                      {trackerStore.linkError}
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
@@ -793,10 +892,13 @@ export default function SettingsPage() {
 
           <div className="space-y-4 text-xs leading-relaxed text-[#888890]">
             <p>
-              SIRA is designed to respect your privacy. All your tasks, habits, and daily records are securely tied to your personalized account.
+              SIRA is designed to respect your privacy. All your tasks, habits,
+              and daily records are securely tied to your personalized account.
             </p>
             <p>
-              We automatically sync your data using industry-standard secure cloud infrastructure to ensure your information is safe and accessible across your devices.
+              We automatically sync your data using industry-standard secure
+              cloud infrastructure to ensure your information is safe and
+              accessible across your devices.
             </p>
             <ul className="list-disc pl-4 space-y-2 mt-2">
               <li>No sensitive telemetry collection</li>

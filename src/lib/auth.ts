@@ -44,7 +44,7 @@ export const signInWithGoogle = async () => {
       useAuthStore.getState().setLoading(false);
       return userCredential.user;
     } else {
-      // Standard Web Flow
+      // Popup flow is most reliable for this web app setup.
       const result = await signInWithPopup(auth, googleProvider);
       if (!result.user) {
         throw new Error("Sign-in failed: No user data returned");
@@ -94,7 +94,6 @@ export const initAuthListener = () => {
     // EAGERLY start fetching data the INSTANT we know who the user is.
     if (user) {
       const dataStore = useDataStore.getState();
-      const authStoreState = useAuthStore.getState();
 
       // Fetch data
       if (!dataStore.isDataLoaded) {

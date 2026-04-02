@@ -198,7 +198,6 @@ export default function RootLayout({
             href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
           />
         </noscript>
-
       </head>
       <body
         className="bg-black text-on-surface font-body min-h-screen selection:bg-white/20 overflow-x-hidden"
