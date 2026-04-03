@@ -1,5 +1,9 @@
 import { create } from "zustand";
+import { getApp, getApps, initializeApp } from "firebase/app";
 import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
   signInWithCustomToken,
   signOut,
   onAuthStateChanged,
@@ -12,9 +16,39 @@ import { trackerAuth } from "@/lib/tracker-db";
 import { getTrackItProjects, getTrackItTopics } from "@/lib/db";
 
 const FOCUSFLOW_LINK_TOKEN_PATH = "/api/focusflow/link-token";
+const PRIMARY_PICKER_APP_NAME = "primary-picker-app";
 let trackerRestoreInFlight = false;
 let trackerRestoreAttempted = false;
 let trackerAuthUnsubscribe: (() => void) | null = null;
+
+const getPrimaryPickerAuth = () => {
+  const existing = getApps().find(
+    (app) => app.name === PRIMARY_PICKER_APP_NAME,
+  );
+  const pickerApp =
+    existing || initializeApp({ ...auth.app.options }, PRIMARY_PICKER_APP_NAME);
+  return getAuth(pickerApp);
+};
+
+const requestTrackerGoogleIdTokenFromWebPicker = async (): Promise<string> => {
+  const pickerAuth = getPrimaryPickerAuth();
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
+
+  const result = await signInWithPopup(pickerAuth, provider);
+  const credential = GoogleAuthProvider.credentialFromResult(result);
+  const trackerGoogleIdToken = credential?.idToken;
+
+  await signOut(pickerAuth).catch(() => undefined);
+
+  if (!trackerGoogleIdToken) {
+    throw new Error(
+      "Could not get Google ID token for selected tracker account.",
+    );
+  }
+
+  return trackerGoogleIdToken;
+};
 
 const getFocusflowLinkTokenUrl = () => {
   const bridgeBaseUrl =
@@ -77,7 +111,7 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
   }
 
   if (lower.includes("redirect_uri_mismatch")) {
-    return "Tracker Google OAuth redirect URI is misconfigured for this web domain. Update OAuth client redirect URIs in tracker Firebase/Google Cloud config, or use mobile for different-account linking.";
+    return "Google OAuth redirect URI is misconfigured for this web domain. Update OAuth client redirect URIs in Firebase/Google Cloud config for this project and try again.";
   }
 
   if (
@@ -307,10 +341,28 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         return;
       }
 
+      const primaryUser = auth.currentUser;
+      if (!primaryUser) {
+        throw new Error("Please sign in to Perfect Day first.");
+      }
+
+      const trackerGoogleIdToken =
+        await requestTrackerGoogleIdTokenFromWebPicker();
+      const primaryIdToken = await primaryUser.getIdToken();
+      const payload = await requestFocusflowCustomToken(primaryIdToken, {
+        trackerGoogleIdToken,
+      });
+
+      const trackerUserCredential = await signInWithCustomToken(
+        trackerAuth,
+        payload.customToken,
+      );
+
       set({
+        trackerUser: trackerUserCredential.user,
+        isLinked: true,
         isLinking: false,
-        linkError:
-          "Different-account selection is not available on web right now because tracker OAuth redirect configuration is invalid. Use mobile app for different account selection, or use normal Link FocusFlow on web.",
+        linkError: null,
       });
       return;
     } catch (error) {
