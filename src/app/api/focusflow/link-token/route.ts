@@ -20,6 +20,17 @@ const allowedOrigins = new Set([
   "capacitor://localhost",
 ]);
 
+const allowedOriginSuffixes = [".vercel.app", ".netlify.app"];
+
+const extraAllowedOrigins = (process.env.FOCUSFLOW_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
+
+for (const origin of extraAllowedOrigins) {
+  allowedOrigins.add(origin);
+}
+
 const FOCUSFLOW_LINKS_COLLECTION = "focusflowLinks";
 
 type FocusflowLinkBody = {
@@ -30,7 +41,9 @@ type FocusflowLinkBody = {
 const isAllowedOrigin = (origin: string | null): origin is string => {
   if (!origin) return false;
   if (allowedOrigins.has(origin)) return true;
-  if (origin.endsWith(".vercel.app")) return true;
+  if (allowedOriginSuffixes.some((suffix) => origin.endsWith(suffix))) {
+    return true;
+  }
   return false;
 };
 

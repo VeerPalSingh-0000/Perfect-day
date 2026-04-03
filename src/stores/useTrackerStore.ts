@@ -46,6 +46,13 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
       : "";
 
   if (
+    code === "auth/unauthorized-domain" ||
+    lower.includes("unauthorized-domain")
+  ) {
+    return "This website domain is not authorized for FocusFlow Google sign-in. Add the current domain in tracker Firebase Console -> Authentication -> Settings -> Authorized domains.";
+  }
+
+  if (
     lower.includes("init.json") ||
     lower.includes("network-request-failed") ||
     lower.includes("authdomain")
