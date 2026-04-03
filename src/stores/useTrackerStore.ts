@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import {
-  signInWithPopup,
   signInWithCustomToken,
-  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   User,
@@ -15,6 +13,8 @@ import { getTrackItProjects, getTrackItTopics } from "@/lib/db";
 
 const FOCUSFLOW_LINK_TOKEN_PATH = "/api/focusflow/link-token";
 let trackerRestoreInFlight = false;
+let trackerRestoreAttempted = false;
+let trackerAuthUnsubscribe: (() => void) | null = null;
 
 const getFocusflowLinkTokenUrl = () => {
   const bridgeBaseUrl =
@@ -72,6 +72,10 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
     return "Sign-in was cancelled before completion.";
   }
 
+  if (lower.includes("redirect_uri_mismatch")) {
+    return "Tracker Google OAuth redirect URI is misconfigured for this web domain. Update OAuth client redirect URIs in tracker Firebase/Google Cloud config, or use mobile for different-account linking.";
+  }
+
   if (
     lower.includes("invalid_request") ||
     lower.includes("disallowed_useragent") ||
@@ -91,6 +95,10 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
 
   if (lower.includes("focusflow link token request failed")) {
     return "FocusFlow backend token bridge failed. Check server deployment/env vars and try again.";
+  }
+
+  if (lower.includes("missing required env variable")) {
+    return "FocusFlow server is missing Firebase admin environment variables. Add PRIMARY_* and TRACKER_* Firebase admin credentials in your hosting provider settings and redeploy.";
   }
 
   if (
@@ -159,8 +167,9 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
 
   initTrackerAuth: () => {
     if (typeof window === "undefined") return;
+    if (trackerAuthUnsubscribe) return;
 
-    return onAuthStateChanged(trackerAuth, (user) => {
+    trackerAuthUnsubscribe = onAuthStateChanged(trackerAuth, (user) => {
       set({
         trackerUser: user,
         isLinked: !!user,
@@ -168,8 +177,14 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         linkError: null,
       });
 
-      if (!user && auth.currentUser && !trackerRestoreInFlight) {
+      if (
+        !user &&
+        auth.currentUser &&
+        !trackerRestoreInFlight &&
+        !trackerRestoreAttempted
+      ) {
         trackerRestoreInFlight = true;
+        trackerRestoreAttempted = true;
         (async () => {
           try {
             const primaryIdToken = await auth.currentUser!.getIdToken();
@@ -177,14 +192,23 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
               restoreOnly: true,
             });
             await signInWithCustomToken(trackerAuth, payload.customToken);
-          } catch {
+          } catch (error) {
             // No persisted link or restore failed; user can relink manually.
+            const message =
+              error instanceof Error
+                ? error.message
+                : "Unknown FocusFlow restore error.";
+            if (!message.toLowerCase().includes("focusflow_not_linked")) {
+              console.warn("FocusFlow restore attempt failed:", message);
+            }
           } finally {
             trackerRestoreInFlight = false;
           }
         })();
       }
     });
+
+    return trackerAuthUnsubscribe;
   },
 
   linkTrackerAccount: async () => {
@@ -213,12 +237,17 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         return;
       }
 
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithPopup(trackerAuth, provider);
-      if (!result.user) {
-        throw new Error("Linking failed: No user data returned");
+      const primaryUser = auth.currentUser;
+      if (!primaryUser) {
+        throw new Error("Please sign in to Perfect Day first.");
       }
+
+      const primaryIdToken = await primaryUser.getIdToken();
+      const payload = await requestFocusflowCustomToken(primaryIdToken, {});
+      const result = await signInWithCustomToken(
+        trackerAuth,
+        payload.customToken,
+      );
 
       set({
         trackerUser: result.user,
@@ -274,19 +303,9 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         return;
       }
 
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithPopup(trackerAuth, provider);
-      if (!result.user) {
-        throw new Error("Linking failed: No user data returned");
-      }
-
-      set({
-        trackerUser: result.user,
-        isLinked: true,
-        isLinking: false,
-        linkError: null,
-      });
+      throw new Error(
+        "Different-account selection is not available on web right now because tracker OAuth redirect configuration is invalid. Use mobile app for different account selection, or use normal Link FocusFlow on web.",
+      );
     } catch (error) {
       console.error("Failed to link different tracker account:", error);
       set({
