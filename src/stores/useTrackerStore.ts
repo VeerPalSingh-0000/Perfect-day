@@ -60,6 +60,10 @@ const getTrackerLinkErrorMessage = (error: unknown) => {
     return "FocusFlow sign-in is currently unavailable due to tracker Firebase domain config. Please try again later or update tracker Firebase env values.";
   }
 
+  if (lower.includes("failed to fetch")) {
+    return "Could not reach FocusFlow bridge API. This is usually a CORS or deployment issue. Ensure your current web origin is allowed by the bridge API and redeploy.";
+  }
+
   if (lower.includes("popup-closed-by-user")) {
     return "Sign-in popup was closed before completion.";
   }
@@ -303,9 +307,12 @@ export const useTrackerStore = create<TrackerStore>()((set, get) => ({
         return;
       }
 
-      throw new Error(
-        "Different-account selection is not available on web right now because tracker OAuth redirect configuration is invalid. Use mobile app for different account selection, or use normal Link FocusFlow on web.",
-      );
+      set({
+        isLinking: false,
+        linkError:
+          "Different-account selection is not available on web right now because tracker OAuth redirect configuration is invalid. Use mobile app for different account selection, or use normal Link FocusFlow on web.",
+      });
+      return;
     } catch (error) {
       console.error("Failed to link different tracker account:", error);
       set({

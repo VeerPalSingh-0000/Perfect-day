@@ -38,9 +38,43 @@ type FocusflowLinkBody = {
   restoreOnly?: boolean;
 };
 
+const isPrivateIpv4 = (hostname: string): boolean => {
+  if (/^192\.168\./.test(hostname)) return true;
+  if (/^10\./.test(hostname)) return true;
+
+  const match = /^172\.(\d{1,3})\./.exec(hostname);
+  if (!match) return false;
+
+  const secondOctet = Number(match[1]);
+  return secondOctet >= 16 && secondOctet <= 31;
+};
+
+const isLocalDevOrigin = (origin: string): boolean => {
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      return false;
+    }
+
+    const hostname = url.hostname;
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "0.0.0.0"
+    ) {
+      return true;
+    }
+
+    return isPrivateIpv4(hostname);
+  } catch {
+    return origin === "capacitor://localhost";
+  }
+};
+
 const isAllowedOrigin = (origin: string | null): origin is string => {
   if (!origin) return false;
   if (allowedOrigins.has(origin)) return true;
+  if (isLocalDevOrigin(origin)) return true;
   if (allowedOriginSuffixes.some((suffix) => origin.endsWith(suffix))) {
     return true;
   }
@@ -49,7 +83,7 @@ const isAllowedOrigin = (origin: string | null): origin is string => {
 
 const corsHeadersFor = (request: Request): HeadersInit => {
   const origin = request.headers.get("origin");
-  const allowOrigin = isAllowedOrigin(origin) ? origin : "https://localhost";
+  const allowOrigin = isAllowedOrigin(origin) ? origin : "null";
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
