@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   output: isServerOutput ? undefined : "export",
 
   // Avoid route payload lookups under /login/__next... in static mode.
-  trailingSlash: false,
+  trailingSlash: true,
   skipTrailingSlashRedirect: false,
 
   images: {

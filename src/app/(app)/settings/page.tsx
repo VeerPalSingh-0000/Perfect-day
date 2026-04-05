@@ -47,6 +47,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useThemeStore } from "@/stores/useThemeStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
+import { useTargetStore } from "@/stores/useTargetStore";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -80,6 +81,7 @@ export default function SettingsPage() {
   const [isHapticsEnabled, setIsHapticsEnabled] = useState(true);
 
   const trackerStore = useTrackerStore();
+  const targets = useTargetStore((state) => state.targets);
 
   React.useEffect(() => {
     trackerStore.initTrackerAuth();
@@ -444,6 +446,109 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Target Completion Section */}
+        <section className="space-y-3 sm:space-y-4">
+          <h2 className="pl-0 sm:pl-2 text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#464555]">
+            TARGET COMPLETION
+          </h2>
+          <div className="overflow-hidden rounded-lg sm:rounded-xl border border-[rgba(70,69,85,0.2)] bg-[#0E0E0E] shadow-[0_5px_15px_rgba(0,0,0,0.5)]">
+            <div className="p-4 sm:p-5 md:p-6 border-b border-[#464555]/10 bg-white/5">
+              <div className="flex flex-col gap-1">
+                <p className="text-[13px] font-bold uppercase tracking-wider text-white">
+                  Active Learning Cycles
+                </p>
+                <p className="text-[10px] sm:text-[11px] font-medium text-[#464555] uppercase tracking-wide">
+                  Strategic objectives and progress tracking
+                </p>
+              </div>
+            </div>
+
+            <div className="divide-y divide-[#464555]/10">
+              {targets.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-xs font-bold text-[#464555] uppercase tracking-widest italic mb-4">No active targets found</p>
+                  <button
+                    onClick={() => {
+                      triggerHaptic();
+                      router.push("/targets");
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#4F44E2]/10 border border-[#4F44E2]/20 text-[10px] font-black uppercase tracking-widest text-[#4F44E2] hover:bg-[#4F44E2]/20 transition-all"
+                  >
+                    Initialize First Target
+                  </button>
+                </div>
+              ) : (
+                targets.map((target) => {
+                  const percentage = Math.round((target.completedDays.length / target.totalDays) * 100);
+                  return (
+                    <button
+                      key={target.id}
+                      onClick={() => {
+                        triggerHaptic();
+                        useTargetStore.getState().setActiveTarget(target.id);
+                        router.push("/targets");
+                      }}
+                      className="w-full flex items-center justify-between p-4 sm:p-5 transition-colors hover:bg-white/5 group"
+                    >
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="relative flex items-center justify-center shrink-0">
+                          <svg className="h-10 w-10 -rotate-90" viewBox="0 0 32 32">
+                            <circle
+                              className="text-white/5"
+                              cx="16"
+                              cy="16"
+                              r="14"
+                              fill="transparent"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                            />
+                            <circle
+                              className="text-[#4F44E2] drop-shadow-[0_0_5px_rgba(79,68,226,0.3)]"
+                              cx="16"
+                              cy="16"
+                              r="14"
+                              fill="transparent"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeDasharray="87.96"
+                              strokeDashoffset={87.96 - (percentage / 100) * 87.96}
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <span className="absolute text-[8px] font-black text-white">{percentage}%</span>
+                        </div>
+                        <div className="text-left min-w-0">
+                          <p className="text-[11px] font-black uppercase tracking-widest text-white truncate transition-colors group-hover:text-[#C4C0FF]">
+                            {target.title}
+                          </p>
+                          <p className="text-[9px] font-bold text-[#464555] uppercase tracking-tighter">
+                            Day {target.completedDays.length} / {target.totalDays} Cycle
+                          </p>
+                        </div>
+                      </div>
+                      <span className="material-symbols-outlined text-lg text-[#464555] group-hover:text-white transition-colors">
+                        chevron_right
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+            
+            {targets.length > 0 && (
+              <button
+                onClick={() => {
+                  triggerHaptic();
+                  router.push("/targets");
+                }}
+                className="w-full py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-[#464555] hover:text-white transition-colors border-t border-[#464555]/10 bg-black/20"
+              >
+                Access Hub Interface
+              </button>
+            )}
           </div>
         </section>
 

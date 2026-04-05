@@ -56,3 +56,20 @@ export interface Achievement {
   unlockedAt: number;
   isViewed: boolean;
 }
+export interface DayStep {
+  day: number;
+  title: string;
+  description: string;
+  isCompleted: boolean;
+}
+
+export interface LearningTarget {
+  id: string;
+  userId: string;
+  title: string;
+  totalDays: number;
+  plan: DayStep[];
+  completedDays: number[]; // Array of indices (day - 1)
+  createdAt: number;
+  startDate: string; // YYYY-MM-DD
+}

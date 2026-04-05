@@ -30,8 +30,8 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(() => {
-    // Prefer .webp version if the source is a .png
-    if (src.endsWith(".png")) {
+    // Prefer .webp version if the source is a local .png
+    if (src.startsWith("/") && src.endsWith(".png")) {
       return src.replace(/\.png$/, ".webp");
     }
     return src;
@@ -40,7 +40,7 @@ export function OptimizedImage({
 
   // Update src if prop changes (e.g. avatar switch)
   useEffect(() => {
-    const newSrc = src.endsWith(".png")
+    const newSrc = (src.startsWith("/") && src.endsWith(".png"))
       ? src.replace(/\.png$/, ".webp")
       : src;
     if (newSrc !== currentSrc) {

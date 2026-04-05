@@ -10,6 +10,7 @@ const navItems = [
   { id: "journey", label: "Journey", icon: "explore", href: "/history" },
   { id: "stats", label: "Stats", icon: "bar_chart", href: "/analytics" },
   { id: "habits", label: "Habits", icon: "event_repeat", href: "/habits" },
+  { id: "targets", label: "Targets", icon: "flag", href: "/targets" },
   { id: "profile", label: "Profile", icon: "person", href: "/settings" },
 ];
 

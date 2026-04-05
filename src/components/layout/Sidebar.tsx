@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/history", label: "Journey", icon: "explore" },
   { href: "/analytics", label: "Stats", icon: "bar_chart" },
   { href: "/habits", label: "Habits", icon: "event_repeat" },
+  { href: "/targets", label: "Targets", icon: "flag" },
   { href: "/settings", label: "Profile", icon: "person" },
 ];
 
