@@ -8,20 +8,24 @@ import { useTargetStore } from "@/stores/useTargetStore";
 import { LearningTarget, DayStep } from "@/types";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
+
+export const dynamic = "force-static";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function TargetsPage() {
   const user = useAuthStore((s) => s.user);
   const targets = useTargetStore((s) => s.targets);
   const activeTargetId = useTargetStore((s) => s.activeTargetId);
-  const { addTarget, removeTarget, toggleDayCompletion, setActiveTarget } = useTargetStore.getState();
+  const { addTarget, removeTarget, toggleDayCompletion, setActiveTarget } =
+    useTargetStore.getState();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTargetTitle, setNewTargetTitle] = useState("");
   const [newTargetDays, setNewTargetDays] = useState(30);
   const [newTargetPlan, setNewTargetPlan] = useState("");
 
-  const activeTarget = targets.find((t) => t.id === activeTargetId) || targets[0];
+  const activeTarget =
+    targets.find((t) => t.id === activeTargetId) || targets[0];
 
   const handleCreateTarget = () => {
     if (!user || !newTargetTitle) return;
@@ -32,10 +36,13 @@ export default function TargetsPage() {
     const plan: DayStep[] = [];
 
     for (let i = 1; i <= totalDays; i++) {
-      const line = lines[i - 1] || `Day ${i}: Progress towards ${newTargetTitle}`;
+      const line =
+        lines[i - 1] || `Day ${i}: Progress towards ${newTargetTitle}`;
       plan.push({
         day: i,
-        title: line.startsWith(`Day ${i}:`) ? line.split(":")[1].trim() : line.trim(),
+        title: line.startsWith(`Day ${i}:`)
+          ? line.split(":")[1].trim()
+          : line.trim(),
         description: `Continue your ${newTargetTitle} journey.`,
         isCompleted: false,
       });
@@ -73,11 +80,14 @@ export default function TargetsPage() {
         {!activeTarget ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="h-24 w-24 rounded-full bg-[#4F44E2]/10 border border-[#4F44E2]/20 flex items-center justify-center mb-6">
-              <span className="material-symbols-outlined text-4xl text-[#4F44E2]">flag</span>
+              <span className="material-symbols-outlined text-4xl text-[#4F44E2]">
+                flag
+              </span>
             </div>
             <h2 className="text-xl font-bold mb-2">No Active Targets</h2>
             <p className="text-[#464555] max-w-sm mb-8">
-              Start a new learning journey today. Set a duration and daily plan to stay on track.
+              Start a new learning journey today. Set a duration and daily plan
+              to stay on track.
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
@@ -91,7 +101,10 @@ export default function TargetsPage() {
             {/* Header: Progress Ring */}
             <section className="flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-[#0A0A0A] p-8 rounded-2xl border border-[#464555]/15">
               <div className="relative flex items-center justify-center">
-                <svg className="h-40 w-40 sm:h-48 sm:w-48 -rotate-90" viewBox="0 0 100 100">
+                <svg
+                  className="h-40 w-40 sm:h-48 sm:w-48 -rotate-90"
+                  viewBox="0 0 100 100"
+                >
                   <circle
                     className="text-[#141414]"
                     cx="50"
@@ -103,7 +116,11 @@ export default function TargetsPage() {
                   />
                   <motion.circle
                     initial={{ strokeDashoffset: 282.7 }}
-                    animate={{ strokeDashoffset: 282.7 - (calculatePercentage(activeTarget) / 100) * 282.7 }}
+                    animate={{
+                      strokeDashoffset:
+                        282.7 -
+                        (calculatePercentage(activeTarget) / 100) * 282.7,
+                    }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
                     className="text-[#4F44E2] drop-shadow-[0_0_8px_rgba(79,68,226,0.6)]"
                     cx="50"
@@ -129,8 +146,12 @@ export default function TargetsPage() {
               <div className="flex-1 text-center md:text-left space-y-4">
                 <div>
                   <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                    <span className="material-symbols-outlined text-[#4F44E2] text-sm">flag</span>
-                    <span className="text-[10px] font-bold text-[#464555] uppercase tracking-widest">Active Pursuit</span>
+                    <span className="material-symbols-outlined text-[#4F44E2] text-sm">
+                      flag
+                    </span>
+                    <span className="text-[10px] font-bold text-[#464555] uppercase tracking-widest">
+                      Active Pursuit
+                    </span>
                   </div>
                   <h1 className="text-3xl sm:text-4xl font-headline font-black tracking-tight text-white uppercase italic">
                     {activeTarget.title}
@@ -139,35 +160,47 @@ export default function TargetsPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-2">
                   <div>
-                    <p className="text-[8px] font-black text-[#464555] uppercase tracking-widest mb-1">Daily Step</p>
-                    <p className="text-lg font-bold text-[#E2E2E2]">Day {activeTarget.completedDays.length + 1}</p>
+                    <p className="text-[8px] font-black text-[#464555] uppercase tracking-widest mb-1">
+                      Daily Step
+                    </p>
+                    <p className="text-lg font-bold text-[#E2E2E2]">
+                      Day {activeTarget.completedDays.length + 1}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[8px] font-black text-[#464555] uppercase tracking-widest mb-1">Total Cycle</p>
-                    <p className="text-lg font-bold text-[#E2E2E2]">{activeTarget.totalDays} Days</p>
+                    <p className="text-[8px] font-black text-[#464555] uppercase tracking-widest mb-1">
+                      Total Cycle
+                    </p>
+                    <p className="text-lg font-bold text-[#E2E2E2]">
+                      {activeTarget.totalDays} Days
+                    </p>
                   </div>
                   <div className="col-span-2 md:col-span-1">
-                    <p className="text-[8px] font-black text-[#464555] uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-[8px] font-black text-[#464555] uppercase tracking-widest mb-1">
+                      Status
+                    </p>
                     <div className="flex items-center justify-center md:justify-start gap-2">
                       <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                      <p className="text-sm font-bold text-green-500 uppercase tracking-widest">Ongoing</p>
+                      <p className="text-sm font-bold text-green-500 uppercase tracking-widest">
+                        Ongoing
+                      </p>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-3 pt-4 justify-center md:justify-start">
-                   <button 
-                     onClick={() => setIsModalOpen(true)}
-                     className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
-                   >
-                     New Target
-                   </button>
-                   <button 
-                     onClick={() => removeTarget(activeTarget.id)}
-                     className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-widest text-red-400 hover:bg-red-500/20 transition-all"
-                   >
-                     Abandon Target
-                   </button>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                  >
+                    New Target
+                  </button>
+                  <button
+                    onClick={() => removeTarget(activeTarget.id)}
+                    className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] font-black uppercase tracking-widest text-red-400 hover:bg-red-500/20 transition-all"
+                  >
+                    Abandon Target
+                  </button>
                 </div>
               </div>
             </section>
@@ -175,8 +208,12 @@ export default function TargetsPage() {
             {/* Plan Timeline */}
             <section className="space-y-6">
               <div className="flex items-center justify-between px-2">
-                <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-[#464555]">Operational Timeline</h2>
-                <span className="text-[10px] font-bold text-[#464555] italic">{calculatePercentage(activeTarget)}% Synced</span>
+                <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-[#464555]">
+                  Operational Timeline
+                </h2>
+                <span className="text-[10px] font-bold text-[#464555] italic">
+                  {calculatePercentage(activeTarget)}% Synced
+                </span>
               </div>
 
               <div className="space-y-4 relative">
@@ -184,8 +221,12 @@ export default function TargetsPage() {
                 <div className="absolute left-6 top-4 bottom-4 w-px bg-linear-to-b from-[#4F44E2]/40 via-[#4F44E2]/20 to-transparent z-0" />
 
                 {activeTarget.plan.map((step) => {
-                  const isCompleted = activeTarget.completedDays.includes(step.day - 1);
-                  const isNextStep = !isCompleted && (activeTarget.completedDays.length === step.day - 1);
+                  const isCompleted = activeTarget.completedDays.includes(
+                    step.day - 1,
+                  );
+                  const isNextStep =
+                    !isCompleted &&
+                    activeTarget.completedDays.length === step.day - 1;
 
                   return (
                     <motion.button
@@ -196,37 +237,53 @@ export default function TargetsPage() {
                       onClick={() => toggleDayCompletion(activeTarget.id, step)}
                       className={cn(
                         "w-full flex items-start gap-6 p-4 rounded-xl border transition-all text-left relative z-10",
-                        isCompleted 
-                          ? "bg-[#0A0A0A]/40 border-white/5 opacity-50" 
-                          : isNextStep 
-                          ? "bg-[#4F44E2]/5 border-[#4F44E2]/30 shadow-[0_0_30px_rgba(79,68,226,0.05)]" 
-                          : "bg-black border-white/5"
+                        isCompleted
+                          ? "bg-[#0A0A0A]/40 border-white/5 opacity-50"
+                          : isNextStep
+                            ? "bg-[#4F44E2]/5 border-[#4F44E2]/30 shadow-[0_0_30px_rgba(79,68,226,0.05)]"
+                            : "bg-black border-white/5",
                       )}
                     >
-                      <div className={cn(
-                        "h-4 w-4 rounded-full border-2 shrink-0 mt-1 flex items-center justify-center transition-all",
-                        isCompleted 
-                          ? "bg-[#4F44E2] border-[#4F44E2]" 
-                          : isNextStep 
-                          ? "border-[#4F44E2] animate-pulse" 
-                          : "border-[#464555]/40"
-                      )}>
-                        {isCompleted && <span className="material-symbols-outlined text-[10px] text-white font-black">check</span>}
+                      <div
+                        className={cn(
+                          "h-4 w-4 rounded-full border-2 shrink-0 mt-1 flex items-center justify-center transition-all",
+                          isCompleted
+                            ? "bg-[#4F44E2] border-[#4F44E2]"
+                            : isNextStep
+                              ? "border-[#4F44E2] animate-pulse"
+                              : "border-[#464555]/40",
+                        )}
+                      >
+                        {isCompleted && (
+                          <span className="material-symbols-outlined text-[10px] text-white font-black">
+                            check
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center justify-between">
-                          <p className={cn(
-                            "text-[10px] font-black uppercase tracking-widest",
-                            isCompleted ? "text-[#464555]" : isNextStep ? "text-[#4F44E2]" : "text-[#8E8D99]"
-                          )}>
+                          <p
+                            className={cn(
+                              "text-[10px] font-black uppercase tracking-widest",
+                              isCompleted
+                                ? "text-[#464555]"
+                                : isNextStep
+                                  ? "text-[#4F44E2]"
+                                  : "text-[#8E8D99]",
+                            )}
+                          >
                             Day {step.day}
                           </p>
                         </div>
-                        <h3 className={cn(
-                          "text-base font-bold",
-                          isCompleted ? "text-[#464555] line-through" : "text-[#E2E2E2]"
-                        )}>
+                        <h3
+                          className={cn(
+                            "text-base font-bold",
+                            isCompleted
+                              ? "text-[#464555] line-through"
+                              : "text-[#E2E2E2]",
+                          )}
+                        >
                           {step.title}
                         </h3>
                         <p className="text-xs text-[#464555] leading-relaxed">
@@ -243,16 +300,18 @@ export default function TargetsPage() {
       </main>
 
       {/* Target Genesis Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         title="TARGET GENESIS"
         className="max-w-xl"
       >
         <div className="space-y-8">
           <div className="space-y-4">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-[#464555] block mb-3">Objective Designation</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#464555] block mb-3">
+                Objective Designation
+              </label>
               <input
                 type="text"
                 value={newTargetTitle}
@@ -264,7 +323,9 @@ export default function TargetsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-[#464555] block mb-3">Time Horizon (Days)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#464555] block mb-3">
+                  Time Horizon (Days)
+                </label>
                 <input
                   type="number"
                   value={newTargetDays}
@@ -274,14 +335,20 @@ export default function TargetsPage() {
               </div>
               <div className="flex items-end">
                 <div className="w-full p-4 rounded-xl bg-[#4F44E2]/10 border border-[#4F44E2]/20 flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-[#4F44E2] text-sm">schedule</span>
-                  <p className="text-[10px] font-black uppercase text-[#4F44E2]">Auto-Seq Enabled</p>
+                  <span className="material-symbols-outlined text-[#4F44E2] text-sm">
+                    schedule
+                  </span>
+                  <p className="text-[10px] font-black uppercase text-[#4F44E2]">
+                    Auto-Seq Enabled
+                  </p>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-[#464555] block mb-3">Strategic Blueprint (Paste Plan)</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#464555] block mb-3">
+                Strategic Blueprint (Paste Plan)
+              </label>
               <textarea
                 value={newTargetPlan}
                 onChange={(e) => setNewTargetPlan(e.target.value)}
@@ -289,7 +356,9 @@ export default function TargetsPage() {
                 rows={6}
                 className="w-full bg-[#111111] border border-white/10 rounded-xl px-5 py-4 font-bold text-white placeholder:text-[#464555] focus:border-[#4F44E2] outline-none transition-all resize-none"
               />
-              <p className="text-[8px] font-bold text-[#464555] uppercase mt-2 italic px-1">Tip: Each newline designates a specific day objective.</p>
+              <p className="text-[8px] font-bold text-[#464555] uppercase mt-2 italic px-1">
+                Tip: Each newline designates a specific day objective.
+              </p>
             </div>
           </div>
 

@@ -7,6 +7,8 @@ import Link from "next/link";
 import { getCurrentYear } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
+export const dynamic = "force-static";
+
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);

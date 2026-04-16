@@ -27,6 +27,7 @@ export const signInWithGoogle = async () => {
 
     if (Capacitor.isNativePlatform()) {
       // Native Android Flow
+      // WebClientId is handled automatically via google-services.json and capacitor.config.ts
       const result = await FirebaseAuthentication.signInWithGoogle();
       if (!result.credential) {
         throw new Error(

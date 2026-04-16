@@ -8,11 +8,18 @@ import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Reorder } from "framer-motion";
 
+export const dynamic = "force-static";
+
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
 import { TaskTimer } from "@/components/ui/TaskTimer";
 import { useTrackerStore } from "@/stores/useTrackerStore";
 import { trackerDb } from "@/lib/tracker-db";
-import { collection, query as fsQuery, where as fsWhere, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  query as fsQuery,
+  where as fsWhere,
+  onSnapshot,
+} from "firebase/firestore";
 import {
   addTask as dbAddTask,
   updateTask,
@@ -39,7 +46,13 @@ export default function TodayPage() {
   const tasks = useDataStore((s) => s.tasks);
   const records = useDataStore((s) => s.records);
   const todayFocus = useDataStore((s) => s.todayFocus);
-  const { addTask, deleteTask, toggleTaskCompletion, setTodayFocus, reorderTasks } = useDataStore.getState();
+  const {
+    addTask,
+    deleteTask,
+    toggleTaskCompletion,
+    setTodayFocus,
+    reorderTasks,
+  } = useDataStore.getState();
   const unlockAchievement = useAchievementStore((s) => s.unlockAchievement);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,9 +62,11 @@ export default function TodayPage() {
     taskId: string;
     taskTitle: string;
   } | null>(null);
-  
+
   // Hold-to-drag state
-  const [dragEnabledTaskId, setDragEnabledTaskId] = useState<string | null>(null);
+  const [dragEnabledTaskId, setDragEnabledTaskId] = useState<string | null>(
+    null,
+  );
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
   const holdingTaskRef = useRef<string | null>(null);
 
@@ -64,7 +79,7 @@ export default function TodayPage() {
   const greeting = getTimeBasedGreeting();
   const quote = getQuoteOfDay();
   const [localFocus, setLocalFocus] = useState(todayFocus);
-  
+
   // Ref to always have latest tasks in the FocusFlow background listener without dependency loops
   const tasksRef = useRef(tasks);
   useEffect(() => {
@@ -76,7 +91,10 @@ export default function TodayPage() {
   // Derived state
   const completedTasks = tasks.filter((t) => t.isCompleted).length;
   const totalTasks = tasks.length;
-  const completionPercentage = calculateCompletionPercentage(tasks, priorityMode);
+  const completionPercentage = calculateCompletionPercentage(
+    tasks,
+    priorityMode,
+  );
 
   const rating = calculateDayRating(
     totalTasks === 0 ? 0 : completionPercentage,
@@ -114,20 +132,22 @@ export default function TodayPage() {
   // --- 3A. Achievement Monitoring ---
   useEffect(() => {
     // 1. One Hundred Club
-    const totalLifetimeTasks = records.reduce((acc, r) => acc + r.completedTasks, 0) + completedTasks;
+    const totalLifetimeTasks =
+      records.reduce((acc, r) => acc + r.completedTasks, 0) + completedTasks;
     if (totalLifetimeTasks >= 100) {
       unlockAchievement({
         id: "tasks_100",
         title: "Century Club",
-        description: "You've crushed 100 tasks. Consistency is your middle name.",
+        description:
+          "You've crushed 100 tasks. Consistency is your middle name.",
         icon: "🏆",
-        type: "stat"
+        type: "stat",
       });
     }
 
     // 2. Early Bird (All tasks done before noon)
     if (totalTasks > 0 && completionPercentage === 100) {
-      const allDoneBeforeNoon = tasks.every(t => {
+      const allDoneBeforeNoon = tasks.every((t) => {
         if (!t.completedAt) return false;
         const hour = new Date(t.completedAt).getHours();
         return hour < 12;
@@ -138,7 +158,7 @@ export default function TodayPage() {
           title: "Early Bird",
           description: "Finished your entire day before noon? Incredible.",
           icon: "🐦",
-          type: "milestone"
+          type: "milestone",
         });
       }
     }
@@ -150,16 +170,17 @@ export default function TodayPage() {
         title: "Relentless Week",
         description: "A full week of 80%+ performance. You're on fire.",
         icon: "🔥",
-        type: "streak"
+        type: "streak",
       });
     }
     if (displayStreak >= 30) {
       unlockAchievement({
         id: "streak_30",
         title: "Unstoppable Month",
-        description: "30 days of excellence. This isn't a fluke, it's a lifestyle.",
+        description:
+          "30 days of excellence. This isn't a fluke, it's a lifestyle.",
         icon: "💎",
-        type: "streak"
+        type: "streak",
       });
     }
 
@@ -168,12 +189,21 @@ export default function TodayPage() {
       unlockAchievement({
         id: "first_perfect",
         title: "The Perfect Day",
-        description: "You finished every single task on your list. 100% absolute power.",
+        description:
+          "You finished every single task on your list. 100% absolute power.",
         icon: "🌟",
-        type: "milestone"
+        type: "milestone",
       });
     }
-  }, [completionPercentage, completedTasks, totalTasks, displayStreak, records, tasks, unlockAchievement]);
+  }, [
+    completionPercentage,
+    completedTasks,
+    totalTasks,
+    displayStreak,
+    records,
+    tasks,
+    unlockAchievement,
+  ]);
 
   // Debounced auto-save
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -217,9 +247,11 @@ export default function TodayPage() {
     setTodayFocus(e.target.value);
   };
 
-  const handleSubmitTask = async (taskData: Partial<Task> & { id?: string }) => {
+  const handleSubmitTask = async (
+    taskData: Partial<Task> & { id?: string },
+  ) => {
     if (!user) return;
-    
+
     if (taskData.id) {
       // Edit mode
       const updates: any = {
@@ -227,12 +259,12 @@ export default function TodayPage() {
         category: taskData.category,
         isHabit: taskData.isHabit,
       };
-      
+
       if (taskData.priority) {
         updates.priority = taskData.priority;
       }
 
-      if ('targetTime' in taskData) {
+      if ("targetTime" in taskData) {
         if (taskData.targetTime) {
           updates.targetTime = taskData.targetTime;
         } else {
@@ -281,7 +313,9 @@ export default function TodayPage() {
         }));
       } else {
         useDataStore.setState((state) => ({
-          tasks: state.tasks.map((t) => (t.id === taskData.id ? { ...t, ...updates } : t)),
+          tasks: state.tasks.map((t) =>
+            t.id === taskData.id ? { ...t, ...updates } : t,
+          ),
         }));
       }
 
@@ -303,7 +337,7 @@ export default function TodayPage() {
         order: tasks.length,
         createdAt: Date.now(),
       };
-      
+
       if (taskData.priority) {
         newTask.priority = taskData.priority;
       }
@@ -318,7 +352,7 @@ export default function TodayPage() {
       if (taskData.linkedTrackItIds) {
         newTask.linkedTrackItIds = taskData.linkedTrackItIds;
       }
-      
+
       let newDateStr = todayDateStr;
       if (newTask.isHabit) {
         if (!isHabitValidForDate(newTask, todayDateStr)) {
@@ -336,11 +370,11 @@ export default function TodayPage() {
           }
         }
       }
-      
+
       if (newDateStr !== todayDateStr) {
-         newTask.date = newDateStr;
+        newTask.date = newDateStr;
       } else {
-         addTask(newTask);
+        addTask(newTask);
       }
 
       dbAddTask(newTask).catch((error) => {
@@ -371,13 +405,13 @@ export default function TodayPage() {
   // Hold-to-drag handlers
   const handleDragHoldStart = (taskId: string) => {
     // Only on mobile devices
-    if (typeof window !== 'undefined' && window.innerWidth > 640) return;
-    
+    if (typeof window !== "undefined" && window.innerWidth > 640) return;
+
     holdingTaskRef.current = taskId;
     holdTimerRef.current = setTimeout(() => {
       setDragEnabledTaskId(taskId);
       // Haptic feedback if available
-      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate(50);
       }
     }, 1000); // 1 second hold
@@ -393,7 +427,7 @@ export default function TodayPage() {
 
   const handleDragStart = (taskId: string) => {
     // Only allow drag if hold was completed (or on desktop)
-    if (typeof window !== 'undefined' && window.innerWidth <= 640) {
+    if (typeof window !== "undefined" && window.innerWidth <= 640) {
       if (dragEnabledTaskId !== taskId) {
         return false; // Prevent drag
       }
@@ -407,9 +441,9 @@ export default function TodayPage() {
 
   // FocusFlow Background Tracker Sync
   const trackerStore = useTrackerStore();
-  
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       trackerStore.initTrackerAuth();
     }
   }, []); // Run ONCE on mount
@@ -419,102 +453,128 @@ export default function TodayPage() {
 
     const q = fsQuery(
       collection(trackerDb, "sessions"),
-      fsWhere("userId", "==", trackerStore.trackerUser.uid)
+      fsWhere("userId", "==", trackerStore.trackerUser.uid),
     );
 
     // This listener fires on initial load with ALL existing sessions,
     // and then again whenever a new session is added.
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Get ALL session docs (not just changes) to aggregate total time
-      const allSessions = snapshot.docs.map(d => d.data());
-      
-      // Filter to today's sessions only
-      const startOfToday = new Date();
-      startOfToday.setHours(0, 0, 0, 0);
-      const todayMs = startOfToday.getTime();
-      
-      const todaySessions = allSessions.filter(s => {
-        const t = s.createdAt?.toMillis() || s.startTime || 0;
-        return t >= todayMs;
-      });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        // Get ALL session docs (not just changes) to aggregate total time
+        const allSessions = snapshot.docs.map((d) => d.data());
 
-      // Build a map: ID -> total duration in minutes
-      const durationMap: Record<string, number> = {};
-      todaySessions.forEach(s => {
-        const durationMin = (s.duration || 0) / 60000;
-        const ids = [s.projectId, s.topicId, s.subTopicId].filter(Boolean);
-        ids.forEach(id => {
-          durationMap[id] = (durationMap[id] || 0) + durationMin;
+        // Filter to today's sessions only
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const todayMs = startOfToday.getTime();
+
+        const todaySessions = allSessions.filter((s) => {
+          const t = s.createdAt?.toMillis() || s.startTime || 0;
+          return t >= todayMs;
         });
-      });
 
-      console.log("[FocusFlow Sync] Today's total durations:", durationMap);
+        // Build a map: ID -> total duration in minutes
+        const durationMap: Record<string, number> = {};
+        todaySessions.forEach((s) => {
+          const durationMin = (s.duration || 0) / 60000;
+          const ids = [s.projectId, s.topicId, s.subTopicId].filter(Boolean);
+          ids.forEach((id) => {
+            durationMap[id] = (durationMap[id] || 0) + durationMin;
+          });
+        });
 
-      // Check each uncompleted task with linked IDs
-      const currentTasks = tasksRef.current;
-      
-      currentTasks.forEach(task => {
-        if (task.isCompleted || !task.linkedTrackItIds || task.linkedTrackItIds.length === 0) return;
+        console.log("[FocusFlow Sync] Today's total durations:", durationMap);
 
-        // Find the max accumulated duration across all linked IDs
-        let maxDuration = 0;
-        task.linkedTrackItIds.forEach((id: string) => {
-          if (durationMap[id] && durationMap[id] > maxDuration) {
-            maxDuration = durationMap[id];
+        // Check each uncompleted task with linked IDs
+        const currentTasks = tasksRef.current;
+
+        currentTasks.forEach((task) => {
+          if (
+            task.isCompleted ||
+            !task.linkedTrackItIds ||
+            task.linkedTrackItIds.length === 0
+          )
+            return;
+
+          // Find the max accumulated duration across all linked IDs
+          let maxDuration = 0;
+          task.linkedTrackItIds.forEach((id: string) => {
+            if (durationMap[id] && durationMap[id] > maxDuration) {
+              maxDuration = durationMap[id];
+            }
+          });
+
+          const targetMinutes = task.targetTime || 0;
+
+          if (maxDuration > 0) {
+            console.log(
+              `[FocusFlow Sync] "${task.title}": Total=${Math.round(maxDuration)}m, Goal=${targetMinutes}m`,
+            );
+          }
+
+          if (
+            maxDuration > 0 &&
+            (targetMinutes === 0 || maxDuration >= targetMinutes)
+          ) {
+            console.log(`[FocusFlow Sync] ✅ Auto-completing "${task.title}"!`);
+            handleToggleTask(task);
           }
         });
 
-        const targetMinutes = task.targetTime || 0;
+        // Aggregate total focus time today across all unique sessions
+        const sessionKeysProcessed = new Set<string>();
+        let totalFocusMinutes = 0;
 
-        if (maxDuration > 0) {
-          console.log(`[FocusFlow Sync] "${task.title}": Total=${Math.round(maxDuration)}m, Goal=${targetMinutes}m`);
+        todaySessions.forEach((s) => {
+          // Use multiple fields as a unique key since s.id might be missing in raw data
+          const skey =
+            s.id ||
+            `${s.projectName}_${s.startTime || s.createdAt?.toMillis()}_${s.duration}`;
+          if (!sessionKeysProcessed.has(skey)) {
+            sessionKeysProcessed.add(skey);
+            totalFocusMinutes += (s.duration || 0) / 60000;
+          }
+        });
+
+        console.log(
+          `[FocusFlow Sync] Total combined minutes for history:`,
+          totalFocusMinutes,
+        );
+
+        // Save to dayRecord for history
+        if (totalFocusMinutes > 0) {
+          const todayDateStr = new Date().toLocaleDateString("en-CA");
+          const recordId = `${user.uid}_${todayDateStr}`;
+          const totalTasksCount = currentTasks.length;
+          const completedTasksCount = currentTasks.filter(
+            (t) => t.isCompleted,
+          ).length;
+          const completionPercentage =
+            totalTasksCount === 0
+              ? 0
+              : Math.round((completedTasksCount / totalTasksCount) * 100);
+
+          const record: DayRecord = {
+            id: recordId,
+            userId: user.uid,
+            date: todayDateStr,
+            totalTasks: totalTasksCount,
+            completedTasks: completedTasksCount,
+            completionPercentage,
+            rating: calculateDayRating(completionPercentage),
+            tasks: currentTasks,
+            createdAt: Date.now(),
+            totalFocusTime: totalFocusMinutes,
+          };
+
+          saveDayRecord(record).catch((e) =>
+            console.error("History sync failed:", e),
+          );
         }
-
-        if (maxDuration > 0 && (targetMinutes === 0 || maxDuration >= targetMinutes)) {
-          console.log(`[FocusFlow Sync] ✅ Auto-completing "${task.title}"!`);
-          handleToggleTask(task);
-        }
-      });
-
-      // Aggregate total focus time today across all unique sessions
-      const sessionKeysProcessed = new Set<string>();
-      let totalFocusMinutes = 0;
-      
-      todaySessions.forEach(s => {
-        // Use multiple fields as a unique key since s.id might be missing in raw data
-        const skey = s.id || `${s.projectName}_${s.startTime || s.createdAt?.toMillis()}_${s.duration}`;
-        if (!sessionKeysProcessed.has(skey)) {
-          sessionKeysProcessed.add(skey);
-          totalFocusMinutes += (s.duration || 0) / 60000;
-        }
-      });
-
-      console.log(`[FocusFlow Sync] Total combined minutes for history:`, totalFocusMinutes);
-
-      // Save to dayRecord for history
-      if (totalFocusMinutes > 0) {
-        const todayDateStr = new Date().toLocaleDateString("en-CA");
-        const recordId = `${user.uid}_${todayDateStr}`;
-        const totalTasksCount = currentTasks.length;
-        const completedTasksCount = currentTasks.filter(t => t.isCompleted).length;
-        const completionPercentage = totalTasksCount === 0 ? 0 : Math.round((completedTasksCount / totalTasksCount) * 100);
-
-        const record: DayRecord = {
-          id: recordId,
-          userId: user.uid,
-          date: todayDateStr,
-          totalTasks: totalTasksCount,
-          completedTasks: completedTasksCount,
-          completionPercentage,
-          rating: calculateDayRating(completionPercentage),
-          tasks: currentTasks,
-          createdAt: Date.now(),
-          totalFocusTime: totalFocusMinutes
-        };
-        
-        saveDayRecord(record).catch(e => console.error("History sync failed:", e));
-      }
-    }, (error) => console.error("FocusFlow Sync Error:", error));
+      },
+      (error) => console.error("FocusFlow Sync Error:", error),
+    );
     return () => unsubscribe();
   }, [trackerStore.isLinked, trackerStore.trackerUser, user]); // Removed tasks from deps to prevent trigger loop, using state ref logic or handleToggleTask closure safely
 
@@ -557,27 +617,29 @@ export default function TodayPage() {
               </p>
             </div>
           </div>
-          
+
           {/* 3D. Daily Focus Intention */}
           <div className="mt-6 sm:mt-8 relative group">
-             <input 
-               type="text" 
-               value={localFocus}
-               onChange={handleFocusChange}
-               placeholder="Set your daily intention..." 
-               className="w-full bg-transparent border-none p-0 font-headline text-lg sm:text-2xl font-bold text-[#C4C0FF] placeholder:text-[#464555] focus:outline-none focus:ring-0"
-             />
-             <div className="h-px w-full bg-[#464555]/20 group-focus-within:bg-[#C4C0FF]/50 transition-all mt-1" />
+            <input
+              type="text"
+              value={localFocus}
+              onChange={handleFocusChange}
+              placeholder="Set your daily intention..."
+              className="w-full bg-transparent border-none p-0 font-headline text-lg sm:text-2xl font-bold text-[#C4C0FF] placeholder:text-[#464555] focus:outline-none focus:ring-0"
+            />
+            <div className="h-px w-full bg-[#464555]/20 group-focus-within:bg-[#C4C0FF]/50 transition-all mt-1" />
           </div>
 
           {/* 3B. Motivational Quote */}
           <div className="mt-8 rounded-xl border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-4 sm:p-5 relative overflow-hidden">
-             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                <span className="material-symbols-outlined text-4xl">format_quote</span>
-             </div>
-             <p className="font-medium text-xs sm:text-sm text-[#8E8D99] italic leading-relaxed">
-               {quote}
-             </p>
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <span className="material-symbols-outlined text-4xl">
+                format_quote
+              </span>
+            </div>
+            <p className="font-medium text-xs sm:text-sm text-[#8E8D99] italic leading-relaxed">
+              {quote}
+            </p>
           </div>
         </section>
 
@@ -716,19 +778,32 @@ export default function TodayPage() {
                 </p>
               </div>
             ) : (
-              <Reorder.Group axis="y" values={tasks} onReorder={reorderTasks} className="space-y-2 sm:space-y-3">
+              <Reorder.Group
+                axis="y"
+                values={tasks}
+                onReorder={reorderTasks}
+                className="space-y-2 sm:space-y-3"
+              >
                 {tasks.map((task) => (
                   <Reorder.Item
                     key={task.id}
                     value={task}
                     className={`group w-full flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-3 sm:p-4 text-left transition-colors hover:bg-[#111111] ${task.isCompleted ? "opacity-50" : ""}`}
-                    whileDrag={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", zIndex: 10 }}
+                    whileDrag={{
+                      scale: 1.02,
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                      zIndex: 10,
+                    }}
                     onDragStart={() => handleDragStart(task.id)}
                     onDragEnd={handleDragEnd}
-                    drag={typeof window !== 'undefined' && window.innerWidth <= 640 ? dragEnabledTaskId === task.id : true}
+                    drag={
+                      typeof window !== "undefined" && window.innerWidth <= 640
+                        ? dragEnabledTaskId === task.id
+                        : true
+                    }
                   >
-                    <div 
-                      className={`touch-none flex items-center opacity-30 active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing text-[#464555] shrink-0 ${dragEnabledTaskId === task.id ? 'opacity-100 text-[#4F44E2]' : ''}`}
+                    <div
+                      className={`touch-none flex items-center opacity-30 active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing text-[#464555] shrink-0 ${dragEnabledTaskId === task.id ? "opacity-100 text-[#4F44E2]" : ""}`}
                       onPointerDown={() => handleDragHoldStart(task.id)}
                       onPointerUp={handleDragHoldEnd}
                       onPointerLeave={handleDragHoldEnd}
@@ -754,9 +829,18 @@ export default function TodayPage() {
                       className="grow min-w-0 flex items-center gap-2 cursor-pointer"
                       onClick={() => handleToggleTask(task)}
                     >
-                      {priorityMode === 'advanced' && (
-                        <span className="text-xs shrink-0" title={`${task.priority || 'medium'} priority`}>
-                          {task.priority === 'critical' ? '🔴' : task.priority === 'high' ? '🟠' : task.priority === 'low' ? '🔵' : '🟡'}
+                      {priorityMode === "advanced" && (
+                        <span
+                          className="text-xs shrink-0"
+                          title={`${task.priority || "medium"} priority`}
+                        >
+                          {task.priority === "critical"
+                            ? "🔴"
+                            : task.priority === "high"
+                              ? "🟠"
+                              : task.priority === "low"
+                                ? "🔵"
+                                : "🟡"}
                         </span>
                       )}
                       <p

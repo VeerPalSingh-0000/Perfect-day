@@ -8,6 +8,8 @@ import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StealthFooter } from "@/components/layout/StealthFooter";
 import { updateUserProfile } from "@/lib/db";
+
+export const dynamic = "force-static";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useAchievementStore } from "@/stores/useAchievementStore";
@@ -469,7 +471,9 @@ export default function SettingsPage() {
             <div className="divide-y divide-[#464555]/10">
               {targets.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="text-xs font-bold text-[#464555] uppercase tracking-widest italic mb-4">No active targets found</p>
+                  <p className="text-xs font-bold text-[#464555] uppercase tracking-widest italic mb-4">
+                    No active targets found
+                  </p>
                   <button
                     onClick={() => {
                       triggerHaptic();
@@ -482,7 +486,9 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 targets.map((target) => {
-                  const percentage = Math.round((target.completedDays.length / target.totalDays) * 100);
+                  const percentage = Math.round(
+                    (target.completedDays.length / target.totalDays) * 100,
+                  );
                   return (
                     <button
                       key={target.id}
@@ -495,7 +501,10 @@ export default function SettingsPage() {
                     >
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="relative flex items-center justify-center shrink-0">
-                          <svg className="h-10 w-10 -rotate-90" viewBox="0 0 32 32">
+                          <svg
+                            className="h-10 w-10 -rotate-90"
+                            viewBox="0 0 32 32"
+                          >
                             <circle
                               className="text-white/5"
                               cx="16"
@@ -514,18 +523,23 @@ export default function SettingsPage() {
                               stroke="currentColor"
                               strokeWidth="2.5"
                               strokeDasharray="87.96"
-                              strokeDashoffset={87.96 - (percentage / 100) * 87.96}
+                              strokeDashoffset={
+                                87.96 - (percentage / 100) * 87.96
+                              }
                               strokeLinecap="round"
                             />
                           </svg>
-                          <span className="absolute text-[8px] font-black text-white">{percentage}%</span>
+                          <span className="absolute text-[8px] font-black text-white">
+                            {percentage}%
+                          </span>
                         </div>
                         <div className="text-left min-w-0">
                           <p className="text-[11px] font-black uppercase tracking-widest text-white truncate transition-colors group-hover:text-[#C4C0FF]">
                             {target.title}
                           </p>
                           <p className="text-[9px] font-bold text-[#464555] uppercase tracking-tighter">
-                            Day {target.completedDays.length} / {target.totalDays} Cycle
+                            Day {target.completedDays.length} /{" "}
+                            {target.totalDays} Cycle
                           </p>
                         </div>
                       </div>
@@ -537,7 +551,7 @@ export default function SettingsPage() {
                 })
               )}
             </div>
-            
+
             {targets.length > 0 && (
               <button
                 onClick={() => {
