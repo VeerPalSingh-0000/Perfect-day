@@ -6,6 +6,7 @@ import { useDataStore, isHabitValidForDate } from "@/stores/useDataStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { Reorder } from "framer-motion";
 
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
 import { TaskTimer } from "@/components/ui/TaskTimer";
@@ -38,7 +39,7 @@ export default function TodayPage() {
   const tasks = useDataStore((s) => s.tasks);
   const records = useDataStore((s) => s.records);
   const todayFocus = useDataStore((s) => s.todayFocus);
-  const { addTask, deleteTask, toggleTaskCompletion, setTodayFocus } = useDataStore.getState();
+  const { addTask, deleteTask, toggleTaskCompletion, setTodayFocus, reorderTasks } = useDataStore.getState();
   const unlockAchievement = useAchievementStore((s) => s.unlockAchievement);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,6 +49,11 @@ export default function TodayPage() {
     taskId: string;
     taskTitle: string;
   } | null>(null);
+  
+  // Hold-to-drag state
+  const [dragEnabledTaskId, setDragEnabledTaskId] = useState<string | null>(null);
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const holdingTaskRef = useRef<string | null>(null);
 
   const todayDateStr = getTodayDateString();
   const todayDisplay = new Date().toLocaleDateString("en-US", {
@@ -362,6 +368,43 @@ export default function TodayPage() {
     }
   };
 
+  // Hold-to-drag handlers
+  const handleDragHoldStart = (taskId: string) => {
+    // Only on mobile devices
+    if (typeof window !== 'undefined' && window.innerWidth > 640) return;
+    
+    holdingTaskRef.current = taskId;
+    holdTimerRef.current = setTimeout(() => {
+      setDragEnabledTaskId(taskId);
+      // Haptic feedback if available
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+    }, 1000); // 1 second hold
+  };
+
+  const handleDragHoldEnd = () => {
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    holdingTaskRef.current = null;
+  };
+
+  const handleDragStart = (taskId: string) => {
+    // Only allow drag if hold was completed (or on desktop)
+    if (typeof window !== 'undefined' && window.innerWidth <= 640) {
+      if (dragEnabledTaskId !== taskId) {
+        return false; // Prevent drag
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDragEnabledTaskId(null);
+    handleDragHoldEnd();
+  };
+
   // FocusFlow Background Tracker Sync
   const trackerStore = useTrackerStore();
   
@@ -673,64 +716,82 @@ export default function TodayPage() {
                 </p>
               </div>
             ) : (
-              tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className={`group w-full flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-3 sm:p-4 text-left transition-all hover:bg-[#111111] ${task.isCompleted ? "opacity-50" : ""}`}
-                >
-                  <button
-                    onClick={() => handleToggleTask(task)}
-                    className={`flex h-5 sm:h-6 w-5 sm:w-6 items-center justify-center rounded-full border shrink-0 transition-colors ${task.isCompleted ? "border-[#C4C0FF]/30 bg-[#C4C0FF]/20" : "border-[#464555]/30 bg-transparent hover:border-[#C4C0FF]/50"}`}
+              <Reorder.Group axis="y" values={tasks} onReorder={reorderTasks} className="space-y-2 sm:space-y-3">
+                {tasks.map((task) => (
+                  <Reorder.Item
+                    key={task.id}
+                    value={task}
+                    className={`group w-full flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-3 sm:p-4 text-left transition-colors hover:bg-[#111111] ${task.isCompleted ? "opacity-50" : ""}`}
+                    whileDrag={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", zIndex: 10 }}
+                    onDragStart={() => handleDragStart(task.id)}
+                    onDragEnd={handleDragEnd}
+                    drag={typeof window !== 'undefined' && window.innerWidth <= 640 ? dragEnabledTaskId === task.id : true}
                   >
-                    {task.isCompleted ? (
-                      <span className="material-symbols-outlined text-sm font-bold text-[#C4C0FF]">
-                        done
-                      </span>
-                    ) : (
-                      <div className="h-2 w-2 rounded-full bg-[#464555]/50 shrink-0" />
-                    )}
-                  </button>
-                  <div
-                    className="grow min-w-0 flex items-center gap-2 cursor-pointer"
-                    onClick={() => handleToggleTask(task)}
-                  >
-                    {priorityMode === 'advanced' && (
-                      <span className="text-xs shrink-0" title={`${task.priority || 'medium'} priority`}>
-                        {task.priority === 'critical' ? '🔴' : task.priority === 'high' ? '🟠' : task.priority === 'low' ? '🔵' : '🟡'}
-                      </span>
-                    )}
-                    <p
-                      className={`font-medium text-sm transition-all ${task.isCompleted ? "text-[#E2E2E2] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
+                    <div 
+                      className={`touch-none flex items-center opacity-30 active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing text-[#464555] shrink-0 ${dragEnabledTaskId === task.id ? 'opacity-100 text-[#4F44E2]' : ''}`}
+                      onPointerDown={() => handleDragHoldStart(task.id)}
+                      onPointerUp={handleDragHoldEnd}
+                      onPointerLeave={handleDragHoldEnd}
                     >
-                      {task.title}
-                    </p>
-                  </div>
-                  {task.isHabit && (
-                    <span className="rounded border border-[#4F44E2]/20 bg-[#4F44E2]/10 px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#C4C0FF] shrink-0">
-                      Habit
-                    </span>
-                  )}
-                  <span className="rounded border border-[#464555]/20 bg-black px-2 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555] shrink-0">
-                    {task.category}
-                  </span>
+                      <span className="material-symbols-outlined text-[20px]">
+                        drag_indicator
+                      </span>
+                    </div>
 
-                  <button
-                    onClick={() =>
-                      setDeleteConfirmation({
-                        taskId: task.id,
-                        taskTitle: task.title,
-                      })
-                    }
-                    disabled={deletingTaskId === task.id}
-                    className="opacity-20 active:opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all p-1 sm:p-1.5 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0"
-                    aria-label={`Delete task: ${task.title}`}
-                  >
-                    <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                      delete
+                    <button
+                      onClick={() => handleToggleTask(task)}
+                      className={`flex h-5 sm:h-6 w-5 sm:w-6 items-center justify-center rounded-full border shrink-0 transition-colors ${task.isCompleted ? "border-[#C4C0FF]/30 bg-[#C4C0FF]/20" : "border-[#464555]/30 bg-transparent hover:border-[#C4C0FF]/50"}`}
+                    >
+                      {task.isCompleted ? (
+                        <span className="material-symbols-outlined text-sm font-bold text-[#C4C0FF]">
+                          done
+                        </span>
+                      ) : (
+                        <div className="h-2 w-2 rounded-full bg-[#464555]/50 shrink-0" />
+                      )}
+                    </button>
+                    <div
+                      className="grow min-w-0 flex items-center gap-2 cursor-pointer"
+                      onClick={() => handleToggleTask(task)}
+                    >
+                      {priorityMode === 'advanced' && (
+                        <span className="text-xs shrink-0" title={`${task.priority || 'medium'} priority`}>
+                          {task.priority === 'critical' ? '🔴' : task.priority === 'high' ? '🟠' : task.priority === 'low' ? '🔵' : '🟡'}
+                        </span>
+                      )}
+                      <p
+                        className={`font-medium text-sm transition-all ${task.isCompleted ? "text-[#E2E2E2] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
+                      >
+                        {task.title}
+                      </p>
+                    </div>
+                    {task.isHabit && (
+                      <span className="rounded border border-[#4F44E2]/20 bg-[#4F44E2]/10 px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#C4C0FF] shrink-0">
+                        Habit
+                      </span>
+                    )}
+                    <span className="rounded border border-[#464555]/20 bg-black px-2 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555] shrink-0">
+                      {task.category}
                     </span>
-                  </button>
-                </div>
-              ))
+
+                    <button
+                      onClick={() =>
+                        setDeleteConfirmation({
+                          taskId: task.id,
+                          taskTitle: task.title,
+                        })
+                      }
+                      disabled={deletingTaskId === task.id}
+                      className="opacity-20 active:opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all p-1 sm:p-1.5 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0"
+                      aria-label={`Delete task: ${task.title}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                        delete
+                      </span>
+                    </button>
+                  </Reorder.Item>
+                ))}
+              </Reorder.Group>
             )}
           </div>
         </section>

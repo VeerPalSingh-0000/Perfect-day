@@ -8,7 +8,8 @@ import {
   getDocs,
   updateDoc,
   getDoc,
-  onSnapshot
+  onSnapshot,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Task, DayRecord, UserProfile } from "../types";
@@ -402,9 +403,13 @@ export const listenToTasksByDate = (
     q,
     (snapshot) => {
       const tasks: Task[] = [];
+      const seenIds = new Set<string>();
       snapshot.forEach((docSnap) => {
         const taskData = docSnap.data() as Task;
-        if (taskData) tasks.push(taskData);
+        if (taskData && !seenIds.has(taskData.id)) {
+          seenIds.add(taskData.id);
+          tasks.push(taskData);
+        }
       });
       callback(tasks.sort((a, b) => (a.order || 0) - (b.order || 0)));
     },
@@ -442,29 +447,33 @@ export const listenToDayRecords = (
 // Listen to TrackIT sessions for a specific user ID
 export const listenToTrackItSessions = (
   trackerUid: string,
-  onNewSession: (session: any) => void
+  onNewSession: (session: any) => void,
 ) => {
   if (!trackerUid) return () => {};
 
   // Track the last processed session time to only react to NEW sessions
-  // We use a small 2-second buffer to make sure we don't skip sessions 
+  // We use a small 2-second buffer to make sure we don't skip sessions
   // that were saved right as the listener was starting.
   let lastProcessedTime = Date.now() - 2000;
 
   const sessionsRef = collection(trackerDb, "sessions");
-  const q = query(
-    sessionsRef,
-    where("userId", "==", trackerUid)
-  );
+  const q = query(sessionsRef, where("userId", "==", trackerUid));
 
   return onSnapshot(q, (snapshot) => {
     snapshot.docChanges().forEach((change) => {
       if (change.type === "added") {
         const session = change.doc.data();
         const sessionTime = session.createdAt?.toMillis() || Date.now();
-        
-        console.log("TrackIT Session Detected:", session.projectName, "IDs:", [session.projectId, session.topicId, session.subTopicId].filter(Boolean));
-        
+
+        console.log(
+          "TrackIT Session Detected:",
+          session.projectName,
+          "IDs:",
+          [session.projectId, session.topicId, session.subTopicId].filter(
+            Boolean,
+          ),
+        );
+
         // Only trigger for sessions added AFTER we started listening
         if (sessionTime > lastProcessedTime) {
           onNewSession(session);
@@ -482,7 +491,7 @@ export const getTrackItProjects = async (trackerUid: string) => {
   const projectsRef = collection(trackerDb, "projects");
   const q = query(projectsRef, where("userId", "==", trackerUid));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 };
 
 // Extract topics + subtopics from project docs (they are nested, not a separate collection)
@@ -514,4 +523,107 @@ export const getTrackItTopics = async (trackerUid: string) => {
     }
   });
   return items;
+};
+
+// Batch update task orders
+export const reorderTasks = async (
+  userId: string,
+  taskOrders: { id: string; order: number }[],
+) => {
+  if (!userId || !taskOrders.length) return;
+
+  try {
+    const batches = [];
+    let currentBatch = writeBatch(db);
+    let opCount = 0;
+
+    for (const { id, order } of taskOrders) {
+      const taskRef = doc(db, "users", userId, "tasks", id);
+      currentBatch.update(taskRef, { order });
+      opCount++;
+
+      if (opCount === 500) {
+        batches.push(currentBatch.commit());
+        currentBatch = writeBatch(db);
+        opCount = 0;
+      }
+    }
+
+    if (opCount > 0) {
+      batches.push(currentBatch.commit());
+    }
+
+    await Promise.all(batches);
+  } catch (error) {
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
+    throw error;
+  }
+};
+
+// Clean up duplicate tasks for a specific date
+export const cleanupDuplicateTasksForDate = async (
+  userId: string,
+  date: string,
+): Promise<number> => {
+  if (!userId || !date) return 0;
+
+  try {
+    const tasksRef = collection(db, "users", userId, "tasks");
+    const q = query(tasksRef, where("date", "==", date));
+
+    const snapshot = await getDocs(q);
+    const tasks: Task[] = [];
+    const duplicateIds: string[] = [];
+    const seenKeys = new Set<string>();
+
+    // Collect all tasks and identify duplicates
+    snapshot.forEach((docSnap) => {
+      const taskData = docSnap.data() as Task;
+      if (taskData) tasks.push(taskData);
+    });
+
+    // Find duplicates by title+category for habits, keeping only the first one
+    tasks.forEach((task) => {
+      const key = task.isHabit ? `${task.title}__${task.category}` : task.id;
+      if (seenKeys.has(key)) {
+        duplicateIds.push(task.id);
+      } else {
+        seenKeys.add(key);
+      }
+    });
+
+    // Delete duplicate tasks
+    if (duplicateIds.length > 0) {
+      const batches = [];
+      let currentBatch = writeBatch(db);
+      let opCount = 0;
+
+      for (const taskId of duplicateIds) {
+        const taskRef = doc(db, "users", userId, "tasks", taskId);
+        currentBatch.delete(taskRef);
+        opCount++;
+
+        if (opCount === 500) {
+          batches.push(currentBatch.commit());
+          currentBatch = writeBatch(db);
+          opCount = 0;
+        }
+      }
+
+      if (opCount > 0) {
+        batches.push(currentBatch.commit());
+      }
+
+      await Promise.all(batches);
+      console.log(
+        `Cleaned up ${duplicateIds.length} duplicate tasks for date ${date}`,
+      );
+      return duplicateIds.length;
+    }
+
+    return 0;
+  } catch (error) {
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
+    return 0;
+  }
 };

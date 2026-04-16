@@ -11,6 +11,7 @@ import {
   rebuildDayRecordsFromTasks,
   listenToTrackItSessions,
   updateTask as dbUpdateTask,
+  reorderTasks as dbReorderTasks,
 } from "@/lib/db";
 
 export const isHabitValidForDate = (habit: Task, dateStr: string) => {
@@ -62,6 +63,7 @@ interface DataState {
   toggleTaskCompletion: (taskId: string) => void;
   setRecords: (records: DayRecord[]) => void;
   setTodayFocus: (word: string) => void;
+  reorderTasks: (tasks: Task[]) => void;
   reset: () => void;
 
   // Listeners
@@ -106,6 +108,20 @@ export const useDataStore = create<DataState>()(
 
       setTodayFocus: (word) => set({ todayFocus: word }),
 
+      reorderTasks: (reorderedTasks) => {
+        set({ tasks: reorderedTasks });
+        const userId = reorderedTasks[0]?.userId;
+        if (userId) {
+          const taskOrders = reorderedTasks.map((t, index) => ({
+            id: t.id,
+            order: index,
+          }));
+          dbReorderTasks(userId, taskOrders).catch((error) =>
+            console.error("Failed to reorder tasks in db", error),
+          );
+        }
+      },
+
       reset: () => {
         const { unsubTasks, unsubRecords, unsubTracker } = get();
         if (unsubTasks) unsubTasks();
@@ -139,7 +155,7 @@ export const useDataStore = create<DataState>()(
         // If date changed (or stale listeners exist), clean up and resubscribe.
         if (unsubTasks) unsubTasks();
         if (unsubRecords) unsubRecords();
-        // unsubTracker is user-based, not date-based, but we'll reset it to be safe 
+        // unsubTracker is user-based, not date-based, but we'll reset it to be safe
         // if this is a force reload.
         if (forceResubscribe && get().unsubTracker) get().unsubTracker?.();
 
@@ -176,6 +192,7 @@ export const useDataStore = create<DataState>()(
                 );
                 const newHabits = habits.filter(
                   (h) =>
+                    !h.isPaused &&
                     !existingTitles.has(`${h.title}__${h.category}`) &&
                     isHabitValidForDate(h, todayDateStr),
                 );
@@ -211,7 +228,20 @@ export const useDataStore = create<DataState>()(
           userId,
           todayDateStr,
           (tasks) => {
-            set({ tasks });
+            // Filter inactive tasks and deduplicate
+            const seenKeys = new Set<string>();
+            const activeTasks = tasks.filter((t) => {
+              // Only keep tasks that are not paused OR are completed
+              const isActive = !t.isPaused || t.isCompleted;
+              if (!isActive) return false;
+
+              // Deduplicate by title+category for habits, by id for others
+              const key = t.isHabit ? `${t.title}__${t.category}` : t.id;
+              if (seenKeys.has(key)) return false;
+              seenKeys.add(key);
+              return true;
+            });
+            set({ tasks: activeTasks });
             tasksLoaded = true;
             checkLoaded();
           },
@@ -240,40 +270,59 @@ export const useDataStore = create<DataState>()(
         if (unsubTracker) unsubTracker();
 
         console.log("Starting TrackIT Sync for UID:", trackerUid);
-        
-        const nextUnsubTracker = listenToTrackItSessions(trackerUid, (session) => {
-          const currentTasks = get().tasks;
-          
-          // Collect ALL IDs from the session (a session has projectId, topicId, subTopicId)
-          const sessionIds = [
-            session.projectId,
-            session.topicId,
-            session.subTopicId,
-          ].filter(Boolean);
-          
-          // Find any SIRA task whose linkedTrackItIds overlaps with ANY session ID
-          const matchingTasks = currentTasks.filter(t => 
-            !t.isCompleted && 
-            t.linkedTrackItIds?.some((id: string) => sessionIds.includes(id))
-          );
 
-          matchingTasks.forEach(task => {
-            const sessionDurationMinutes = (session.duration || 0) / 60000;
-            const targetMinutes = task.targetTime || 0;
+        const nextUnsubTracker = listenToTrackItSessions(
+          trackerUid,
+          (session) => {
+            const currentTasks = get().tasks;
 
-            console.log(`Checking Goal for "${task.title}": Focus was ${Math.round(sessionDurationMinutes)}m, Target is ${targetMinutes}m`);
+            // Collect ALL IDs from the session (a session has projectId, topicId, subTopicId)
+            const sessionIds = [
+              session.projectId,
+              session.topicId,
+              session.subTopicId,
+            ].filter(Boolean);
 
-            // Only auto-complete if session meets or exceeds target (if a target is set)
-            if (targetMinutes === 0 || sessionDurationMinutes >= targetMinutes) {
-              console.log("Auto-completing SIRA Task:", task.title, "due to FocusFlow session");
-              get().toggleTaskCompletion(task.id);
-              dbUpdateTask(userId, task.id, { isCompleted: true, completedAt: Date.now() })
-                .catch(e => console.error("Auto-complete failed:", e));
-            } else {
-              console.log(`Session too short for "${task.title}". Required ${targetMinutes}m, got ${Math.round(sessionDurationMinutes)}m.`);
-            }
-          });
-        });
+            // Find any SIRA task whose linkedTrackItIds overlaps with ANY session ID
+            const matchingTasks = currentTasks.filter(
+              (t) =>
+                !t.isCompleted &&
+                t.linkedTrackItIds?.some((id: string) =>
+                  sessionIds.includes(id),
+                ),
+            );
+
+            matchingTasks.forEach((task) => {
+              const sessionDurationMinutes = (session.duration || 0) / 60000;
+              const targetMinutes = task.targetTime || 0;
+
+              console.log(
+                `Checking Goal for "${task.title}": Focus was ${Math.round(sessionDurationMinutes)}m, Target is ${targetMinutes}m`,
+              );
+
+              // Only auto-complete if session meets or exceeds target (if a target is set)
+              if (
+                targetMinutes === 0 ||
+                sessionDurationMinutes >= targetMinutes
+              ) {
+                console.log(
+                  "Auto-completing SIRA Task:",
+                  task.title,
+                  "due to FocusFlow session",
+                );
+                get().toggleTaskCompletion(task.id);
+                dbUpdateTask(userId, task.id, {
+                  isCompleted: true,
+                  completedAt: Date.now(),
+                }).catch((e) => console.error("Auto-complete failed:", e));
+              } else {
+                console.log(
+                  `Session too short for "${task.title}". Required ${targetMinutes}m, got ${Math.round(sessionDurationMinutes)}m.`,
+                );
+              }
+            });
+          },
+        );
 
         set({ unsubTracker: nextUnsubTracker });
       },

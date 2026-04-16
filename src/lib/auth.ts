@@ -98,6 +98,15 @@ export const initAuthListener = () => {
       // Fetch data
       if (!dataStore.isDataLoaded) {
         dataStore.fetchAll(user.uid, getTodayStr(), user.email);
+
+        // Clean up any duplicate tasks that may exist from previous issues
+        import("@/lib/db").then(({ cleanupDuplicateTasksForDate }) => {
+          cleanupDuplicateTasksForDate(user.uid, getTodayStr()).catch(
+            (error) => {
+              console.error("Duplicate cleanup failed:", error);
+            },
+          );
+        });
       }
 
       // Fetch Profile instantly using real-time cache sync

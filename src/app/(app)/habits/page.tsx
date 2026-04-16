@@ -2,12 +2,20 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useDataStore } from "@/stores/useDataStore";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { getHabitTasks, updateTask } from "@/lib/db";
 import { Task } from "@/types";
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
-import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+  deleteField,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function HabitsPage() {
@@ -39,7 +47,12 @@ export default function HabitsPage() {
 
   const handleDeleteHabit = async (habit: Task) => {
     if (!user) return;
-    if (!confirm(`Are you sure you want to stop the habit: ${habit.title}? It will no longer repeat.`)) return;
+    if (
+      !confirm(
+        `Are you sure you want to stop the habit: ${habit.title}? It will no longer repeat.`,
+      )
+    )
+      return;
 
     setDeletingHabitId(habit.id);
     try {
@@ -47,7 +60,7 @@ export default function HabitsPage() {
         collection(db, "users", user.uid, "tasks"),
         where("title", "==", habit.title),
         where("category", "==", habit.category),
-        where("isHabit", "==", true)
+        where("isHabit", "==", true),
       );
       const snap = await getDocs(q);
       const batch = writeBatch(db);
@@ -64,7 +77,49 @@ export default function HabitsPage() {
     }
   };
 
-  const handleEditSubmit = async (taskData: Partial<Task> & { id?: string }) => {
+  const handleTogglePause = async (habit: Task) => {
+    if (!user) return;
+    const newPausedState = !habit.isPaused;
+
+    // Optimistically update local state
+    setHabits((prev) =>
+      prev.map((h) =>
+        h.id === habit.id ? { ...h, isPaused: newPausedState } : h,
+      ),
+    );
+
+    try {
+      const q = query(
+        collection(db, "users", user.uid, "tasks"),
+        where("title", "==", habit.title),
+        where("category", "==", habit.category),
+        where("isHabit", "==", true),
+      );
+      const snap = await getDocs(q);
+      const batch = writeBatch(db);
+      snap.forEach((docSnap) => {
+        batch.update(docSnap.ref, { isPaused: newPausedState });
+      });
+      await batch.commit();
+
+      // Refresh the today page to immediately reflect the pause state change
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      await useDataStore.getState().fetchAll(user.uid, dateStr, null, true);
+    } catch (error) {
+      console.error("Failed to toggle habit pause state:", error);
+      // Revert optimistic update on failure
+      setHabits((prev) =>
+        prev.map((h) =>
+          h.id === habit.id ? { ...h, isPaused: habit.isPaused } : h,
+        ),
+      );
+    }
+  };
+
+  const handleEditSubmit = async (
+    taskData: Partial<Task> & { id?: string },
+  ) => {
     if (!user || !taskData.id || !editingHabit) return;
 
     if (!taskData.isHabit) {
@@ -85,18 +140,58 @@ export default function HabitsPage() {
         updates.priority = taskData.priority;
       }
 
-      if (taskData.targetTime !== undefined) {
-        updates.targetTime = taskData.targetTime;
+      if ("targetTime" in taskData) {
+        if (taskData.targetTime) {
+          updates.targetTime = taskData.targetTime;
+        } else {
+          updates.targetTime = deleteField();
+        }
       }
 
-      if (taskData.linkedTrackItIds !== undefined) {
-        updates.linkedTrackItIds = taskData.linkedTrackItIds;
+      if ("linkedTrackItIds" in taskData) {
+        if (taskData.linkedTrackItIds && taskData.linkedTrackItIds.length > 0) {
+          updates.linkedTrackItIds = taskData.linkedTrackItIds;
+        } else {
+          updates.linkedTrackItIds = deleteField();
+        }
       }
 
-      await updateTask(user.uid, taskData.id, updates);
+      const q = query(
+        collection(db, "users", user.uid, "tasks"),
+        where("title", "==", editingHabit.title),
+        where("category", "==", editingHabit.category),
+      );
+
+      const snap = await getDocs(q);
+      const batches = [];
+      let currentBatch = writeBatch(db);
+      let opCount = 0;
+
+      snap.forEach((docSnap) => {
+        currentBatch.update(docSnap.ref, updates);
+        opCount++;
+        if (opCount === 500) {
+          batches.push(currentBatch.commit());
+          currentBatch = writeBatch(db);
+          opCount = 0;
+        }
+      });
+
+      if (opCount > 0) {
+        batches.push(currentBatch.commit());
+      }
+
+      await Promise.all(batches);
+
       await loadHabits();
+      // Assuming today's date is needed for fetching. Since habits page doesn't directly
+      // have `todayDateStr` like the today page, we'll construct it in the client timezone.
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      await useDataStore.getState().fetchAll(user.uid, dateStr);
+      setIsModalOpen(false);
     } catch (e) {
-      console.error(e);
+      console.error("Failed to update habit:", e);
     }
   };
 
@@ -117,7 +212,10 @@ export default function HabitsPage() {
         {loading ? (
           <div className="animate-pulse flex flex-col gap-4 mt-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-16 w-full bg-[#111111] rounded-xl border border-white/5" />
+              <div
+                key={i}
+                className="h-16 w-full bg-[#111111] rounded-xl border border-white/5"
+              />
             ))}
           </div>
         ) : habits.length === 0 ? (
@@ -129,7 +227,8 @@ export default function HabitsPage() {
               No Active Habits
             </p>
             <p className="text-xs text-[#464555]">
-              Create a repeating habit from your Focus page, and it will appear here.
+              Create a repeating habit from your Focus page, and it will appear
+              here.
             </p>
           </div>
         ) : (
@@ -156,10 +255,31 @@ export default function HabitsPage() {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
                       {habit.category}
                     </span>
+                    {habit.isPaused && (
+                      <>
+                        <span className="h-1 w-1 shrink-0 rounded-full bg-[#464555]/50" />
+                        <span className="rounded border border-[#464555]/20 bg-black px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-orange-400">
+                          Paused
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <button
+                    onClick={() => handleTogglePause(habit)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${!habit.isPaused ? "bg-[#4F44E2]" : "bg-[#464555]/50"}`}
+                    role="switch"
+                    aria-checked={!habit.isPaused}
+                    aria-label={`Toggle pause state for ${habit.title}`}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!habit.isPaused ? "translate-x-4" : "translate-x-0"}`}
+                    />
+                  </button>
+                  <div className="w-px h-6 bg-white/5 mx-1" />
                   <button
                     onClick={() => {
                       setEditingHabit(habit);

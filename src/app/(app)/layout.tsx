@@ -10,6 +10,7 @@ import { useDataStore } from "@/stores/useDataStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
+import { ClientOnly } from "@/components/ClientOnly";
 
 // Helper to get today as YYYY-MM-DD
 function getTodayStr() {
@@ -89,18 +90,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
   }, [user, fetchAll]);
 
-  if (!isInitialized) return <LoadingSkeleton />;
-  if (!user) return <LoadingSkeleton />;
+  if (!isInitialized)
+    return (
+      <ClientOnly fallback={<LoadingSkeleton />}>
+        <LoadingSkeleton />
+      </ClientOnly>
+    );
+  if (!user)
+    return (
+      <ClientOnly fallback={<LoadingSkeleton />}>
+        <LoadingSkeleton />
+      </ClientOnly>
+    );
 
   // Show skeleton only on the very first data load
-  if (!isDataLoaded) return <LoadingSkeleton />;
+  if (!isDataLoaded)
+    return (
+      <ClientOnly fallback={<LoadingSkeleton />}>
+        <LoadingSkeleton />
+      </ClientOnly>
+    );
 
   return (
-    <div className="flex min-h-screen bg-black w-full">
-      <Sidebar />
-      <div className="flex-1 w-full max-w-full relative overflow-x-hidden pb-16 md:pb-0">
-        <div className="animate-fade-in">{children}</div>
+    <ClientOnly fallback={<LoadingSkeleton />}>
+      <div className="flex min-h-screen bg-black w-full">
+        <Sidebar />
+        <div className="flex-1 w-full max-w-full relative overflow-x-hidden pb-16 md:pb-0">
+          <div className="animate-fade-in">{children}</div>
+        </div>
       </div>
-    </div>
+    </ClientOnly>
   );
 }

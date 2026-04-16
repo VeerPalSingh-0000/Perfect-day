@@ -8,6 +8,7 @@ export interface Task {
   category: TaskCategory;
   isCompleted: boolean;
   isHabit: boolean;
+  isPaused?: boolean;
   frequency?: HabitFrequency;
   priority?: TaskPriority;
   targetTime?: number; // Target duration in minutes
