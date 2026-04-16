@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { signInWithGoogle } from "@/lib/auth";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { ClientOnly } from "@/components/ClientOnly";
-
+export const dynamic = 'force-static';
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);

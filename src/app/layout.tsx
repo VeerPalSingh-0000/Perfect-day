@@ -173,8 +173,8 @@ export default function RootLayout({
           <AuthInitializer />
           <NotificationCenter />
           <InstallPWA />
+          {children}
         </ClientOnly>
-        {children}
       </body>
     </html>
   );
