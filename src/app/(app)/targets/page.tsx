@@ -9,7 +9,6 @@ import { LearningTarget, DayStep } from "@/types";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-static";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function TargetsPage() {

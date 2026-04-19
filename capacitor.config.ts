@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
     hostname: "localhost",
     cleartext: true,
     allowNavigation: ["*.firebaseapp.com", "*.googleapis.com", "*.gstatic.com"],
-    // url: "http://192.168.1.9:3000"
+    // url: "http://192.168.1.8:3000"
   },
   plugins: {
     FirebaseAuthentication: {

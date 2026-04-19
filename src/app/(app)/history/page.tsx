@@ -8,8 +8,6 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { trackerDb } from "@/lib/tracker-db";
 
-export const dynamic = "force-static";
-
 function formatMinutes(mins: number): string {
   if (mins >= 60) {
     return `${Math.floor(mins / 60)}h ${Math.round(mins % 60)}m`;

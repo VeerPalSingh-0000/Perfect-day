@@ -8,8 +8,6 @@ import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Reorder } from "framer-motion";
 
-export const dynamic = "force-static";
-
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
 import { TaskTimer } from "@/components/ui/TaskTimer";
 import { useTrackerStore } from "@/stores/useTrackerStore";

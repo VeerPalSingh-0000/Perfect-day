@@ -7,21 +7,25 @@ import Link from "next/link";
 import { getCurrentYear } from "@/lib/utils";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-export const dynamic = "force-static";
-
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
   const isInitialized = useAuthStore((s) => s.isInitialized);
 
+  // Ensure client-only rendering to prevent hydration mismatch
   useEffect(() => {
-    if (isInitialized && !isLoading && user) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && isInitialized && !isLoading && user) {
       router.replace("/today");
     }
-  }, [user, isInitialized, isLoading, router]);
+  }, [user, isInitialized, isLoading, router, mounted]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -42,16 +46,23 @@ export default function SignupPage() {
     }
   };
 
-  if (!isInitialized || isLoading || user) {
+  // Show loading state until mounted to prevent hydration mismatch
+  if (!mounted || !isInitialized || isLoading || user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div
+        className="min-h-screen bg-black flex items-center justify-center"
+        suppressHydrationWarning
+      >
         <div className="w-12 h-12 rounded-full border-2 border-white/5 border-t-white/40 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-black relative overflow-hidden">
+    <div
+      className="min-h-screen w-full flex items-center justify-center p-6 bg-black relative overflow-hidden"
+      suppressHydrationWarning
+    >
       <div className="fixed top-0 left-0 w-[60%] h-[60%] bg-tertiary/10 rounded-full blur-[120px] -z-10 pointer-events-none opacity-50" />
       <div className="fixed bottom-0 right-0 w-[50%] h-[50%] bg-primary/5 rounded-full blur-[100px] -z-10 pointer-events-none opacity-30" />
 

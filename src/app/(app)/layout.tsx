@@ -1,7 +1,7 @@
 // src/app/(app)/layout.tsx
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
@@ -10,7 +10,6 @@ import { useDataStore } from "@/stores/useDataStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
-import { ClientOnly } from "@/components/ClientOnly";
 
 // Helper to get today as YYYY-MM-DD
 function getTodayStr() {
@@ -19,6 +18,7 @@ function getTodayStr() {
 }
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
@@ -30,6 +30,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const trackerUser = useTrackerStore((s) => s.trackerUser);
   const isTrackerLinked = useTrackerStore((s) => s.isLinked);
   const initTrackerAuth = useTrackerStore((s) => s.initTrackerAuth);
+
+  // Ensure client-only render
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     initTrackerAuth();
@@ -90,35 +95,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
   }, [user, fetchAll]);
 
-  if (!isInitialized)
-    return (
-      <ClientOnly fallback={<LoadingSkeleton />}>
-        <LoadingSkeleton />
-      </ClientOnly>
-    );
-  if (!user)
-    return (
-      <ClientOnly fallback={<LoadingSkeleton />}>
-        <LoadingSkeleton />
-      </ClientOnly>
-    );
-
-  // Show skeleton only on the very first data load
-  if (!isDataLoaded)
-    return (
-      <ClientOnly fallback={<LoadingSkeleton />}>
-        <LoadingSkeleton />
-      </ClientOnly>
-    );
+  // Don't render until mounted to avoid hydration mismatch
+  if (!mounted || !isInitialized || isLoading || !user || !isDataLoaded) {
+    return <LoadingSkeleton />;
+  }
 
   return (
-    <ClientOnly fallback={<LoadingSkeleton />}>
-      <div className="flex min-h-screen bg-black w-full">
-        <Sidebar />
-        <div className="flex-1 w-full max-w-full relative overflow-x-hidden pb-16 md:pb-0">
-          <div className="animate-fade-in">{children}</div>
-        </div>
+    <div className="flex min-h-screen bg-black w-full">
+      <Sidebar />
+      <div className="flex-1 w-full max-w-full relative overflow-x-hidden pb-16 md:pb-0">
+        <div className="animate-fade-in">{children}</div>
       </div>
-    </ClientOnly>
+    </div>
   );
 }

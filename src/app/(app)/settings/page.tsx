@@ -8,8 +8,6 @@ import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StealthFooter } from "@/components/layout/StealthFooter";
 import { updateUserProfile } from "@/lib/db";
-
-export const dynamic = "force-static";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useAchievementStore } from "@/stores/useAchievementStore";

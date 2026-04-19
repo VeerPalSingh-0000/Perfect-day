@@ -5,8 +5,6 @@ import { useDataStore } from "@/stores/useDataStore";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 
-export const dynamic = "force-static";
-
 export default function AnalyticsPage() {
   const records = useDataStore((s) => s.records);
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date());

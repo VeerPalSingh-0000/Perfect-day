@@ -9,7 +9,6 @@ import { getHabitTasks, updateTask } from "@/lib/db";
 import { Task } from "@/types";
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
 
-export const dynamic = "force-static";
 import {
   collection,
   query,
