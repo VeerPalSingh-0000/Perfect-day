@@ -15,7 +15,7 @@ import { auth } from "@/lib/firebase";
 import { trackerAuth } from "@/lib/tracker-db";
 import { getTrackItProjects, getTrackItTopics } from "@/lib/db";
 
-const FOCUSFLOW_LINK_TOKEN_PATH = "/api/focusflow/link-token";
+const FOCUSFLOW_LINK_TOKEN_PATH = "/api/focusflow/link-token/";
 const PRIMARY_PICKER_APP_NAME = "primary-picker-app";
 let trackerRestoreInFlight = false;
 let trackerRestoreAttempted = false;

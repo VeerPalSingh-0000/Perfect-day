@@ -497,7 +497,7 @@ export default function SettingsPage() {
                       }}
                       className="w-full flex items-center justify-between p-4 sm:p-5 transition-colors hover:bg-white/5 group"
                     >
-                      <div className="flex items-center gap-4 min-w-0">
+                      <div className="flex items-center gap-4 min-w-0 flex-1 pr-4 text-left">
                         <div className="relative flex items-center justify-center shrink-0">
                           <svg
                             className="h-10 w-10 -rotate-90"
@@ -541,9 +541,25 @@ export default function SettingsPage() {
                           </p>
                         </div>
                       </div>
-                      <span className="material-symbols-outlined text-lg text-[#464555] group-hover:text-white transition-colors">
-                        chevron_right
-                      </span>
+                      
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-8 w-8 rounded-full border border-red-500/0 bg-red-500/0 flex items-center justify-center text-[#464555] opacity-0 group-hover:opacity-100 hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer hover:scale-110 active:scale-95"
+                          onClick={(e) => {
+                             e.stopPropagation();
+                             if (confirm("Are you sure you want to completely delete this target?")) {
+                               triggerHaptic();
+                               useTargetStore.getState().removeTarget(target.id);
+                             }
+                          }}
+                          title="Delete Target"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </div>
+                        <span className="material-symbols-outlined text-lg text-[#464555] group-hover:text-white transition-colors">
+                          chevron_right
+                        </span>
+                      </div>
                     </button>
                   );
                 })

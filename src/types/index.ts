@@ -62,15 +62,27 @@ export interface DayStep {
   title: string;
   description: string;
   isCompleted: boolean;
+  completedAt?: number;
+  isMilestone?: boolean;
+  notes?: string;
 }
+
+export type TargetStatus = 'active' | 'paused' | 'completed' | 'abandoned';
+export type TargetCategory = 'learning' | 'fitness' | 'career' | 'creative' | 'discipline' | 'custom';
 
 export interface LearningTarget {
   id: string;
   userId: string;
   title: string;
+  category: TargetCategory;
   totalDays: number;
   plan: DayStep[];
   completedDays: number[]; // Array of indices (day - 1)
   createdAt: number;
   startDate: string; // YYYY-MM-DD
+  deadline?: string; // YYYY-MM-DD
+  status: TargetStatus;
+  emoji?: string;
+  bestStreak?: number;
+  currentStreak?: number;
 }

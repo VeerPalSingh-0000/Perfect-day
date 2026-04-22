@@ -5,6 +5,7 @@ import ThemeInit from "@/components/ui/ThemeInit";
 import { AuthInitializer } from "@/components/AuthInitializer";
 import { InstallPWA } from "@/components/ui/InstallPWA";
 import { NotificationCenter } from "@/components/ui/NotificationCenter";
+import { LayoutClient } from "@/components/LayoutClient";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -167,11 +168,13 @@ export default function RootLayout({
         className="bg-black text-on-surface font-body min-h-screen selection:bg-white/20 overflow-x-hidden"
         suppressHydrationWarning
       >
-        <ThemeInit />
-        <AuthInitializer />
-        <NotificationCenter />
-        <InstallPWA />
-        {children}
+        <LayoutClient>
+          <ThemeInit />
+          <AuthInitializer />
+          <NotificationCenter />
+          <InstallPWA />
+          {children}
+        </LayoutClient>
       </body>
     </html>
   );
