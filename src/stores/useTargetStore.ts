@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { LearningTarget, DayStep, TargetStatus } from "@/types";
+import { saveTarget, removeTargetFromCloud, updateTargetInCloud, listenToTargets } from "@/lib/db";
 
 interface TargetState {
   targets: LearningTarget[];
@@ -13,6 +14,10 @@ interface TargetState {
   toggleDayCompletion: (targetId: string, dayStep: DayStep) => void;
   setActiveTarget: (targetId: string | null) => void;
   addNote: (targetId: string, dayIndex: number, note: string) => void;
+  
+  // Real-time synchronization
+  unsubTargets: (() => void) | null;
+  initSync: (userId: string) => void;
 }
 
 // Helpers
@@ -67,22 +72,46 @@ export const useTargetStore = create<TargetState>()(
     (set) => ({
       targets: [],
       activeTargetId: null,
+      unsubTargets: null,
 
-      addTarget: (target) =>
+      initSync: (userId) => {
+        const unsub = listenToTargets(userId, (cloudTargets) => {
+          set({ targets: cloudTargets });
+        });
+        set({ unsubTargets: unsub });
+      },
+
+      addTarget: (target) => {
+        saveTarget(target).catch(console.error);
         set((state) => ({
           targets: [...state.targets, target],
-        })),
+        }));
+      },
 
-      removeTarget: (targetId) =>
-        set((state) => ({
-          targets: state.targets.filter((t) => t.id !== targetId),
-          activeTargetId: state.activeTargetId === targetId ? null : state.activeTargetId,
-        })),
+      removeTarget: (targetId) => {
+        set((state) => {
+          const target = state.targets.find(t => t.id === targetId);
+          if (target && target.userId) {
+             removeTargetFromCloud(target.userId, targetId).catch(console.error);
+          }
+          return {
+            targets: state.targets.filter((t) => t.id !== targetId),
+            activeTargetId: state.activeTargetId === targetId ? null : state.activeTargetId,
+          };
+        });
+      },
 
-      updateTarget: (targetId, updates) =>
-        set((state) => ({
-          targets: state.targets.map((t) => t.id === targetId ? { ...t, ...updates } : t)
-        })),
+      updateTarget: (targetId, updates) => {
+        set((state) => {
+          const t = state.targets.find(t => t.id === targetId);
+          if (t && t.userId) {
+            updateTargetInCloud(t.userId, targetId, updates).catch(console.error);
+          }
+          return {
+            targets: state.targets.map((t) => t.id === targetId ? { ...t, ...updates } : t)
+          };
+        });
+      },
 
       toggleDayCompletion: (targetId, dayStep) =>
         set((state) => {
@@ -136,7 +165,7 @@ export const useTargetStore = create<TargetState>()(
                 }
               }
 
-              return {
+              const nextTarget = {
                 ...t,
                 completedDays: nextCompletedDays,
                 plan: nextPlan,
@@ -144,6 +173,9 @@ export const useTargetStore = create<TargetState>()(
                 currentStreak: currentStreak,
                 bestStreak: Math.max(t.bestStreak || 0, currentStreak)
               };
+              
+              saveTarget(nextTarget).catch(console.error);
+              return nextTarget;
             }),
           };
         }),
@@ -156,7 +188,9 @@ export const useTargetStore = create<TargetState>()(
             if (nextPlan[dayIndex]) {
               nextPlan[dayIndex] = { ...nextPlan[dayIndex], notes: note };
             }
-            return { ...t, plan: nextPlan };
+            const nextTarget = { ...t, plan: nextPlan };
+            saveTarget(nextTarget).catch(console.error);
+            return nextTarget;
           })
         })),
 

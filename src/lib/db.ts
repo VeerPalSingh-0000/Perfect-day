@@ -12,7 +12,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { Task, DayRecord, UserProfile } from "../types";
+import { Task, DayRecord, UserProfile, LearningTarget } from "../types";
 import { calculateDayRating } from "./utils";
 import { logError, createSafeErrorMessage } from "./errorHandler";
 import { trackerDb } from "./tracker-db";
@@ -625,5 +625,58 @@ export const cleanupDuplicateTasksForDate = async (
   } catch (error) {
     logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     return 0;
+  }
+};
+
+// --- TARGET SYNC FUNCTIONS ---
+
+export const listenToTargets = (
+  userId: string,
+  callback: (targets: LearningTarget[]) => void
+) => {
+  if (!userId) return () => {};
+  const targetsRef = collection(db, "users", userId, "targets");
+  return onSnapshot(targetsRef, (snapshot) => {
+    const targets: LearningTarget[] = [];
+    snapshot.forEach((docSnap) => {
+      targets.push(docSnap.data() as LearningTarget);
+    });
+    // Sort oldest first or however they were created
+    callback(targets.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0)));
+  }, (error) => {
+    logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
+  });
+};
+
+export const saveTarget = async (target: LearningTarget) => {
+  if (!target || !target.userId || !target.id) throw new Error("Invalid target");
+  try {
+    const targetRef = doc(db, "users", target.userId, "targets", target.id);
+    await withRetry(() => setDoc(targetRef, target));
+  } catch (error) {
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
+    throw error;
+  }
+};
+
+export const updateTargetInCloud = async (userId: string, targetId: string, updates: Partial<LearningTarget>) => {
+  if (!userId || !targetId) throw new Error("Missing ID");
+  try {
+    const targetRef = doc(db, "users", userId, "targets", targetId);
+    await withRetry(() => updateDoc(targetRef, updates));
+  } catch (error) {
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
+    throw error;
+  }
+};
+
+export const removeTargetFromCloud = async (userId: string, targetId: string) => {
+  if (!userId || !targetId) throw new Error("Missing ID");
+  try {
+    const targetRef = doc(db, "users", userId, "targets", targetId);
+    await withRetry(() => deleteDoc(targetRef));
+  } catch (error) {
+    logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
+    throw error;
   }
 };

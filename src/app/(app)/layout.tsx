@@ -8,6 +8,7 @@ import { App } from "@capacitor/app";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore } from "@/stores/useDataStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
+import { useTargetStore } from "@/stores/useTargetStore";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { LoadingSkeleton } from "@/components/ui/LoadingSkeleton";
 
@@ -26,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const fetchAll = useDataStore((s) => s.fetchAll);
   const startTrackerSync = useDataStore((s) => s.startTrackerSync);
   const isDataLoaded = useDataStore((s) => s.isDataLoaded);
+  const initTargetSync = useTargetStore((s) => s.initSync);
 
   const trackerUser = useTrackerStore((s) => s.trackerUser);
   const isTrackerLinked = useTrackerStore((s) => s.isLinked);
@@ -51,8 +53,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && !isDataLoaded) {
       fetchAll(user.uid, getTodayStr(), user.email);
+      initTargetSync(user.uid);
     }
-  }, [user, isDataLoaded, fetchAll]);
+  }, [user, isDataLoaded, fetchAll, initTargetSync]);
 
   // Start Tracker Sync when linked
   useEffect(() => {
