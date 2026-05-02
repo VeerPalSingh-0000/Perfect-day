@@ -58,7 +58,6 @@ export default function TodayPage() {
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     taskId: string;
-    taskTitle: string;
   } | null>(null);
 
   // Hold-to-drag state
@@ -855,22 +854,6 @@ export default function TodayPage() {
                     <span className="rounded border border-[#464555]/20 bg-black px-2 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555] shrink-0">
                       {task.category}
                     </span>
-
-                    <button
-                      onClick={() =>
-                        setDeleteConfirmation({
-                          taskId: task.id,
-                          taskTitle: task.title,
-                        })
-                      }
-                      disabled={deletingTaskId === task.id}
-                      className="opacity-20 active:opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all p-1 sm:p-1.5 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0"
-                      aria-label={`Delete task: ${task.title}`}
-                    >
-                      <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                        delete
-                      </span>
-                    </button>
                   </Reorder.Item>
                 ))}
               </Reorder.Group>
@@ -878,41 +861,6 @@ export default function TodayPage() {
           </div>
         </section>
       </main>
-
-      {/* Delete Confirmation Dialog */}
-      {deleteConfirmation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="mx-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-6 sm:p-8 max-w-sm w-full shadow-2xl">
-            <h2 className="font-headline text-lg sm:text-xl font-bold text-[#E2E2E2] mb-2">
-              Delete Task?
-            </h2>
-            <p className="text-sm text-[#8E8D99] mb-6">
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-[#C4C0FF]">
-                "{deleteConfirmation.taskTitle}"
-              </span>
-              ?
-            </p>
-            <p className="text-xs text-[#464555] mb-6">
-              This action cannot be undone.
-            </p>
-            <div className="flex gap-3 sm:gap-4">
-              <button
-                onClick={() => setDeleteConfirmation(null)}
-                className="flex-1 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#111111] px-4 py-2 sm:py-2.5 text-sm font-semibold text-[#E2E2E2] hover:bg-[#1A1A1A] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2 sm:py-2.5 text-sm font-semibold text-white hover:bg-red-700 transition-colors active:scale-95"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <AddTaskModal
         isOpen={isModalOpen}

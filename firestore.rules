@@ -55,6 +55,19 @@ service cloud.firestore {
         allow delete: if request.auth.uid == userId &&
                          resource.data.userId == userId;
       }
+
+      // Learning targets collection (nested under users/{userId})
+      // Users can manage only their own 30-day learning targets
+      match /targets/{targetId} {
+        allow read: if request.auth.uid == userId;
+        allow create: if request.auth.uid == userId &&
+                         request.resource.data.userId == userId;
+        allow update: if request.auth.uid == userId &&
+                         request.resource.data.userId == userId &&
+                         resource.data.userId == userId;
+        allow delete: if request.auth.uid == userId &&
+                         resource.data.userId == userId;
+      }
     }
 
     // ====== FIRESTORE BEST PRACTICES ======

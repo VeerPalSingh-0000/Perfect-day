@@ -6,10 +6,12 @@ import {
   query,
   where,
   getDocs,
+  getDocsFromServer,
   updateDoc,
   getDoc,
   onSnapshot,
   writeBatch,
+  Unsubscribe,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Task, DayRecord, UserProfile, LearningTarget } from "../types";
@@ -37,6 +39,83 @@ async function withRetry<T>(
   throw lastError;
 }
 
+// Resilient listener wrapper that handles network errors gracefully
+// Catches QUIC timeouts, connection errors, and retries with logging
+function createResilientListener<T>(
+  name: string,
+  setupListener: (
+    onSuccess: (data: T) => void,
+    onError: (error: any) => void,
+  ) => Unsubscribe,
+  callback: (data: T) => void,
+): Unsubscribe {
+  let isActive = true;
+  let unsubscribe: Unsubscribe | null = null;
+  let errorCount = 0;
+  const maxErrors = 5;
+
+  const setupWithErrorHandling = () => {
+    if (!isActive) return;
+
+    try {
+      unsubscribe = setupListener(
+        (data) => {
+          errorCount = 0; // Reset error count on success
+          callback(data);
+        },
+        (error) => {
+          // Handle network errors gracefully
+          if (error?.code === "permission-denied") {
+            console.debug(
+              `🔐 [${name}] Permission denied (expected during auth)`,
+            );
+            return; // Silently ignore permission errors
+          }
+
+          if (
+            error?.code === "failed-precondition" ||
+            error?.message?.includes("QUIC") ||
+            error?.message?.includes("NETWORK") ||
+            error?.message?.includes("timeout")
+          ) {
+            errorCount++;
+            console.warn(
+              `⚠️ [${name}] Network error (${errorCount}/${maxErrors}):`,
+              error?.message,
+            );
+
+            // Retry with exponential backoff
+            if (errorCount < maxErrors && isActive) {
+              const backoffMs = Math.min(
+                1000 * Math.pow(2, errorCount - 1),
+                10000,
+              );
+              setTimeout(setupWithErrorHandling, backoffMs);
+            }
+            return;
+          }
+
+          // Log other errors but don't retry
+          console.error(`❌ [${name}] Listener error:`, error);
+        },
+      );
+    } catch (error) {
+      console.error(`❌ [${name}] Failed to setup listener:`, error);
+      errorCount++;
+      if (errorCount < maxErrors && isActive) {
+        setTimeout(setupWithErrorHandling, 1000 * Math.pow(2, errorCount));
+      }
+    }
+  };
+
+  setupWithErrorHandling();
+
+  return () => {
+    isActive = false;
+    if (unsubscribe) unsubscribe();
+  };
+}
+
 // User Profile Management
 export const listenToUserProfile = (
   userId: string,
@@ -54,7 +133,14 @@ export const listenToUserProfile = (
         callback(null);
       }
     },
-    (error) => {
+    (error: any) => {
+      // Silently ignore permission-denied errors (expected before auth is ready)
+      if (error?.code === "permission-denied") {
+        console.debug(
+          "⏳ Waiting for authentication before fetching profile...",
+        );
+        return;
+      }
       logError(
         "profileOperation",
         error,
@@ -177,6 +263,8 @@ export const getTasksByDate = async (
 };
 
 // Fetch all habit tasks (for auto-seeding on new days)
+// Uses server-first fetch to ensure we always have the latest habit settings
+// (targetTime, linkedTrackItIds, frequency, etc.) even if the local cache is stale.
 export const getHabitTasks = async (userId: string): Promise<Task[]> => {
   if (!userId) {
     if (process.env.NODE_ENV !== "production") {
@@ -189,7 +277,16 @@ export const getHabitTasks = async (userId: string): Promise<Task[]> => {
     const tasksRef = collection(db, "users", userId, "tasks");
     const q = query(tasksRef, where("isHabit", "==", true));
 
-    const snapshot = await getDocs(q);
+    // Try server-first to get the absolute latest habit settings.
+    // Fall back to cache if offline (e.g. airplane mode).
+    let snapshot;
+    try {
+      snapshot = await getDocsFromServer(q);
+    } catch {
+      // Offline or server unreachable — use cache
+      snapshot = await getDocs(q);
+    }
+
     const tasks: Task[] = [];
     const seenTitles = new Set<string>();
 
@@ -413,7 +510,12 @@ export const listenToTasksByDate = (
       });
       callback(tasks.sort((a, b) => (a.order || 0) - (b.order || 0)));
     },
-    (error) => {
+    (error: any) => {
+      // Silently ignore permission-denied errors (expected before auth is ready)
+      if (error?.code === "permission-denied") {
+        console.debug("⏳ Waiting for authentication before fetching tasks...");
+        return;
+      }
       logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
     },
   );
@@ -438,7 +540,14 @@ export const listenToDayRecords = (
       });
       callback(records.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
     },
-    (error) => {
+    (error: any) => {
+      // Silently ignore permission-denied errors (expected before auth is ready)
+      if (error?.code === "permission-denied") {
+        console.debug(
+          "⏳ Waiting for authentication before fetching day records...",
+        );
+        return;
+      }
       logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
     },
   );
@@ -459,28 +568,41 @@ export const listenToTrackItSessions = (
   const sessionsRef = collection(trackerDb, "sessions");
   const q = query(sessionsRef, where("userId", "==", trackerUid));
 
-  return onSnapshot(q, (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const session = change.doc.data();
-        const sessionTime = session.createdAt?.toMillis() || Date.now();
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const session = change.doc.data();
+          const sessionTime = session.createdAt?.toMillis() || Date.now();
 
-        console.log(
-          "TrackIT Session Detected:",
-          session.projectName,
-          "IDs:",
-          [session.projectId, session.topicId, session.subTopicId].filter(
-            Boolean,
-          ),
-        );
+          console.log(
+            "TrackIT Session Detected:",
+            session.projectName,
+            "IDs:",
+            [session.projectId, session.topicId, session.subTopicId].filter(
+              Boolean,
+            ),
+          );
 
-        // Only trigger for sessions added AFTER we started listening
-        if (sessionTime > lastProcessedTime) {
-          onNewSession(session);
+          // Only trigger for sessions added AFTER we started listening
+          if (sessionTime > lastProcessedTime) {
+            onNewSession(session);
+          }
         }
+      });
+    },
+    (error: any) => {
+      // Silently ignore permission-denied errors (expected before auth is ready)
+      if (error?.code === "permission-denied") {
+        console.debug(
+          "⏳ Waiting for authentication before fetching TrackIT sessions...",
+        );
+        return;
       }
-    });
-  });
+      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
+    },
+  );
 };
 
 // Fetch ALL linkable items from TrackIT (projects + nested topics + subtopics)
@@ -632,50 +754,125 @@ export const cleanupDuplicateTasksForDate = async (
 
 export const listenToTargets = (
   userId: string,
-  callback: (targets: LearningTarget[]) => void
+  callback: (targets: LearningTarget[]) => void,
 ) => {
-  if (!userId) return () => {};
+  if (!userId) {
+    console.warn("⚠️ Cannot listen to targets - userId is missing");
+    return () => {};
+  }
+
+  console.log("🎯 Setting up real-time listener for targets, userId:", userId);
   const targetsRef = collection(db, "users", userId, "targets");
-  return onSnapshot(targetsRef, (snapshot) => {
-    const targets: LearningTarget[] = [];
-    snapshot.forEach((docSnap) => {
-      targets.push(docSnap.data() as LearningTarget);
-    });
-    // Sort oldest first or however they were created
-    callback(targets.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0)));
-  }, (error) => {
-    logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
-  });
+  return onSnapshot(
+    targetsRef,
+    (snapshot) => {
+      const targets: LearningTarget[] = [];
+      snapshot.forEach((docSnap) => {
+        targets.push(docSnap.data() as LearningTarget);
+      });
+      console.log(
+        "📥 Received targets from Firestore:",
+        targets.length,
+        "targets",
+      );
+      // Sort oldest first or however they were created
+      callback(targets.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)));
+    },
+    (error: any) => {
+      // Silently ignore permission-denied errors (expected before auth is ready)
+      if (error?.code === "permission-denied") {
+        console.debug(
+          "⏳ Waiting for authentication before fetching targets...",
+        );
+        return;
+      }
+      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
+    },
+  );
 };
 
 export const saveTarget = async (target: LearningTarget) => {
-  if (!target || !target.userId || !target.id) throw new Error("Invalid target");
+  if (!target) {
+    const err = "Target object is null or undefined";
+    console.error("❌", err);
+    throw new Error(err);
+  }
+  if (!target.userId) {
+    const err = `Cannot save target - missing userId. Target: ${target.title || target.id}`;
+    console.error("❌", err);
+    throw new Error(err);
+  }
+  if (!target.id) {
+    const err = "Cannot save target - missing id";
+    console.error("❌", err);
+    throw new Error(err);
+  }
+
   try {
+    console.log(
+      "💾 Saving target to Firestore:",
+      target.title,
+      "userId:",
+      target.userId,
+    );
     const targetRef = doc(db, "users", target.userId, "targets", target.id);
     await withRetry(() => setDoc(targetRef, target));
+    console.log("✅ Target saved successfully:", target.id);
   } catch (error) {
+    console.error("❌ Failed to save target:", target.title, error);
     logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }
 };
 
-export const updateTargetInCloud = async (userId: string, targetId: string, updates: Partial<LearningTarget>) => {
-  if (!userId || !targetId) throw new Error("Missing ID");
+export const updateTargetInCloud = async (
+  userId: string,
+  targetId: string,
+  updates: Partial<LearningTarget>,
+) => {
+  if (!userId || !targetId) {
+    const err = "Cannot update target - missing userId or targetId";
+    console.error("❌", err);
+    throw new Error(err);
+  }
   try {
+    console.log(
+      "✏️ Updating target in Firestore:",
+      targetId,
+      "userId:",
+      userId,
+    );
     const targetRef = doc(db, "users", userId, "targets", targetId);
     await withRetry(() => updateDoc(targetRef, updates));
+    console.log("✅ Target updated successfully:", targetId);
   } catch (error) {
+    console.error("❌ Failed to update target:", targetId, error);
     logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }
 };
 
-export const removeTargetFromCloud = async (userId: string, targetId: string) => {
-  if (!userId || !targetId) throw new Error("Missing ID");
+export const removeTargetFromCloud = async (
+  userId: string,
+  targetId: string,
+) => {
+  if (!userId || !targetId) {
+    const err = "Cannot remove target - missing userId or targetId";
+    console.error("❌", err);
+    throw new Error(err);
+  }
   try {
+    console.log(
+      "🗑️ Removing target from Firestore:",
+      targetId,
+      "userId:",
+      userId,
+    );
     const targetRef = doc(db, "users", userId, "targets", targetId);
     await withRetry(() => deleteDoc(targetRef));
+    console.log("✅ Target removed successfully:", targetId);
   } catch (error) {
+    console.error("❌ Failed to remove target:", targetId, error);
     logError("taskOperation", error, createSafeErrorMessage("taskOperation"));
     throw error;
   }

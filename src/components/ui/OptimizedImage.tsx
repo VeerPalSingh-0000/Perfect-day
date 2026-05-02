@@ -40,14 +40,13 @@ export function OptimizedImage({
 
   // Update src if prop changes (e.g. avatar switch)
   useEffect(() => {
-    const newSrc = (src.startsWith("/") && src.endsWith(".png"))
-      ? src.replace(/\.png$/, ".webp")
-      : src;
-    if (newSrc !== currentSrc) {
-      setIsLoaded(false);
-      setCurrentSrc(newSrc);
+    setIsLoaded(false);
+    if (src.startsWith("/") && src.endsWith(".png")) {
+      setCurrentSrc(src.replace(/\.png$/, ".webp"));
+    } else {
+      setCurrentSrc(src);
     }
-  }, [src, currentSrc]);
+  }, [src]);
 
   // Handle case where image is already cached
   useEffect(() => {

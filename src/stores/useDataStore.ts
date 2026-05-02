@@ -212,14 +212,30 @@ export const useDataStore = create<DataState>()(
                       order: currentTasks.length + i,
                       createdAt: Date.now(),
                     };
+                    // Copy ALL habit-specific fields explicitly.
+                    // Previously used truthiness checks which could miss valid values.
                     if (habit.frequency) task.frequency = habit.frequency;
                     if (habit.priority) task.priority = habit.priority;
+                    if (habit.targetTime !== undefined && habit.targetTime !== null) {
+                      task.targetTime = habit.targetTime;
+                    }
+                    if (habit.linkedTrackItIds && habit.linkedTrackItIds.length > 0) {
+                      task.linkedTrackItIds = [...habit.linkedTrackItIds];
+                    }
                     return task;
                   });
+                  console.log(
+                    `[Habit Seed] Seeding ${newTasks.length} habits for ${todayDateStr}:`,
+                    newTasks.map((t) => ({
+                      title: t.title,
+                      targetTime: t.targetTime,
+                      linkedTrackItIds: t.linkedTrackItIds,
+                    })),
+                  );
                   newTasks.forEach((t) => dbAddTask(t).catch(() => {}));
                 }
               })
-              .catch(() => {});
+              .catch((e) => console.error("[Habit Seed] Error:", e));
           }
         };
 

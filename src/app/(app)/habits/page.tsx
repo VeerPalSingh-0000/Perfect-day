@@ -14,6 +14,7 @@ import {
   query,
   where,
   getDocs,
+  getDocsFromServer,
   writeBatch,
   deleteField,
 } from "firebase/firestore";
@@ -161,9 +162,17 @@ export default function HabitsPage() {
         collection(db, "users", user.uid, "tasks"),
         where("title", "==", editingHabit.title),
         where("category", "==", editingHabit.category),
+        where("isHabit", "==", true),
       );
 
-      const snap = await getDocs(q);
+      // Use server-first fetch to ensure we find ALL habit instances,
+      // not just what's in the local cache for today's date.
+      let snap;
+      try {
+        snap = await getDocsFromServer(q);
+      } catch {
+        snap = await getDocs(q);
+      }
       const batches = [];
       let currentBatch = writeBatch(db);
       let opCount = 0;
@@ -184,12 +193,17 @@ export default function HabitsPage() {
 
       await Promise.all(batches);
 
+      console.log(
+        `[Habit Edit] Updated ${snap.size} instances of "${taskData.title}" with:`,
+        { targetTime: updates.targetTime, linkedTrackItIds: updates.linkedTrackItIds },
+      );
+
       await loadHabits();
       // Assuming today's date is needed for fetching. Since habits page doesn't directly
       // have `todayDateStr` like the today page, we'll construct it in the client timezone.
       const today = new Date();
       const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-      await useDataStore.getState().fetchAll(user.uid, dateStr);
+      await useDataStore.getState().fetchAll(user.uid, dateStr, null, true);
       setIsModalOpen(false);
     } catch (e) {
       console.error("Failed to update habit:", e);

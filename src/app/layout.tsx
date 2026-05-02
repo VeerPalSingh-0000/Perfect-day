@@ -94,6 +94,15 @@ export const metadata: Metadata = {
     google: "-eNrtVYxyV2gNmynl2ofvHkBfBw5BRMyxGHhGuq_0-U",
   },
   category: "productivity",
+  icons: {
+    icon: [
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    shortcut: { url: "/favicon.ico" },
+  },
+  manifest: "/manifest.json",
 };
 
 // Structured data for Google rich results

@@ -1,10 +1,11 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import {
   getFirestore,
   initializeFirestore,
   Firestore,
   persistentLocalCache,
+  connectFirestoreEmulator,
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -22,17 +23,20 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase only once
-let app;
+let app: FirebaseApp;
+
 if (getApps().length > 0) {
   app = getApp();
 } else {
   app = initializeApp(firebaseConfig);
 }
 
+export { app };
+
 export const auth = getAuth(app);
 
-// Initialize Firestore with durable local cache and safe fallback.
-// This preserves pending writes across reloads and improves offline reliability.
+// Initialize Firestore with durable local cache for network resilience
+// This preserves pending writes across reloads and handles offline scenarios
 let db: Firestore;
 try {
   db = initializeFirestore(app, {

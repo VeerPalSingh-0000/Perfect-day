@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { LearningTarget, DayStep, TargetStatus } from "@/types";
-import { saveTarget, removeTargetFromCloud, updateTargetInCloud, listenToTargets } from "@/lib/db";
+import {
+  saveTarget,
+  removeTargetFromCloud,
+  updateTargetInCloud,
+  listenToTargets,
+} from "@/lib/db";
 
 interface TargetState {
   targets: LearningTarget[];
@@ -14,7 +19,7 @@ interface TargetState {
   toggleDayCompletion: (targetId: string, dayStep: DayStep) => void;
   setActiveTarget: (targetId: string | null) => void;
   addNote: (targetId: string, dayIndex: number, note: string) => void;
-  
+
   // Real-time synchronization
   unsubTargets: (() => void) | null;
   initSync: (userId: string) => void;
@@ -30,21 +35,23 @@ export const getTargetAnalysis = (target: LearningTarget) => {
 
   const diffTime = Math.abs(now.getTime() - start.getTime());
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  
+
   // Current calendar day (1-indexed based on dates, not capped)
   const currentDay = diffDays + 1;
   const daysElapsed = Math.min(currentDay, target.totalDays);
-  
+
   const completedCount = target.completedDays.length;
   const targetCompletedCount = Math.min(daysElapsed, target.totalDays);
   const velocity = daysElapsed > 0 ? (completedCount / daysElapsed) * 100 : 0;
-  
+
   const daysRemaining = Math.max(0, target.totalDays - completedCount);
-  
+
   let projectedCompletion = new Date();
   if (velocity > 0) {
     const daysToFinish = daysRemaining / (velocity / 100);
-    projectedCompletion = new Date(now.getTime() + daysToFinish * 24 * 60 * 60 * 1000);
+    projectedCompletion = new Date(
+      now.getTime() + daysToFinish * 24 * 60 * 60 * 1000,
+    );
   }
 
   // Calculate Streak working backwards from today
@@ -63,7 +70,7 @@ export const getTargetAnalysis = (target: LearningTarget) => {
     velocity,
     daysRemaining,
     projectedCompletion,
-    streak
+    streak,
   };
 };
 
@@ -75,40 +82,82 @@ export const useTargetStore = create<TargetState>()(
       unsubTargets: null,
 
       initSync: (userId) => {
+        // Clear localStorage targets to force fresh cloud fetch
+        set({ targets: [] });
+
+        console.log("🔄 Initializing target sync for user:", userId);
         const unsub = listenToTargets(userId, (cloudTargets) => {
-          set({ targets: cloudTargets });
+          console.log("☁️ Received targets from cloud:", cloudTargets.length);
+          // Ensure all targets have userId set (safety check)
+          const targetsWithUserId = cloudTargets.map((t) => ({
+            ...t,
+            userId: userId,
+          }));
+          set({ targets: targetsWithUserId });
         });
         set({ unsubTargets: unsub });
       },
 
       addTarget: (target) => {
-        saveTarget(target).catch(console.error);
+        // Ensure userId is always set before saving
+        const targetWithUserId = { ...target };
+        if (!targetWithUserId.userId) {
+          console.warn(
+            "⚠️ Target missing userId, cannot sync to cloud:",
+            target,
+          );
+          return;
+        }
+
+        console.log(
+          "💾 Saving target to cloud:",
+          targetWithUserId.title,
+          "for user:",
+          targetWithUserId.userId,
+        );
+        saveTarget(targetWithUserId).catch((error) => {
+          console.error("❌ Failed to save target:", error);
+        });
+
         set((state) => ({
-          targets: [...state.targets, target],
+          targets: [...state.targets, targetWithUserId],
         }));
       },
 
       removeTarget: (targetId) => {
         set((state) => {
-          const target = state.targets.find(t => t.id === targetId);
+          const target = state.targets.find((t) => t.id === targetId);
           if (target && target.userId) {
-             removeTargetFromCloud(target.userId, targetId).catch(console.error);
+            console.log("🗑️ Removing target from cloud:", targetId);
+            removeTargetFromCloud(target.userId, targetId).catch((error) => {
+              console.error("❌ Failed to remove target:", error);
+            });
+          } else {
+            console.warn("⚠️ Cannot remove target - missing userId:", targetId);
           }
           return {
             targets: state.targets.filter((t) => t.id !== targetId),
-            activeTargetId: state.activeTargetId === targetId ? null : state.activeTargetId,
+            activeTargetId:
+              state.activeTargetId === targetId ? null : state.activeTargetId,
           };
         });
       },
 
       updateTarget: (targetId, updates) => {
         set((state) => {
-          const t = state.targets.find(t => t.id === targetId);
+          const t = state.targets.find((t) => t.id === targetId);
           if (t && t.userId) {
-            updateTargetInCloud(t.userId, targetId, updates).catch(console.error);
+            console.log("✏️ Updating target in cloud:", targetId, updates);
+            updateTargetInCloud(t.userId, targetId, updates).catch((error) => {
+              console.error("❌ Failed to update target:", error);
+            });
+          } else {
+            console.warn("⚠️ Cannot update target - missing userId:", targetId);
           }
           return {
-            targets: state.targets.map((t) => t.id === targetId ? { ...t, ...updates } : t)
+            targets: state.targets.map((t) =>
+              t.id === targetId ? { ...t, ...updates } : t,
+            ),
           };
         });
       },
@@ -119,11 +168,15 @@ export const useTargetStore = create<TargetState>()(
             targets: state.targets.map((t) => {
               if (t.id !== targetId) return t;
 
-              const isAlreadyCompleted = t.completedDays.includes(dayStep.day - 1);
+              const isAlreadyCompleted = t.completedDays.includes(
+                dayStep.day - 1,
+              );
               let nextCompletedDays: number[];
 
               if (isAlreadyCompleted) {
-                nextCompletedDays = t.completedDays.filter((d) => d !== dayStep.day - 1);
+                nextCompletedDays = t.completedDays.filter(
+                  (d) => d !== dayStep.day - 1,
+                );
               } else {
                 nextCompletedDays = [...t.completedDays, dayStep.day - 1];
               }
@@ -131,10 +184,10 @@ export const useTargetStore = create<TargetState>()(
               // Update the plan specifically
               const nextPlan = t.plan.map((step) => {
                 if (step.day === dayStep.day) {
-                  return { 
-                    ...step, 
+                  return {
+                    ...step,
                     isCompleted: !step.isCompleted,
-                    completedAt: !step.isCompleted ? Date.now() : undefined
+                    completedAt: !step.isCompleted ? Date.now() : undefined,
                   };
                 }
                 return step;
@@ -143,9 +196,9 @@ export const useTargetStore = create<TargetState>()(
               // Status check
               let nextStatus = t.status;
               if (nextCompletedDays.length === t.totalDays) {
-                nextStatus = 'completed';
-              } else if (nextStatus === 'completed') {
-                nextStatus = 'active'; // REVERT
+                nextStatus = "completed";
+              } else if (nextStatus === "completed") {
+                nextStatus = "active"; // REVERT
               }
 
               // Analysis logic
@@ -154,14 +207,17 @@ export const useTargetStore = create<TargetState>()(
               const now = new Date();
               now.setHours(0, 0, 0, 0);
               const diffTime = Math.abs(now.getTime() - start.getTime());
-              const currentDayIndex = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-              
+              const currentDayIndex = Math.floor(
+                diffTime / (1000 * 60 * 60 * 24),
+              );
+
               let currentStreak = 0;
               for (let i = currentDayIndex; i >= 0; i--) {
                 if (nextCompletedDays.includes(i)) {
                   currentStreak++;
-                } else if (i < currentDayIndex) { // It's okay if today isn't done yet, but past missed breaks it if today is also not done yet or maybe just standard logic
-                  break; 
+                } else if (i < currentDayIndex) {
+                  // It's okay if today isn't done yet, but past missed breaks it if today is also not done yet or maybe just standard logic
+                  break;
                 }
               }
 
@@ -171,9 +227,9 @@ export const useTargetStore = create<TargetState>()(
                 plan: nextPlan,
                 status: nextStatus,
                 currentStreak: currentStreak,
-                bestStreak: Math.max(t.bestStreak || 0, currentStreak)
+                bestStreak: Math.max(t.bestStreak || 0, currentStreak),
               };
-              
+
               saveTarget(nextTarget).catch(console.error);
               return nextTarget;
             }),
@@ -191,7 +247,7 @@ export const useTargetStore = create<TargetState>()(
             const nextTarget = { ...t, plan: nextPlan };
             saveTarget(nextTarget).catch(console.error);
             return nextTarget;
-          })
+          }),
         })),
 
       setActiveTarget: (targetId) => set({ activeTargetId: targetId }),
@@ -199,6 +255,6 @@ export const useTargetStore = create<TargetState>()(
     {
       name: "perfect-day-target-store",
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );

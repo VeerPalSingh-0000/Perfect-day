@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { signOut } from "@/lib/auth";
+import { initializeMessaging } from "@/lib/messaging";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StealthFooter } from "@/components/layout/StealthFooter";
@@ -90,10 +91,7 @@ export default function SettingsPage() {
   React.useEffect(() => {
     // Check initial notification preference
     const storedPref = localStorage.getItem("push_enabled");
-    if (
-      storedPref === "true" &&
-      window.Notification?.permission === "granted"
-    ) {
+    if (storedPref === "true") {
       setIsNotificationsEnabled(true);
     } else {
       setIsNotificationsEnabled(false);
@@ -154,31 +152,27 @@ export default function SettingsPage() {
     triggerHaptic();
     if (!isNotificationsEnabled) {
       // Trying to enable
-      if (!("Notification" in window)) {
-        alert("This browser does not support desktop notification");
-        return;
-      }
+      try {
+        const token = await initializeMessaging();
+        if (token) {
+          setIsNotificationsEnabled(true);
+          localStorage.setItem("push_enabled", "true");
 
-      let permission = Notification.permission;
-      if (permission !== "granted") {
-        permission = await Notification.requestPermission();
-      }
-
-      if (permission === "granted") {
-        setIsNotificationsEnabled(true);
-        localStorage.setItem("push_enabled", "true");
-        // Create a test notification
-        new Notification("Notifications Enabled", {
-          body: "You will now receive reminders.",
-          icon: "/avatars/avatar1.webp",
-        });
-      } else {
-        alert(
-          "Please grant notification permissions in your browser settings.",
-        );
+          if (typeof window !== "undefined" && "Notification" in window) {
+            new Notification("Notifications Enabled", {
+              body: "You will now receive reminders.",
+              icon: "/avatars/avatar1.webp",
+            });
+          }
+        } else {
+          alert("Please grant notification permissions in your settings.");
+        }
+      } catch (error) {
+        console.error("Failed to enable notifications:", error);
+        alert("Failed to enable notifications.");
       }
     } else {
-      // Disabling
+      // Disabling (Note: actual token revocation would require backend/firebase cleanup)
       setIsNotificationsEnabled(false);
       localStorage.setItem("push_enabled", "false");
     }
@@ -541,20 +535,26 @@ export default function SettingsPage() {
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
                         <div
-                          className="h-8 w-8 rounded-full border border-red-500/0 bg-red-500/0 flex items-center justify-center text-[#464555] opacity-0 group-hover:opacity-100 hover:border-red-500/20 hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer hover:scale-110 active:scale-95"
+                          className="h-8 w-8 rounded-full border border-red-500/20 bg-red-500/10 flex items-center justify-center text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 hover:border-red-500/40 hover:bg-red-500/20 transition-all cursor-pointer hover:scale-110 active:scale-95"
                           onClick={(e) => {
-                             e.stopPropagation();
-                             if (confirm("Are you sure you want to completely delete this target?")) {
-                               triggerHaptic();
-                               useTargetStore.getState().removeTarget(target.id);
-                             }
+                            e.stopPropagation();
+                            if (
+                              confirm(
+                                "Are you sure you want to completely delete this target?",
+                              )
+                            ) {
+                              triggerHaptic();
+                              useTargetStore.getState().removeTarget(target.id);
+                            }
                           }}
                           title="Delete Target"
                         >
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                          <span className="material-symbols-outlined text-[16px]">
+                            delete
+                          </span>
                         </div>
                         <span className="material-symbols-outlined text-lg text-[#464555] group-hover:text-white transition-colors">
                           chevron_right

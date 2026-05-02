@@ -94,7 +94,7 @@ export function LandingPageContent() {
       <main>
         <section className="relative flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 sm:pt-40 sm:pb-28 min-h-[80vh]">
           {/* Background glow */}
-          <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-[#4F44E2]/8 blur-[150px]" />
+          <div className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-125 w-125 rounded-full bg-[#4F44E2]/8 blur-[150px]" />
 
           <span className="mb-6 inline-block rounded-full border border-[#4F44E2]/30 bg-[#4F44E2]/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#C4C0FF]">
             Your Day, Perfected
@@ -196,7 +196,7 @@ export function LandingPageContent() {
         {/* CTA */}
         <section className="px-6 py-20 sm:py-28">
           <div className="max-w-2xl mx-auto text-center rounded-2xl border border-[rgba(70,69,85,0.2)] bg-[#0A0A0A] p-10 sm:p-14 relative overflow-hidden">
-            <div className="pointer-events-none absolute top-0 right-0 h-[300px] w-[300px] rounded-full bg-[#4F44E2]/5 blur-[120px]" />
+            <div className="pointer-events-none absolute top-0 right-0 h-75 w-75 rounded-full bg-[#4F44E2]/5 blur-[120px]" />
             <h2 className="font-headline text-2xl sm:text-3xl font-black tracking-tighter relative z-10">
               Start Building Your{" "}
               <span className="text-[#7cf6ec]">Routine</span>
