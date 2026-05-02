@@ -28,52 +28,26 @@ async function generateAppIcons() {
 
     for (const [density, size] of Object.entries(densities)) {
       const outputDir = path.join(baseResPath, density);
-      
+      const outputPath = path.join(outputDir, "ic_launcher.png");
+
       // Ensure directory exists
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
 
-      // 1. Generate standard launcher icon
-      const launcherPath = path.join(outputDir, "ic_launcher.png");
+      // Generate icon with high quality
       await sharp(logoPath)
         .resize(size, size, {
           fit: "contain",
-          background: { r: 255, g: 255, b: 255, alpha: 0 },
+          background: { r: 255, g: 255, b: 255, alpha: 0 }, // Transparent background
         })
         .png({ quality: 95, compressionLevel: 9 })
-        .toFile(launcherPath);
+        .toFile(outputPath);
 
-      // 2. Generate round launcher icon (often required by Android)
-      const roundPath = path.join(outputDir, "ic_launcher_round.png");
-      await sharp(logoPath)
-        .resize(size, size, {
-          fit: "contain",
-          background: { r: 255, g: 255, b: 255, alpha: 0 },
-        })
-        .png({ quality: 95, compressionLevel: 9 })
-        .toFile(roundPath);
-
-      // 3. Generate foreground icon for adaptive icons
-      const foregroundPath = path.join(outputDir, "ic_launcher_foreground.png");
-      // For adaptive foreground, we often want a bit of padding (scaled to ~66% of total size)
-      const foregroundSize = Math.floor(size * 0.66);
-      await sharp(logoPath)
-        .resize(foregroundSize, foregroundSize, {
-          fit: "contain",
-          background: { r: 255, g: 255, b: 255, alpha: 0 },
-        })
-        .extend({
-          top: Math.floor((size - foregroundSize) / 2),
-          bottom: Math.ceil((size - foregroundSize) / 2),
-          left: Math.floor((size - foregroundSize) / 2),
-          right: Math.ceil((size - foregroundSize) / 2),
-          background: { r: 255, g: 255, b: 255, alpha: 0 },
-        })
-        .png({ quality: 95, compressionLevel: 9 })
-        .toFile(foregroundPath);
-
-      console.log(`✅ ${density}: Generated PNG icons (${size}x${size}px)`);
+      const stats = fs.statSync(outputPath);
+      console.log(
+        `✅ ${density}: ${size}x${size}px (${(stats.size / 1024).toFixed(2)} KB)`,
+      );
     }
 
     console.log("\n✨ App icons generated successfully!");
