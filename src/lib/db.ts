@@ -750,6 +750,23 @@ export const cleanupDuplicateTasksForDate = async (
   }
 };
 
+// --- FCM TOKEN ---
+export const saveFCMToken = async (userId: string, token: string) => {
+  if (!userId || !token) return;
+  try {
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, {
+      fcmToken: token,
+      updatedAt: Date.now(),
+    });
+    console.log("✅ FCM Token saved to DB for user:", userId);
+  } catch (error) {
+    // If user document doesn't exist yet, we can't update.
+    // But usually it's created on first login.
+    console.warn("Could not save FCM token (user doc might not exist):", error);
+  }
+};
+
 // --- TARGET SYNC FUNCTIONS ---
 
 export const listenToTargets = (

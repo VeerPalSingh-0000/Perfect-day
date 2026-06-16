@@ -3,6 +3,7 @@ import "server-only";
 import { App, cert, getApp, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 const PRIMARY_ADMIN_APP_NAME = "primary-admin";
 const TRACKER_ADMIN_APP_NAME = "tracker-admin";
@@ -62,3 +63,6 @@ export const getTrackerAdminAuth = () =>
 
 export const getPrimaryAdminDb = () =>
   getFirestore(getOrInitAdminApp(PRIMARY_ADMIN_APP_NAME, "PRIMARY"));
+
+export const getPrimaryAdminMessaging = () =>
+  getMessaging(getOrInitAdminApp(PRIMARY_ADMIN_APP_NAME, "PRIMARY"));

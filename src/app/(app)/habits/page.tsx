@@ -65,11 +65,31 @@ export default function HabitsPage() {
         where("isHabit", "==", true),
       );
       const snap = await getDocs(q);
-      const batch = writeBatch(db);
+      const batches = [];
+      let currentBatch = writeBatch(db);
+      let opCount = 0;
+
       snap.forEach((docSnap) => {
-        batch.update(docSnap.ref, { isHabit: false });
+        const taskData = docSnap.data();
+        if (!taskData.isCompleted) {
+          currentBatch.delete(docSnap.ref);
+        } else {
+          currentBatch.update(docSnap.ref, { isHabit: false });
+        }
+
+        opCount++;
+        if (opCount === 500) {
+          batches.push(currentBatch.commit());
+          currentBatch = writeBatch(db);
+          opCount = 0;
+        }
       });
-      await batch.commit();
+
+      if (opCount > 0) {
+        batches.push(currentBatch.commit());
+      }
+
+      await Promise.all(batches);
 
       setHabits((prev) => prev.filter((h) => h.id !== habit.id));
     } catch (error) {

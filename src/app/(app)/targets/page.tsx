@@ -8,6 +8,7 @@ import { useTargetStore, getTargetAnalysis } from "@/stores/useTargetStore";
 import { LearningTarget, DayStep, TargetCategory } from "@/types";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
+import { useTrackerStore } from "@/stores/useTrackerStore";
 
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -43,6 +44,10 @@ export default function TargetsPage() {
     dayIndex: number;
     text: string;
   } | null>(null);
+
+  // TrackIT Linking
+  const { isLinked, projects, topics } = useTrackerStore();
+  const [selectedTrackItIds, setSelectedTrackItIds] = useState<string[]>([]);
 
   // Re-run analysis safely to prevent stale values
   const [mounted, setMounted] = useState(false);
@@ -102,6 +107,7 @@ export default function TargetsPage() {
       emoji: CATEGORY_EMOJIS[newTargetCategory],
       bestStreak: 0,
       currentStreak: 0,
+      linkedTrackItIds: selectedTrackItIds.length > 0 ? selectedTrackItIds : undefined,
     };
 
     addTarget(newTarget);
@@ -113,6 +119,7 @@ export default function TargetsPage() {
     setNewTargetCategory("learning");
     setNewTargetDays(30);
     setNewTargetPlan("");
+    setSelectedTrackItIds([]);
   };
 
   const handleNoteSave = () => {
@@ -716,6 +723,61 @@ export default function TargetsPage() {
               system will auto-sequence to your duration.
             </p>
           </div>
+
+          {isLinked && (
+            <div className="space-y-4 pt-2">
+              <div className="flex flex-col">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#4F44E2]">
+                  Link FocusFlow
+                </label>
+                <span className="text-[9px] font-medium text-[#464555]">Auto-complete directives when tracked in FocusFlow</span>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                {projects.map((p: any) => (
+                  <button
+                    key={`proj-${p.id}`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTrackItIds(prev => 
+                        prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                      );
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition-all",
+                      selectedTrackItIds.includes(p.id)
+                        ? "border-[#4F44E2] bg-[#4F44E2]/20 text-white shadow-[0_0_10px_rgba(79,68,226,0.1)]"
+                        : "border-[#464555]/20 bg-[#0A0A0A] text-[#464555] hover:border-[#464555]/40"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-[12px]">folder</span>
+                    {p.name}
+                  </button>
+                ))}
+                
+                {topics.map((t: any) => (
+                  <button
+                    key={`topic-${t.id}`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTrackItIds(prev => 
+                        prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id]
+                      );
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold transition-all",
+                      selectedTrackItIds.includes(t.id)
+                        ? "border-[#4F44E2] bg-[#4F44E2]/20 text-white shadow-[0_0_10px_rgba(79,68,226,0.1)]"
+                        : "border-[#464555]/20 bg-[#0A0A0A] text-[#464555] hover:border-[#464555]/40"
+                    )}
+                  >
+                    <span className="material-symbols-outlined text-[12px]">topic</span>
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="pt-4">
             <button

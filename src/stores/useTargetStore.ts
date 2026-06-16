@@ -82,8 +82,7 @@ export const useTargetStore = create<TargetState>()(
       unsubTargets: null,
 
       initSync: (userId) => {
-        // Clear localStorage targets to force fresh cloud fetch
-        set({ targets: [] });
+        if (!userId) return;
 
         console.log("🔄 Initializing target sync for user:", userId);
         const unsub = listenToTargets(userId, (cloudTargets) => {

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { initAuthListener } from "@/lib/auth";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 /**
  * AuthInitializer - Ensures auth listener is initialized at the root level.
@@ -11,8 +12,10 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
  * Also initializes push notifications.
  */
 export function AuthInitializer() {
+  const user = useAuthStore((s) => s.user);
+
   // Initialize push notifications
-  usePushNotifications();
+  usePushNotifications(user?.uid);
 
   useEffect(() => {
     // Initialize the auth listener singleton at the root level

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useDataStore, isHabitValidForDate } from "@/stores/useDataStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { useTargetStore } from "@/stores/useTargetStore";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Reorder } from "framer-motion";
@@ -59,6 +60,9 @@ export default function TodayPage() {
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     taskId: string;
   } | null>(null);
+
+  // FocusFlow live durations map
+  const [durationMap, setDurationMap] = useState<Record<string, number>>({});
 
   // Hold-to-drag state
   const [dragEnabledTaskId, setDragEnabledTaskId] = useState<string | null>(
@@ -436,14 +440,13 @@ export default function TodayPage() {
     handleDragHoldEnd();
   };
 
-  // FocusFlow Background Tracker Sync
+  // 1. FocusFlow Background Tracker Sync - Listener only
   const trackerStore = useTrackerStore();
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       trackerStore.initTrackerAuth();
     }
-  }, []); // Run ONCE on mount
+  }, []);
 
   useEffect(() => {
     if (!trackerStore.isLinked || !trackerStore.trackerUser || !user) return;
@@ -453,15 +456,10 @@ export default function TodayPage() {
       fsWhere("userId", "==", trackerStore.trackerUser.uid),
     );
 
-    // This listener fires on initial load with ALL existing sessions,
-    // and then again whenever a new session is added.
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        // Get ALL session docs (not just changes) to aggregate total time
         const allSessions = snapshot.docs.map((d) => d.data());
-
-        // Filter to today's sessions only
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
         const todayMs = startOfToday.getTime();
@@ -471,86 +469,37 @@ export default function TodayPage() {
           return t >= todayMs;
         });
 
-        // Build a map: ID -> total duration in minutes
-        const durationMap: Record<string, number> = {};
+        const newDurationMap: Record<string, number> = {};
         todaySessions.forEach((s) => {
           const durationMin = (s.duration || 0) / 60000;
           const ids = [s.projectId, s.topicId, s.subTopicId].filter(Boolean);
           ids.forEach((id) => {
-            durationMap[id] = (durationMap[id] || 0) + durationMin;
+            newDurationMap[id] = (newDurationMap[id] || 0) + durationMin;
           });
         });
 
-        console.log("[FocusFlow Sync] Today's total durations:", durationMap);
-
-        // Check each uncompleted task with linked IDs
-        const currentTasks = tasksRef.current;
-
-        currentTasks.forEach((task) => {
-          if (
-            task.isCompleted ||
-            !task.linkedTrackItIds ||
-            task.linkedTrackItIds.length === 0
-          )
-            return;
-
-          // Find the max accumulated duration across all linked IDs
-          let maxDuration = 0;
-          task.linkedTrackItIds.forEach((id: string) => {
-            if (durationMap[id] && durationMap[id] > maxDuration) {
-              maxDuration = durationMap[id];
-            }
-          });
-
-          const targetMinutes = task.targetTime || 0;
-
-          if (maxDuration > 0) {
-            console.log(
-              `[FocusFlow Sync] "${task.title}": Total=${Math.round(maxDuration)}m, Goal=${targetMinutes}m`,
-            );
-          }
-
-          if (
-            maxDuration > 0 &&
-            (targetMinutes === 0 || maxDuration >= targetMinutes)
-          ) {
-            console.log(`[FocusFlow Sync] ✅ Auto-completing "${task.title}"!`);
-            handleToggleTask(task);
-          }
-        });
+        setDurationMap(newDurationMap);
 
         // Aggregate total focus time today across all unique sessions
         const sessionKeysProcessed = new Set<string>();
         let totalFocusMinutes = 0;
 
         todaySessions.forEach((s) => {
-          // Use multiple fields as a unique key since s.id might be missing in raw data
-          const skey =
-            s.id ||
-            `${s.projectName}_${s.startTime || s.createdAt?.toMillis()}_${s.duration}`;
+          const skey = s.id || `${s.projectName}_${s.startTime || s.createdAt?.toMillis()}_${s.duration}`;
           if (!sessionKeysProcessed.has(skey)) {
             sessionKeysProcessed.add(skey);
             totalFocusMinutes += (s.duration || 0) / 60000;
           }
         });
 
-        console.log(
-          `[FocusFlow Sync] Total combined minutes for history:`,
-          totalFocusMinutes,
-        );
+        console.log(`[FocusFlow Sync] Total Combined Minutes:`, totalFocusMinutes.toFixed(2));
 
-        // Save to dayRecord for history
         if (totalFocusMinutes > 0) {
-          const todayDateStr = new Date().toLocaleDateString("en-CA");
           const recordId = `${user.uid}_${todayDateStr}`;
-          const totalTasksCount = currentTasks.length;
-          const completedTasksCount = currentTasks.filter(
-            (t) => t.isCompleted,
-          ).length;
-          const completionPercentage =
-            totalTasksCount === 0
-              ? 0
-              : Math.round((completedTasksCount / totalTasksCount) * 100);
+          const currentTasksList = tasksRef.current;
+          const totalTasksCount = currentTasksList.length;
+          const completedTasksCount = currentTasksList.filter(t => t.isCompleted).length;
+          const percentage = totalTasksCount === 0 ? 0 : Math.round((completedTasksCount / totalTasksCount) * 100);
 
           const record: DayRecord = {
             id: recordId,
@@ -558,22 +507,77 @@ export default function TodayPage() {
             date: todayDateStr,
             totalTasks: totalTasksCount,
             completedTasks: completedTasksCount,
-            completionPercentage,
-            rating: calculateDayRating(completionPercentage),
-            tasks: currentTasks,
+            completionPercentage: percentage,
+            rating: calculateDayRating(percentage),
+            tasks: currentTasksList,
             createdAt: Date.now(),
             totalFocusTime: totalFocusMinutes,
           };
-
-          saveDayRecord(record).catch((e) =>
-            console.error("History sync failed:", e),
-          );
+          saveDayRecord(record).catch(() => {});
         }
       },
       (error) => console.error("FocusFlow Sync Error:", error),
     );
     return () => unsubscribe();
-  }, [trackerStore.isLinked, trackerStore.trackerUser, user]); // Removed tasks from deps to prevent trigger loop, using state ref logic or handleToggleTask closure safely
+  }, [trackerStore.isLinked, trackerStore.trackerUser, user]);
+
+  // 2. FocusFlow Auto-completion Logic (Reacts to durationMap + tasks + targets)
+  const targets = useTargetStore(s => s.targets);
+  const toggleDayCompletion = useTargetStore(s => s.toggleDayCompletion);
+
+  useEffect(() => {
+    if (Object.keys(durationMap).length === 0) return;
+
+    // A. Tasks & Habits Auto-complete
+    tasks.forEach((task) => {
+      if (task.isCompleted || !task.linkedTrackItIds?.length) return;
+
+      let maxDuration = 0;
+      task.linkedTrackItIds.forEach((id) => {
+        if (durationMap[id] > maxDuration) maxDuration = durationMap[id];
+      });
+
+      const targetMinutes = task.targetTime || 0;
+      if (maxDuration > 0 && (targetMinutes === 0 || maxDuration >= targetMinutes)) {
+        console.log(`[FocusFlow Sync] ✅ Auto-completing Task: "${task.title}"`);
+        // One-way set to completed
+        toggleTaskCompletion(task.id);
+        updateTask(user!.uid, task.id, {
+          isCompleted: true,
+          completedAt: Date.now(),
+        }).catch(console.error);
+      }
+    });
+
+    // B. Learning Targets Auto-complete
+    targets.forEach((target) => {
+      if (target.status !== 'active' || !target.linkedTrackItIds?.length) return;
+
+      const [year, month, day] = target.startDate.split('-').map(Number);
+      const start = new Date(year, month - 1, day);
+      start.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      const todayIndex = diffDays;
+
+      if (todayIndex < 0 || todayIndex >= target.totalDays) return;
+      
+      const todayStep = target.plan[todayIndex];
+      if (!todayStep || todayStep.isCompleted) return;
+
+      let hasFocusToday = false;
+      target.linkedTrackItIds.forEach(id => {
+        if (durationMap[id] > 0) hasFocusToday = true;
+      });
+
+      if (hasFocusToday) {
+        console.log(`[FocusFlow Sync] 🎯 Auto-completing Mission Directive: "${todayStep.title}" for target "${target.title}"`);
+        toggleDayCompletion(target.id, todayStep);
+      }
+    });
+  }, [durationMap, tasks, targets, user]);
 
   const handleDeleteTask = async (task: Task) => {
     if (!user) return;
@@ -823,37 +827,73 @@ export default function TodayPage() {
                       )}
                     </button>
                     <div
-                      className="grow min-w-0 flex items-center gap-2 cursor-pointer"
+                      className="grow min-w-0 flex flex-col gap-1 cursor-pointer"
                       onClick={() => handleToggleTask(task)}
                     >
-                      {priorityMode === "advanced" && (
-                        <span
-                          className="text-xs shrink-0"
-                          title={`${task.priority || "medium"} priority`}
+                      <div className="flex items-start gap-2">
+                        {priorityMode === "advanced" && (
+                          <span
+                            className="text-xs shrink-0 mt-[2px]"
+                            title={`${task.priority || "medium"} priority`}
+                          >
+                            {task.priority === "critical"
+                              ? "🔴"
+                              : task.priority === "high"
+                                ? "🟠"
+                                : task.priority === "low"
+                                  ? "🔵"
+                                  : "🟡"}
+                          </span>
+                        )}
+                        <p
+                          className={`font-medium text-sm transition-all wrap-break-word min-w-0 leading-tight ${task.isCompleted ? "text-[#E2E2E2] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
                         >
-                          {task.priority === "critical"
-                            ? "🔴"
-                            : task.priority === "high"
-                              ? "🟠"
-                              : task.priority === "low"
-                                ? "🔵"
-                                : "🟡"}
+                          {task.title}
+                        </p>
+                      </div>
+                      
+                      {/* Badges row displayed cleanly under the title on mobile */}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                        {task.isHabit && (
+                          <span className="rounded border border-[#4F44E2]/20 bg-[#4F44E2]/10 px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#C4C0FF] shrink-0">
+                            Habit
+                          </span>
+                        )}
+                        <span className="rounded border border-[#464555]/20 bg-black px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#464555] shrink-0">
+                          {task.category}
                         </span>
-                      )}
-                      <p
-                        className={`font-medium text-sm transition-all ${task.isCompleted ? "text-[#E2E2E2] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
-                      >
-                        {task.title}
-                      </p>
+                      </div>
                     </div>
-                    {task.isHabit && (
-                      <span className="rounded border border-[#4F44E2]/20 bg-[#4F44E2]/10 px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#C4C0FF] shrink-0">
-                        Habit
-                      </span>
-                    )}
-                    <span className="rounded border border-[#464555]/20 bg-black px-2 py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555] shrink-0">
-                      {task.category}
-                    </span>
+                    <div className="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all ml-1 sm:ml-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingTask(task);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-1.5 sm:p-2 rounded-lg text-[#464555] hover:text-[#4F44E2] hover:bg-[#4F44E2]/10 active:scale-95 shrink-0 transition-colors"
+                        aria-label={`Edit task: ${task.title}`}
+                      >
+                        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                          edit
+                        </span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+                            handleDeleteTask(task);
+                          }
+                        }}
+                        disabled={deletingTaskId === task.id}
+                        className="p-1.5 sm:p-2 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0 transition-colors"
+                        aria-label={`Delete task: ${task.title}`}
+                      >
+                        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                          {deletingTaskId === task.id ? 'hourglass_empty' : 'delete'}
+                        </span>
+                      </button>
+                    </div>
                   </Reorder.Item>
                 ))}
               </Reorder.Group>

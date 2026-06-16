@@ -380,11 +380,13 @@ export const onForegroundMessage = (
   try {
     if (Capacitor.isNativePlatform()) {
       // For native, use FirebaseMessaging plugin
+      const listener = FirebaseMessaging.addListener("notificationReceived", (event) => {
+        console.log("📬 Native foreground message:", event.notification);
+        callback(event.notification);
+      });
+
       return () => {
-        FirebaseMessaging.addListener("notificationReceived", (event) => {
-          console.log("📬 Native foreground message:", event.notification);
-          callback(event.notification);
-        });
+        listener.then(l => l.remove());
       };
     } else {
       // For web

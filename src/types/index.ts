@@ -85,4 +85,5 @@ export interface LearningTarget {
   emoji?: string;
   bestStreak?: number;
   currentStreak?: number;
+  linkedTrackItIds?: string[]; // TrackIT Folder/Topic IDs for auto-tracking
 }

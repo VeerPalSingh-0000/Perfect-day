@@ -7,12 +7,13 @@ import {
   getDeviceToken,
   saveDeviceToken,
 } from "@/lib/messaging";
+import { saveFCMToken } from "@/lib/db";
 
 /**
  * Hook to initialize and manage push notifications
  * Call this once in your root layout or main component
  */
-export function usePushNotifications() {
+export function usePushNotifications(userId?: string) {
   const initRef = useRef(false);
 
   useEffect(() => {
@@ -21,51 +22,45 @@ export function usePushNotifications() {
       return;
     }
 
-    // Prevent double initialization
-    if (initRef.current) return;
+    // Prevent double initialization if no change in status
+    if (initRef.current && !userId) return;
     initRef.current = true;
+
+    let unsubscribe: (() => void) | null = null;
 
     const setupNotifications = async () => {
       try {
         console.log("🚀 Starting push notifications setup...");
-
-        // Initialize messaging and get device token
         const token = await initializeMessaging();
 
         if (token) {
-          // Save token locally
           saveDeviceToken(token);
           console.log("✅ Push notifications initialized with token:", token);
 
-          // TODO: Send this token to your backend to store in user profile
-          // await api.saveDeviceToken(token);
+          // Save to database if userId is available
+          if (userId) {
+            await saveFCMToken(userId, token);
+          }
         } else {
-          console.warn(
-            "⚠️ Could not get device token. Push notifications may not work.",
-          );
-          console.info("Check browser console for detailed error messages");
+          console.warn("⚠️ Could not get device token.");
         }
 
         // Listen for foreground messages
-        const unsubscribe = onForegroundMessage((payload) => {
+        const unsub = onForegroundMessage((payload) => {
           console.log("📨 Foreground notification:", payload);
 
-          // Customize how you want to display the notification
           if (payload.notification) {
-            // You can show a toast, modal, or badge here
             if (typeof window !== "undefined" && "Notification" in window) {
               const notification = new Notification(
                 payload.notification.title || "Perfect Day",
                 {
-                  body:
-                    payload.notification.body || "You have a new notification",
+                  body: payload.notification.body || "You have a new notification",
                   icon: payload.notification.image || "/logo.png",
                   badge: "/logo.png",
                   tag: payload.data?.tag || "foreground",
                 },
               );
 
-              // Optional: Handle notification click
               notification.onclick = () => {
                 window.focus();
                 notification.close();
@@ -77,22 +72,18 @@ export function usePushNotifications() {
           }
         });
 
-        return () => {
-          if (unsubscribe) unsubscribe();
-        };
+        if (unsub) unsubscribe = unsub;
       } catch (error) {
         console.error("❌ Failed to setup push notifications:", error);
-        if (error instanceof Error) {
-          console.error("Error details:", {
-            message: error.message,
-            stack: error.stack,
-          });
-        }
       }
     };
 
     setupNotifications();
-  }, []);
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [userId]);
 }
 
 /**

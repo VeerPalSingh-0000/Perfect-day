@@ -8,7 +8,7 @@ import { initializeMessaging } from "@/lib/messaging";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { StealthFooter } from "@/components/layout/StealthFooter";
-import { updateUserProfile } from "@/lib/db";
+import { updateUserProfile, saveFCMToken } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { OptimizedImage } from "@/components/ui/OptimizedImage";
 import { useAchievementStore } from "@/stores/useAchievementStore";
@@ -157,6 +157,10 @@ export default function SettingsPage() {
         if (token) {
           setIsNotificationsEnabled(true);
           localStorage.setItem("push_enabled", "true");
+          
+          if (user?.uid) {
+            await saveFCMToken(user.uid, token);
+          }
 
           if (typeof window !== "undefined" && "Notification" in window) {
             new Notification("Notifications Enabled", {
@@ -175,6 +179,33 @@ export default function SettingsPage() {
       // Disabling (Note: actual token revocation would require backend/firebase cleanup)
       setIsNotificationsEnabled(false);
       localStorage.setItem("push_enabled", "false");
+    }
+  };
+
+  const handleTestPush = async () => {
+    triggerHaptic();
+    if (!user) return alert("Please log in first.");
+    if (!isNotificationsEnabled) return alert("Please enable Push Delivery first.");
+    
+    try {
+      const res = await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          title: "SIRA Notification Test",
+          body: "If you see this, push notifications are working! 🎉",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Push notification sent to ${data.successCount} device(s)!`);
+      } else {
+        alert(`Failed to send: ${data.message || data.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error sending test push notification.");
     }
   };
 
@@ -674,6 +705,32 @@ export default function SettingsPage() {
                 />
               </div>
             </button>
+
+            {isNotificationsEnabled && (
+              <button
+                onClick={handleTestPush}
+                className="w-full flex items-center justify-between p-4 sm:p-5 gap-3 transition-colors hover:bg-white/5 active:bg-white/10"
+              >
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#4F44E2]/50 bg-[#4F44E2]/10 shrink-0 transition-colors">
+                    <span className="material-symbols-outlined text-base text-[#4F44E2]">
+                      send
+                    </span>
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <p className="text-[13px] font-bold uppercase tracking-wider text-white transition-colors duration-300">
+                      Send Test Push
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] font-medium text-[#464555] uppercase tracking-wide transition-colors duration-300">
+                      Verify connection to this device
+                    </p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-lg text-[#464555] hover:text-white transition-colors">
+                  chevron_right
+                </span>
+              </button>
+            )}
           </div>
         </section>
 
