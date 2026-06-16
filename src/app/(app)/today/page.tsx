@@ -33,10 +33,27 @@ import {
   getTimeBasedGreeting,
   getTodayDateString,
   calculateCompletionPercentage,
+  cn,
 } from "@/lib/utils";
 import { getQuoteOfDay } from "@/lib/quotes";
 import { useAchievementStore } from "@/stores/useAchievementStore";
 import { AchievementCelebration } from "@/components/ui/AchievementCelebration";
+
+const getCategoryBadgeStyles = (category: string) => {
+  switch (category?.toLowerCase()) {
+    case "work":
+      return "border-violet-500/25 bg-violet-500/10 text-violet-300";
+    case "learning":
+      return "border-[#7cf6ec]/25 bg-[#7cf6ec]/10 text-[#7cf6ec]";
+    case "personal":
+      return "border-orange-500/25 bg-orange-500/10 text-orange-300";
+    case "health":
+    case "fitness":
+      return "border-emerald-500/25 bg-emerald-500/10 text-emerald-300";
+    default:
+      return "border-white/10 bg-white/5 text-[#8E8D99]";
+  }
+};
 
 export default function TodayPage() {
   const user = useAuthStore((s) => s.user);
@@ -606,300 +623,456 @@ export default function TodayPage() {
     <div className="min-h-screen bg-black text-[#E2E2E2]">
       <TopAppBar variant="brand" />
 
-      <main className="mx-auto w-full max-w-4xl space-y-6 sm:space-y-8 md:space-y-10 px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 pb-4">
-        <section className="relative">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <h1 className="mb-1 font-headline text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter text-[#E2E2E2]">
-                {greeting}, {firstName}
-              </h1>
-              <p className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-[0.2em] text-[#464555]">
-                {todayDisplay}
-              </p>
-            </div>
-          </div>
+      <main className="mx-auto w-full max-w-4xl md:max-w-6xl px-4 sm:px-6 pt-20 sm:pt-24 md:pt-28 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* Left Column: Greeting, Daily Focus, Quote, and Tasks List */}
+          <div className="md:col-span-7 lg:col-span-8 space-y-6 sm:space-y-8 order-1">
+            <section className="relative">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                  <h1 className="mb-1 font-headline text-2xl sm:text-3xl md:text-5xl font-black tracking-tighter text-[#E2E2E2]">
+                    {greeting}, {firstName}
+                  </h1>
+                  <p className="text-xs sm:text-sm md:text-base font-bold uppercase tracking-[0.2em] text-[#464555]">
+                    {todayDisplay}
+                  </p>
+                </div>
+              </div>
 
-          {/* 3D. Daily Focus Intention */}
-          <div className="mt-6 sm:mt-8 relative group">
-            <input
-              type="text"
-              value={localFocus}
-              onChange={handleFocusChange}
-              placeholder="Set your daily intention..."
-              className="w-full bg-transparent border-none p-0 font-headline text-lg sm:text-2xl font-bold text-[#C4C0FF] placeholder:text-[#464555] focus:outline-none focus:ring-0"
-            />
-            <div className="h-px w-full bg-[#464555]/20 group-focus-within:bg-[#C4C0FF]/50 transition-all mt-1" />
-          </div>
-
-          {/* 3B. Motivational Quote */}
-          <div className="mt-8 rounded-xl border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-4 sm:p-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-              <span className="material-symbols-outlined text-4xl">
-                format_quote
-              </span>
-            </div>
-            <p className="font-medium text-xs sm:text-sm text-[#8E8D99] italic leading-relaxed">
-              {quote}
-            </p>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Day Status Card */}
-          <div className="flex flex-col md:flex-row md:col-span-2 items-center justify-between rounded-lg md:rounded-xl border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-4 sm:p-6 md:p-8 gap-4 shadow-[#000000] shadow-[0_10px_30px]">
-            <div className="flex flex-col gap-1 text-center md:text-left">
-              <span className="mb-2 text-2xl sm:text-3xl">
-                {ratingInfo.emoji}
-              </span>
-              <h2 className="font-headline text-lg sm:text-xl md:text-2xl font-bold text-[#E2E2E2]">
-                {ratingInfo.label}
-              </h2>
-              <p className="text-xs sm:text-sm md:text-base font-medium text-[#464555]">
-                {totalTasks === 0
-                  ? "No tasks scheduled for today"
-                  : `${completedTasks} of ${totalTasks} tasks completed`}
-              </p>
-            </div>
-            <div className="relative flex items-center justify-center shrink-0">
-              <svg
-                className="h-16 sm:h-20 md:h-24 w-16 sm:w-20 md:w-24 -rotate-90"
-                viewBox="0 0 96 96"
-              >
-                <circle
-                  className="text-[#141414]"
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  fill="transparent"
-                  stroke="currentColor"
-                  strokeWidth="6"
+              {/* 3D. Daily Focus Intention */}
+              <div className="mt-6 sm:mt-8 relative group rounded-xl border border-white/5 bg-[#0C0C0E]/50 p-4 sm:p-5 hover:border-[#C4C0FF]/25 hover:shadow-[0_4px_20px_rgba(196,192,255,0.05)] transition-all duration-300">
+                <div className="flex items-center gap-1.5 mb-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.2em] text-[#464555] group-focus-within:text-[#C4C0FF] transition-colors">
+                  <span className="material-symbols-outlined text-[10px] sm:text-[12px] font-bold text-[#C4C0FF]/70 group-focus-within:animate-pulse">
+                    target
+                  </span>
+                  Focus Intention
+                </div>
+                <input
+                  type="text"
+                  value={localFocus}
+                  onChange={handleFocusChange}
+                  placeholder="Set your daily intention..."
+                  className="w-full bg-transparent border-none p-0 font-headline text-base sm:text-xl font-bold text-white placeholder:text-[#464555] focus:outline-none focus:ring-0"
                 />
-                <circle
-                  className={`transition-all duration-1000 ${completionPercentage === 100 ? "text-[#FFFFFF]" : "text-[#C4C0FF]"}`}
-                  cx="48"
-                  cy="48"
-                  r="42"
-                  fill="transparent"
-                  stroke="currentColor"
-                  strokeWidth="6"
-                  strokeDasharray="263.89"
-                  strokeDashoffset={
-                    263.89 - (completionPercentage / 100) * 263.89
-                  }
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span
-                className={`absolute font-headline text-sm sm:text-base md:text-lg font-bold ${completionPercentage === 100 ? "text-white text-glow" : "text-[#E2E2E2]"}`}
-              >
-                {completionPercentage}%
-              </span>
-            </div>
-          </div>
+              </div>
 
-          {/* Streak */}
-          <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-linear-to-r from-[#0A0A0A] to-[#111111] p-4 sm:p-5">
-            <div
-              className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-full border border-[#4F44E2]/20 shrink-0 ${displayStreak > 0 ? "bg-[#4F44E2]/10" : "bg-[#1A1A1A]"}`}
-            >
-              <span
-                className={`material-symbols-outlined text-lg sm:text-xl ${displayStreak > 0 ? "text-[#C4C0FF]" : "text-[#464555]"}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                local_fire_department
-              </span>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span
-                className={`font-headline text-2xl sm:text-3xl font-bold tracking-tighter ${displayStreak > 0 ? "text-[#E2E2E2]" : "text-[#464555]"}`}
-              >
-                {displayStreak}
-              </span>
-              <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555]">
-                Day Streak
-              </span>
-            </div>
-          </div>
-
-          {/* Perfect Days */}
-          <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-linear-to-r from-[#0A0A0A] to-[#111111] p-4 sm:p-5">
-            <div
-              className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-full border border-[#7cf6ec]/20 shrink-0 ${displayPerfectDays > 0 ? "bg-[#7cf6ec]/10" : "bg-[#1A1A1A]"}`}
-            >
-              <span
-                className={`material-symbols-outlined text-lg sm:text-xl ${displayPerfectDays > 0 ? "text-[#7cf6ec]" : "text-[#464555]"}`}
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                star
-              </span>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span
-                className={`font-headline text-2xl sm:text-3xl font-bold tracking-tighter ${displayPerfectDays > 0 ? "text-[#E2E2E2]" : "text-[#464555]"}`}
-              >
-                {displayPerfectDays}
-              </span>
-              <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555]">
-                Perfect Days
-              </span>
-            </div>
-          </div>
-        </section>
-
-        {/* Tasks */}
-        <section className="space-y-4 sm:space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
-            <h3 className="font-headline text-lg sm:text-xl font-bold text-[#E2E2E2]">
-              Tasks
-            </h3>
-            <button
-              onClick={() => {
-                setEditingTask(null);
-                setIsModalOpen(true);
-              }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full bg-[#E2E2E2] px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-black transition-all hover:opacity-90 active:scale-95"
-            >
-              <span className="material-symbols-outlined text-base sm:text-lg">
-                add
-              </span>
-              <span>New Task</span>
-            </button>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            {tasks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] text-center">
-                <span className="material-symbols-outlined text-4xl text-[#464555] mb-2">
-                  fact_check
-                </span>
-                <p className="text-sm font-medium text-[#8E8D99]">
-                  Your day is a blank canvas.
-                </p>
-                <p className="text-xs text-[#464555] mt-1">
-                  Add tasks above to start planning.
+              {/* 3B. Motivational Quote */}
+              <div className="mt-8 rounded-xl border-l-2 border-l-[#4F44E2] border-t border-t-white/5 border-r border-r-white/5 border-b border-b-white/5 bg-[#0C0C0E]/40 backdrop-blur-md p-4 sm:p-5 relative overflow-hidden hover:border-[#4F44E2]/25 hover:border-l-2 hover:border-l-[#4F44E2] transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
+                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none text-[#4F44E2]">
+                  <span className="material-symbols-outlined text-3xl">
+                    format_quote
+                  </span>
+                </div>
+                <p className="font-medium text-xs sm:text-sm text-[#8E8D99] italic leading-relaxed pr-8">
+                  "{quote}"
                 </p>
               </div>
-            ) : (
-              <Reorder.Group
-                axis="y"
-                values={tasks}
-                onReorder={reorderTasks}
-                className="space-y-2 sm:space-y-3"
-              >
-                {tasks.map((task) => (
-                  <Reorder.Item
-                    key={task.id}
-                    value={task}
-                    className={`group w-full flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-3 sm:p-4 text-left transition-colors hover:bg-[#111111] ${task.isCompleted ? "opacity-50" : ""}`}
-                    whileDrag={{
-                      scale: 1.02,
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-                      zIndex: 10,
-                    }}
-                    onDragStart={() => handleDragStart(task.id)}
-                    onDragEnd={handleDragEnd}
-                    drag={
-                      typeof window !== "undefined" && window.innerWidth <= 640
-                        ? dragEnabledTaskId === task.id
-                        : true
-                    }
-                  >
-                    <div
-                      className={`touch-none flex items-center opacity-30 active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing text-[#464555] shrink-0 ${dragEnabledTaskId === task.id ? "opacity-100 text-[#4F44E2]" : ""}`}
-                      onPointerDown={() => handleDragHoldStart(task.id)}
-                      onPointerUp={handleDragHoldEnd}
-                      onPointerLeave={handleDragHoldEnd}
-                    >
-                      <span className="material-symbols-outlined text-[20px]">
-                        drag_indicator
-                      </span>
-                    </div>
+            </section>
 
-                    <button
-                      onClick={() => handleToggleTask(task)}
-                      className={`flex h-5 sm:h-6 w-5 sm:w-6 items-center justify-center rounded-full border shrink-0 transition-colors ${task.isCompleted ? "border-[#C4C0FF]/30 bg-[#C4C0FF]/20" : "border-[#464555]/30 bg-transparent hover:border-[#C4C0FF]/50"}`}
+            {/* Stats (Mobile Only) */}
+            <div className="block md:hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Day Status Card */}
+                <div className="flex flex-col sm:flex-row sm:col-span-2 items-center justify-between rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] p-4 sm:p-6 gap-4 shadow-[#000000] shadow-[0_10px_30px]">
+                  <div className="flex flex-col gap-1 text-center sm:text-left">
+                    <span className="mb-2 text-2xl sm:text-3xl">
+                      {ratingInfo.emoji}
+                    </span>
+                    <h2 className="font-headline text-lg sm:text-xl font-bold text-[#E2E2E2]">
+                      {ratingInfo.label}
+                    </h2>
+                    <p className="text-xs sm:text-sm font-medium text-[#464555]">
+                      {totalTasks === 0
+                        ? "No tasks scheduled for today"
+                        : `${completedTasks} of ${totalTasks} tasks completed`}
+                    </p>
+                  </div>
+                  <div className="relative flex items-center justify-center shrink-0">
+                    <svg
+                      className="h-16 sm:h-20 w-16 sm:w-20 -rotate-90"
+                      viewBox="0 0 96 96"
                     >
-                      {task.isCompleted ? (
-                        <span className="material-symbols-outlined text-sm font-bold text-[#C4C0FF]">
-                          done
-                        </span>
-                      ) : (
-                        <div className="h-2 w-2 rounded-full bg-[#464555]/50 shrink-0" />
-                      )}
-                    </button>
-                    <div
-                      className="grow min-w-0 flex flex-col gap-1 cursor-pointer"
-                      onClick={() => handleToggleTask(task)}
+                      <circle
+                        className="text-[#141414]"
+                        cx="48"
+                        cy="48"
+                        r="42"
+                        fill="transparent"
+                        stroke="currentColor"
+                        strokeWidth="6"
+                      />
+                      <circle
+                        className={`transition-all duration-1000 ${completionPercentage === 100 ? "text-[#FFFFFF]" : "text-[#C4C0FF]"}`}
+                        cx="48"
+                        cy="48"
+                        r="42"
+                        fill="transparent"
+                        stroke="currentColor"
+                        strokeWidth="6"
+                        strokeDasharray="263.89"
+                        strokeDashoffset={
+                          263.89 - (completionPercentage / 100) * 263.89
+                        }
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span
+                      className={`absolute font-headline text-sm sm:text-base font-bold ${completionPercentage === 100 ? "text-white text-glow" : "text-[#E2E2E2]"}`}
                     >
-                      <div className="flex items-start gap-2">
-                        {priorityMode === "advanced" && (
-                          <span
-                            className="text-xs shrink-0 mt-[2px]"
-                            title={`${task.priority || "medium"} priority`}
-                          >
-                            {task.priority === "critical"
-                              ? "🔴"
-                              : task.priority === "high"
-                                ? "🟠"
-                                : task.priority === "low"
-                                  ? "🔵"
-                                  : "🟡"}
-                          </span>
+                      {completionPercentage}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Streak */}
+                <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-linear-to-r from-[#0A0A0A] to-[#111111] p-4 sm:p-5">
+                  <div
+                    className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-full border border-[#4F44E2]/20 shrink-0 ${displayStreak > 0 ? "bg-[#4F44E2]/10" : "bg-[#1A1A1A]"}`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-lg sm:text-xl ${displayStreak > 0 ? "text-[#C4C0FF]" : "text-[#464555]"}`}
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      local_fire_department
+                    </span>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span
+                      className={`font-headline text-2xl sm:text-3xl font-bold tracking-tighter ${displayStreak > 0 ? "text-[#E2E2E2]" : "text-[#464555]"}`}
+                    >
+                      {displayStreak}
+                    </span>
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555]">
+                      Day Streak
+                    </span>
+                  </div>
+                </div>
+
+                {/* Perfect Days */}
+                <div className="flex items-center gap-3 sm:gap-4 rounded-lg border border-[rgba(70,69,85,0.15)] bg-linear-to-r from-[#0A0A0A] to-[#111111] p-4 sm:p-5">
+                  <div
+                    className={`flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-full border border-[#7cf6ec]/20 shrink-0 ${displayPerfectDays > 0 ? "bg-[#7cf6ec]/10" : "bg-[#1A1A1A]"}`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-lg sm:text-xl ${displayPerfectDays > 0 ? "text-[#7cf6ec]" : "text-[#464555]"}`}
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      star
+                    </span>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span
+                      className={`font-headline text-2xl sm:text-3xl font-bold tracking-tighter ${displayPerfectDays > 0 ? "text-[#E2E2E2]" : "text-[#464555]"}`}
+                    >
+                      {displayPerfectDays}
+                    </span>
+                    <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-[#464555]">
+                      Perfect Days
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tasks */}
+            <section className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+                <h3 className="font-headline text-lg sm:text-xl font-bold text-[#E2E2E2] self-start">
+                  Tasks
+                </h3>
+                <button
+                  onClick={() => {
+                    setEditingTask(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-full border border-[#4F44E2]/45 bg-[#4F44E2]/10 hover:bg-[#4F44E2]/20 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-[#C4C0FF] hover:text-white shadow-[0_0_15px_rgba(79,68,226,0.15)] hover:shadow-[0_0_25px_rgba(79,68,226,0.35)] transition-all duration-300 active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-base sm:text-lg">
+                    add
+                  </span>
+                  <span>New Task</span>
+                </button>
+              </div>
+              <div className="space-y-2 sm:space-y-3">
+                {tasks.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-[rgba(70,69,85,0.15)] bg-[#0A0A0A] text-center">
+                    <span className="material-symbols-outlined text-4xl text-[#464555] mb-2">
+                      fact_check
+                    </span>
+                    <p className="text-sm font-medium text-[#8E8D99]">
+                      Your day is a blank canvas.
+                    </p>
+                    <p className="text-xs text-[#464555] mt-1">
+                      Add tasks above to start planning.
+                    </p>
+                  </div>
+                ) : (
+                  <Reorder.Group
+                    axis="y"
+                    values={tasks}
+                    onReorder={reorderTasks}
+                    className="space-y-2 sm:space-y-3"
+                  >
+                    {tasks.map((task) => (
+                      <Reorder.Item
+                        key={task.id}
+                        value={task}
+                        className={cn(
+                          "group w-full flex items-center gap-3 sm:gap-4 rounded-xl border border-white/5 bg-[#0C0C0E]/90 p-3.5 sm:p-4 text-left transition-all duration-300 hover:bg-[#111115] hover:border-[#4F44E2]/30 hover:shadow-[0_4px_25px_rgba(79,68,226,0.12)]",
+                          task.isCompleted ? "opacity-45 bg-[#07070a]" : ""
                         )}
-                        <p
-                          className={`font-medium text-sm transition-all wrap-break-word min-w-0 leading-tight ${task.isCompleted ? "text-[#E2E2E2] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
+                        whileDrag={{
+                          scale: 1.02,
+                          boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                          zIndex: 10,
+                        }}
+                        onDragStart={() => handleDragStart(task.id)}
+                        onDragEnd={handleDragEnd}
+                        drag={
+                          typeof window !== "undefined" && window.innerWidth <= 640
+                            ? dragEnabledTaskId === task.id
+                            : true
+                        }
+                      >
+                        <div
+                          className={`touch-none flex items-center opacity-30 active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 cursor-grab active:cursor-grabbing text-[#464555] shrink-0 ${dragEnabledTaskId === task.id ? "opacity-100 text-[#4F44E2]" : ""}`}
+                          onPointerDown={() => handleDragHoldStart(task.id)}
+                          onPointerUp={handleDragHoldEnd}
+                          onPointerLeave={handleDragHoldEnd}
                         >
-                          {task.title}
-                        </p>
-                      </div>
-                      
-                      {/* Badges row displayed cleanly under the title on mobile */}
-                      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                        {task.isHabit && (
-                          <span className="rounded border border-[#4F44E2]/20 bg-[#4F44E2]/10 px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#C4C0FF] shrink-0">
-                            Habit
+                          <span className="material-symbols-outlined text-[20px]">
+                            drag_indicator
                           </span>
-                        )}
-                        <span className="rounded border border-[#464555]/20 bg-black px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#464555] shrink-0">
-                          {task.category}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all ml-1 sm:ml-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingTask(task);
-                          setIsModalOpen(true);
-                        }}
-                        className="p-1.5 sm:p-2 rounded-lg text-[#464555] hover:text-[#4F44E2] hover:bg-[#4F44E2]/10 active:scale-95 shrink-0 transition-colors"
-                        aria-label={`Edit task: ${task.title}`}
-                      >
-                        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                          edit
-                        </span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
-                            handleDeleteTask(task);
-                          }
-                        }}
-                        disabled={deletingTaskId === task.id}
-                        className="p-1.5 sm:p-2 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0 transition-colors"
-                        aria-label={`Delete task: ${task.title}`}
-                      >
-                        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                          {deletingTaskId === task.id ? 'hourglass_empty' : 'delete'}
-                        </span>
-                      </button>
-                    </div>
-                  </Reorder.Item>
-                ))}
-              </Reorder.Group>
-            )}
+                        </div>
+
+                        <button
+                          onClick={() => handleToggleTask(task)}
+                          className={cn(
+                            "flex h-5 sm:h-6 w-5 sm:w-6 items-center justify-center rounded-full border shrink-0 transition-all duration-300",
+                            task.isCompleted
+                              ? "border-[#4F44E2] bg-[#4F44E2]/15 text-[#C4C0FF] shadow-[0_0_10px_rgba(79,68,226,0.4)]"
+                              : "border-[#464555]/30 bg-transparent hover:border-[#4F44E2]/50 hover:bg-[#4F44E2]/5 text-[#464555]/50 hover:text-[#C4C0FF]"
+                          )}
+                        >
+                          {task.isCompleted ? (
+                            <span className="material-symbols-outlined text-xs sm:text-sm font-black">
+                              done
+                            </span>
+                          ) : (
+                            <div className="h-1.5 w-1.5 rounded-full bg-[#464555]/60 transition-all duration-300 group-hover:bg-[#4F44E2]/80 group-hover:scale-125" />
+                          )}
+                        </button>
+                        <div
+                          className="grow min-w-0 flex flex-col md:flex-row md:items-center md:justify-between gap-1.5 md:gap-3 cursor-pointer"
+                          onClick={() => handleToggleTask(task)}
+                        >
+                          <div className="flex items-start gap-2 min-w-0">
+                            {priorityMode === "advanced" && (
+                              <span
+                                className="shrink-0 mt-[4px]"
+                                title={`${task.priority || "medium"} priority`}
+                              >
+                                <span className={cn(
+                                  "w-2.5 h-2.5 rounded-full inline-block shrink-0",
+                                  task.priority === "critical" ? "bg-red-500 shadow-[0_0_8px_#ef4444]" :
+                                  task.priority === "high" ? "bg-orange-500 shadow-[0_0_8px_#f97316]" :
+                                  task.priority === "low" ? "bg-blue-500 shadow-[0_0_8px_#3b82f6]" :
+                                  "bg-yellow-500 shadow-[0_0_8px_#eab308]"
+                                )} />
+                              </span>
+                            )}
+                            <p
+                              className={`font-medium text-sm transition-all wrap-break-word min-w-0 leading-tight ${task.isCompleted ? "text-[#8E8D99] line-through decoration-[#464555]/40" : "text-[#E2E2E2]"}`}
+                            >
+                              {task.title}
+                            </p>
+                          </div>
+                          
+                          {/* Badges row displayed cleanly under the title on mobile, and right next to the title on desktop */}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5 md:mt-0 md:shrink-0">
+                            {task.isHabit && (
+                              <span className="rounded border border-[#4F44E2]/25 bg-[#4F44E2]/10 px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest text-[#C4C0FF] shrink-0">
+                                Habit
+                              </span>
+                            )}
+                            <span className={cn(
+                              "rounded border px-1.5 py-0.5 text-[7px] sm:text-[9px] font-bold uppercase tracking-widest shrink-0 transition-colors duration-300",
+                              getCategoryBadgeStyles(task.category)
+                            )}>
+                              {task.category}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all ml-1 sm:ml-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingTask(task);
+                              setIsModalOpen(true);
+                            }}
+                            className="p-1.5 sm:p-2 rounded-lg text-[#464555] hover:text-[#4F44E2] hover:bg-[#4F44E2]/10 active:scale-95 shrink-0 transition-colors"
+                            aria-label={`Edit task: ${task.title}`}
+                          >
+                            <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                              edit
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+                                handleDeleteTask(task);
+                              }
+                            }}
+                            disabled={deletingTaskId === task.id}
+                            className="p-1.5 sm:p-2 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0 transition-colors"
+                            aria-label={`Delete task: ${task.title}`}
+                          >
+                            <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                              {deletingTaskId === task.id ? 'hourglass_empty' : 'delete'}
+                            </span>
+                          </button>
+                        </div>
+                      </Reorder.Item>
+                    ))}
+                  </Reorder.Group>
+                )}
+              </div>
+            </section>
           </div>
-        </section>
+
+          {/* Right Column: Sticky Sidebar (Desktop Only) */}
+          <div className="hidden md:flex md:col-span-5 lg:col-span-4 md:sticky md:top-24 flex-col gap-6 self-start order-2">
+            {/* Day Status Card */}
+            <div className="flex flex-col items-center justify-center rounded-xl border border-white/5 bg-[#0C0C0E]/90 p-6 gap-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)] w-full text-center hover:border-[#4F44E2]/20 transition-all duration-300">
+              <div className="flex flex-col gap-1 items-center">
+                <span className="mb-1 text-3xl drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                  {ratingInfo.emoji}
+                </span>
+                <h2 className="font-headline text-xl font-bold text-white tracking-wide">
+                  {ratingInfo.label}
+                </h2>
+                <p className="text-xs font-semibold text-[#464555] uppercase tracking-wider">
+                  {totalTasks === 0
+                    ? "No tasks scheduled for today"
+                    : `${completedTasks} of ${totalTasks} tasks completed`}
+                </p>
+              </div>
+              <div className="relative flex items-center justify-center shrink-0">
+                <svg
+                  className="h-24 w-24 -rotate-90"
+                  viewBox="0 0 96 96"
+                >
+                  <circle
+                    className="text-[#141414]"
+                    cx="48"
+                    cy="48"
+                    r="42"
+                    fill="transparent"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                  />
+                  <circle
+                    className={`transition-all duration-1000 ${completionPercentage === 100 ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "text-[#4F44E2] drop-shadow-[0_0_8px_rgba(79,68,226,0.6)]"}`}
+                    cx="48"
+                    cy="48"
+                    r="42"
+                    fill="transparent"
+                    stroke="currentColor"
+                    strokeWidth="6"
+                    strokeDasharray="263.89"
+                    strokeDashoffset={
+                      263.89 - (completionPercentage / 100) * 263.89
+                    }
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span
+                  className={`absolute font-headline text-lg font-bold ${completionPercentage === 100 ? "text-white text-glow" : "text-white"}`}
+                >
+                  {completionPercentage}%
+                </span>
+              </div>
+            </div>
+
+            {/* Streak & Perfect Days */}
+            <div className="grid grid-cols-1 gap-4 w-full">
+              {/* Streak */}
+              <div className={cn(
+                "flex items-center gap-4 rounded-xl border p-5 transition-all duration-300",
+                displayStreak > 0
+                  ? "border-white/5 bg-[#0C0C0E]/90 hover:border-orange-500/30 hover:shadow-[0_0_20px_rgba(249,115,22,0.15)]"
+                  : "border-white/5 bg-[#0C0C0E]/90 opacity-60"
+              )}>
+                <div
+                  className={cn(
+                    "flex h-12 w-12 items-center justify-center rounded-full border shrink-0 transition-all duration-300",
+                    displayStreak > 0
+                      ? "border-orange-500/30 bg-orange-500/10 text-orange-500 drop-shadow-[0_0_8px_rgba(249,115,22,0.4)]"
+                      : "border-white/5 bg-[#1A1A1A] text-[#464555]"
+                  )}
+                >
+                  <span
+                    className="material-symbols-outlined text-xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    local_fire_department
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span
+                    className={cn(
+                      "font-headline text-3xl font-bold tracking-tighter leading-none mb-0.5",
+                      displayStreak > 0 ? "text-white text-glow-primary" : "text-[#464555]"
+                    )}
+                  >
+                    {displayStreak}
+                  </span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#464555]">
+                    Day Streak
+                  </span>
+                </div>
+              </div>
+
+              {/* Perfect Days */}
+              <div className={cn(
+                "flex items-center gap-4 rounded-xl border p-5 transition-all duration-300",
+                displayPerfectDays > 0
+                  ? "border-white/5 bg-[#0C0C0E]/90 hover:border-[#7cf6ec]/30 hover:shadow-[0_0_20px_rgba(124,246,236,0.15)]"
+                  : "border-white/5 bg-[#0C0C0E]/90 opacity-60"
+              )}>
+                <div
+                  className={cn(
+                    "flex h-12 w-12 items-center justify-center rounded-full border shrink-0 transition-all duration-300",
+                    displayPerfectDays > 0
+                      ? "border-[#7cf6ec]/30 bg-[#7cf6ec]/10 text-[#7cf6ec] drop-shadow-[0_0_8px_rgba(124,246,236,0.4)]"
+                      : "border-white/5 bg-[#1A1A1A] text-[#464555]"
+                  )}
+                >
+                  <span
+                    className="material-symbols-outlined text-xl"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    star
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span
+                    className={cn(
+                      "font-headline text-3xl font-bold tracking-tighter leading-none mb-0.5",
+                      displayPerfectDays > 0 ? "text-white text-glow" : "text-[#464555]"
+                    )}
+                  >
+                    {displayPerfectDays}
+                  </span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-[#464555]">
+                    Perfect Days
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
 
       <AddTaskModal

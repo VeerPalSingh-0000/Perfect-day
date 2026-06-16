@@ -234,7 +234,7 @@ export default function HabitsPage() {
     <div className="flex min-h-screen flex-col bg-black pb-20 md:pb-0">
       <TopAppBar variant="title" title="Habit Manager" />
 
-      <main className="flex-1 space-y-6 px-4 sm:px-6 pt-20 sm:pt-24 max-w-2xl mx-auto w-full">
+      <main className="flex-1 space-y-6 px-4 sm:px-6 pt-20 sm:pt-24 max-w-2xl md:max-w-6xl mx-auto w-full">
         <div className="flex flex-col gap-2">
           <h2 className="font-headline text-2xl sm:text-3xl font-black tracking-tighter text-[#E2E2E2] uppercase">
             All Habits
@@ -267,7 +267,7 @@ export default function HabitsPage() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {habits.map((habit) => (
               <div
                 key={habit.id}
