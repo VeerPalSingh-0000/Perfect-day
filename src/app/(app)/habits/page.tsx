@@ -19,6 +19,7 @@ import {
   deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { isHabitValidForDate } from "@/stores/useDataStore";
 
 export default function HabitsPage() {
   const user = useAuthStore((s) => s.user);
@@ -197,8 +198,36 @@ export default function HabitsPage() {
       let currentBatch = writeBatch(db);
       let opCount = 0;
 
+      const todayObj = new Date();
+      const todayDateStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, "0")}-${String(todayObj.getDate()).padStart(2, "0")}`;
+
       snap.forEach((docSnap) => {
-        currentBatch.update(docSnap.ref, updates);
+        const taskDoc = docSnap.data() as Task;
+        let finalUpdates = { ...updates };
+        
+        if (taskDoc.date >= todayDateStr && !taskDoc.isCompleted) {
+          const mergedTask = { ...taskDoc, ...updates } as Task;
+          if (!isHabitValidForDate(mergedTask, taskDoc.date)) {
+            let newDateStr = taskDoc.date;
+            let diff = 1;
+            while (diff <= 14) {
+              const checkDate = new Date(taskDoc.date);
+              checkDate.setDate(checkDate.getDate() + diff);
+              const candidateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, "0")}-${String(checkDate.getDate()).padStart(2, "0")}`;
+
+              if (isHabitValidForDate(mergedTask, candidateStr)) {
+                newDateStr = candidateStr;
+                break;
+              }
+              diff++;
+            }
+            if (newDateStr !== taskDoc.date) {
+              finalUpdates.date = newDateStr;
+            }
+          }
+        }
+
+        currentBatch.update(docSnap.ref, finalUpdates);
         opCount++;
         if (opCount === 500) {
           batches.push(currentBatch.commit());
@@ -271,72 +300,78 @@ export default function HabitsPage() {
             {habits.map((habit) => (
               <div
                 key={habit.id}
-                className="group flex items-center gap-3 sm:gap-4 rounded-xl border border-white/5 bg-[#0A0A0A] p-4 text-left transition-all hover:bg-white/5 hover:border-white/10"
+                className="group relative rounded-2xl border border-white/5 bg-linear-to-b from-[#111111] to-[#0A0A0A] p-5 text-left transition-all duration-300 hover:border-white/10 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[#4F44E2]/5 hover:-translate-y-0.5"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#4F44E2]/10 text-[#4F44E2]">
-                  <span className="material-symbols-outlined text-xl">
-                    event_repeat
-                  </span>
-                </div>
-                <div className="grow min-w-0">
-                  <p className="font-medium text-sm text-[#E2E2E2] truncate">
+                {/* Row 1: Icon + Title */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#4F44E2]/10 text-[#4F44E2]">
+                    <span className="material-symbols-outlined text-xl">
+                      event_repeat
+                    </span>
+                  </div>
+                  <p className="font-semibold text-[15px] text-[#F4F4F5] truncate group-hover:text-white transition-colors min-w-0">
                     {habit.title}
                   </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
-                      {habit.frequency || "daily"}
-                    </span>
-                    <span className="h-1 w-1 shrink-0 rounded-full bg-[#464555]/50" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
-                      {habit.category}
-                    </span>
-                    {habit.isPaused && (
-                      <>
-                        <span className="h-1 w-1 shrink-0 rounded-full bg-[#464555]/50" />
-                        <span className="rounded border border-[#464555]/20 bg-black px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-orange-400">
-                          Paused
-                        </span>
-                      </>
-                    )}
-                  </div>
                 </div>
 
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <button
-                    onClick={() => handleTogglePause(habit)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${!habit.isPaused ? "bg-[#4F44E2]" : "bg-[#464555]/50"}`}
-                    role="switch"
-                    aria-checked={!habit.isPaused}
-                    aria-label={`Toggle pause state for ${habit.title}`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${!habit.isPaused ? "translate-x-4" : "translate-x-0"}`}
-                    />
-                  </button>
-                  <div className="w-px h-6 bg-white/5 mx-1" />
-                  <button
-                    onClick={() => {
-                      setEditingHabit(habit);
-                      setIsModalOpen(true);
-                    }}
-                    className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all p-2 rounded-lg text-[#464555] hover:text-[#4F44E2] hover:bg-[#4F44E2]/10 active:scale-95 shrink-0"
-                    aria-label={`Edit habit: ${habit.title}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">
-                      edit
+                {/* Row 2: Tags */}
+                <div className="flex items-center gap-2 flex-wrap mb-4 pl-[52px]">
+                  <span className="inline-flex items-center rounded-md border border-white/5 bg-white/3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#6E6D7A]">
+                    {habit.frequency || "daily"}
+                  </span>
+                  <span className="inline-flex items-center rounded-md border border-white/5 bg-white/3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#6E6D7A]">
+                    {habit.category}
+                  </span>
+                  {habit.isPaused && (
+                    <span className="inline-flex items-center rounded-md border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-orange-400">
+                      Paused
                     </span>
-                  </button>
-                  <button
-                    onClick={() => handleDeleteHabit(habit)}
-                    disabled={deletingHabitId === habit.id}
-                    className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all p-2 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95 shrink-0"
-                    aria-label={`Delete habit: ${habit.title}`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">
-                      delete
+                  )}
+                </div>
+
+                {/* Row 3: Toggle + Actions */}
+                <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleTogglePause(habit)}
+                      className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#4F44E2]/30 ${!habit.isPaused ? "bg-[#4F44E2]" : "bg-[#2A2A2A]"}`}
+                      role="switch"
+                      aria-checked={!habit.isPaused}
+                      aria-label={`Toggle pause state for ${habit.title}`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${!habit.isPaused ? "translate-x-[22px]" : "translate-x-[3px]"}`}
+                      />
+                    </button>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#464555]">
+                      {habit.isPaused ? "Off" : "Active"}
                     </span>
-                  </button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setEditingHabit(habit);
+                        setIsModalOpen(true);
+                      }}
+                      className="transition-all p-2 rounded-lg text-[#464555] hover:text-[#4F44E2] hover:bg-[#4F44E2]/10 active:scale-95"
+                      aria-label={`Edit habit: ${habit.title}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        edit
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteHabit(habit)}
+                      disabled={deletingHabitId === habit.id}
+                      className="transition-all p-2 rounded-lg text-[#464555] hover:text-red-400 hover:bg-red-400/10 active:scale-95"
+                      aria-label={`Delete habit: ${habit.title}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        delete
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
