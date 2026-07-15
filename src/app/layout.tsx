@@ -95,12 +95,9 @@ export const metadata: Metadata = {
   },
   category: "productivity",
   icons: {
-    icon: [
-      { url: "/icon.png", sizes: "32x32", type: "image/png" },
-      { url: "/icon.png", sizes: "16x16", type: "image/png" },
-    ],
-    apple: { url: "/logo.svg", sizes: "180x180", type: "image/svg+xml" },
-    shortcut: { url: "/favicon.ico" },
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/logo.png",
   },
   manifest: "/manifest.json",
 };
