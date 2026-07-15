@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 import { useTrackerStore } from "@/stores/useTrackerStore";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const CATEGORY_EMOJIS: Record<TargetCategory, string> = {
   learning: "🧠",
@@ -31,7 +31,6 @@ export default function TargetsPage() {
     toggleDayCompletion,
     setActiveTarget,
     addNote,
-    updateTarget,
   } = useTargetStore.getState();
 
   const [isModalOpen, setIsModalOpen] = useState(false);

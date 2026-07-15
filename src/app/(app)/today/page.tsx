@@ -10,7 +10,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Reorder } from "framer-motion";
 
 import { AddTaskModal } from "@/components/ui/AddTaskModal";
-import { TaskTimer } from "@/components/ui/TaskTimer";
+
 import { useTrackerStore } from "@/stores/useTrackerStore";
 import { trackerDb } from "@/lib/tracker-db";
 import {
@@ -272,7 +272,7 @@ export default function TodayPage() {
 
     if (taskData.id) {
       // Edit mode
-      const updates: any = {
+      const updates: Partial<Task> = {
         title: taskData.title,
         category: taskData.category,
         isHabit: taskData.isHabit,
@@ -286,14 +286,14 @@ export default function TodayPage() {
         if (taskData.targetTime) {
           updates.targetTime = taskData.targetTime;
         } else {
-          updates.targetTime = deleteField();
+          updates.targetTime = deleteField() as any;
         }
       }
 
       if (taskData.isHabit && taskData.frequency) {
         updates.frequency = taskData.frequency;
       } else {
-        updates.frequency = deleteField();
+        updates.frequency = deleteField() as any;
       }
 
       if (taskData.linkedTrackItIds) {
@@ -408,7 +408,7 @@ export default function TodayPage() {
     toggleTaskCompletion(task.id);
 
     try {
-      const updates: any = { isCompleted: newCompletedState };
+      const updates: Partial<Task> = { isCompleted: newCompletedState };
       if (newCompletedState) {
         updates.completedAt = Date.now();
       }
@@ -463,6 +463,7 @@ export default function TodayPage() {
     if (typeof window !== "undefined") {
       trackerStore.initTrackerAuth();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -536,6 +537,7 @@ export default function TodayPage() {
       (error) => console.error("FocusFlow Sync Error:", error),
     );
     return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trackerStore.isLinked, trackerStore.trackerUser, user]);
 
   // 2. FocusFlow Auto-completion Logic (Reacts to durationMap + tasks + targets)
@@ -594,6 +596,7 @@ export default function TodayPage() {
         toggleDayCompletion(target.id, todayStep);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [durationMap, tasks, targets, user]);
 
   const handleDeleteTask = async (task: Task) => {
@@ -611,13 +614,6 @@ export default function TodayPage() {
     }
   };
 
-  const confirmDelete = () => {
-    if (!deleteConfirmation) return;
-    handleDeleteTask({
-      id: deleteConfirmation.taskId,
-    } as Task);
-    setDeleteConfirmation(null);
-  };
 
   return (
     <div className="min-h-screen bg-black text-[#E2E2E2]">
@@ -664,7 +660,7 @@ export default function TodayPage() {
                   </span>
                 </div>
                 <p className="font-medium text-xs sm:text-sm text-[#8E8D99] italic leading-relaxed pr-8">
-                  "{quote}"
+                  &quot;{quote}&quot;
                 </p>
               </div>
             </section>

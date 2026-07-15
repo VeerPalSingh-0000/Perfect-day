@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useDataStore } from "@/stores/useDataStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
+import { Task } from "@/types";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -77,6 +78,7 @@ export default function HistoryPage() {
   }, [trackerStore.isLinked, trackerStore.trackerUser]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAllSessions();
   }, [fetchAllSessions]);
 
@@ -116,7 +118,7 @@ export default function HistoryPage() {
   });
 
   // Get focus time for a specific task on a specific date
-  const getTaskFocusTime = (task: any, date: string): number => {
+  const getTaskFocusTime = (task: Task, date: string): number => {
     const dayData = focusDataByDate[date];
     if (
       !dayData ||

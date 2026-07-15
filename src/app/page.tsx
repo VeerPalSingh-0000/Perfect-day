@@ -1,4 +1,5 @@
 import { LandingPageContent } from "@/components/LandingPageContent";
+import { AuthRedirect } from "@/components/AuthRedirect";
 
 export const metadata = {
   title: "SIRA – Daily Routine & Aesthetic Productivity App",
@@ -27,7 +28,7 @@ export const metadata = {
     siteName: "SIRA",
     images: [
       {
-        url: "/logo.png",
+        url: "/logo.svg",
         width: 1200,
         height: 630,
         alt: "SIRA App Dashboard",
@@ -39,10 +40,15 @@ export const metadata = {
     title: "SIRA – Daily Routine & Aesthetic Productivity App",
     description:
       "Build unstoppable daily routines. Track habits, rate your days, and master your time.",
-    images: ["/logo.png"],
+    images: ["/logo.svg"],
   },
 };
 
 export default function LandingPage() {
-  return <LandingPageContent />;
+  return (
+    <>
+      <AuthRedirect />
+      <LandingPageContent />
+    </>
+  );
 }

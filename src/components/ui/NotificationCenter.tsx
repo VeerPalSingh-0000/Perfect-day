@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useDataStore } from "@/stores/useDataStore";
 import { useAuthStore } from "@/stores/useAuthStore";
 
 export function NotificationCenter() {
   const user = useAuthStore((s) => s.user);
   const tasks = useDataStore((s) => s.tasks);
-  const lastCheckRef = useRef<number>(0);
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -50,7 +49,7 @@ export function NotificationCenter() {
             if (incomplete > 0) {
               new window.Notification("SIRA: Daily Progress", {
                 body: `You still have ${incomplete} tasks to finish today. You can do it! 🔥`,
-                icon: "/logo.png",
+                icon: "/logo.svg",
               });
               localStorage.setItem(lastCheckKey, "true");
             }

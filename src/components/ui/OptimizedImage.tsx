@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
+import Image from "next/image";
 
 interface OptimizedImageProps {
   src: string;
@@ -14,6 +15,7 @@ interface OptimizedImageProps {
 
 /**
  * Professional image component with smooth fade-in loading.
+ * - Uses next/image under the hood.
  * - Prefers .webp over .png (auto-detects if src ends with .png)
  * - Shows a subtle shimmer placeholder while loading
  * - Smooth opacity transition on load
@@ -29,46 +31,21 @@ export function OptimizedImage({
   style,
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(() => {
-    // Prefer .webp version if the source is a local .png
-    if (src.startsWith("/") && src.endsWith(".png")) {
-      return src.replace(/\.png$/, ".webp");
-    }
-    return src;
-  });
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [errorSrc, setErrorSrc] = useState<string | null>(null);
 
-  // Update src if prop changes (e.g. avatar switch)
-  useEffect(() => {
-    const newSrc = (src.startsWith("/") && src.endsWith(".png"))
+  // Derive preferred src during render (avoiding useEffect for this)
+  const preferredSrc =
+    src.startsWith("/") && src.endsWith(".png")
       ? src.replace(/\.png$/, ".webp")
       : src;
-    if (newSrc !== currentSrc) {
-      setIsLoaded(false);
-      setCurrentSrc(newSrc);
-    }
-  }, [src, currentSrc]);
 
-  // Handle case where image is already cached
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current?.naturalWidth > 0) {
-      setIsLoaded(true);
-    }
-  }, [currentSrc]);
+  // Use error fallback if WEBP fails
+  const currentSrc = errorSrc || preferredSrc;
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-  };
-
-  const handleError = () => {
-    // Fallback to original .png if .webp fails
-    if (currentSrc !== src) {
-      setCurrentSrc(src);
-    }
-  };
-
+  // Use key to reset state when src changes
   return (
     <div
+      key={src} // Reset component state when src changes
       className={`optimized-img-wrapper ${className}`}
       style={{
         position: "relative",
@@ -89,24 +66,29 @@ export function OptimizedImage({
       )}
 
       {/* Actual image */}
-      <img
-        ref={imgRef}
+      <Image
         src={currentSrc}
         alt={alt}
-        width={width}
-        height={height}
+        width={width || 100} // next/image requires width and height, or fill. We use fill if width/height are absent.
+        height={height || 100}
         loading={priority ? "eager" : "lazy"}
-        decoding={priority ? "sync" : "async"}
         fetchPriority={priority ? "high" : "auto"}
-        onLoad={handleLoad}
-        onError={handleError}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          // Fallback to original .png if .webp fails
+          if (currentSrc !== src) {
+            setErrorSrc(src);
+          }
+        }}
         style={{
           opacity: isLoaded ? 1 : 0,
           transition: "opacity 0.3s ease-in-out",
-          width: "100%",
-          height: "100%",
+          width: width ? `${width}px` : "100%",
+          height: height ? `${height}px` : "100%",
           objectFit: "cover",
+          position: !width && !height ? "absolute" : "relative", // If no width/height provided, make it fill its container
         }}
+        unoptimized // Since capacitor uses static export, but we still benefit from next/image structural constraints
       />
     </div>
   );

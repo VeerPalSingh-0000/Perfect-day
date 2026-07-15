@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     // FCM tokens are stored at fcmToken field on the user document
     const usersSnapshot = await db.collection("users").get();
     
-    let allTokens: string[] = [];
+    const allTokens: string[] = [];
     
     for (const userDoc of usersSnapshot.docs) {
       const data = userDoc.data();

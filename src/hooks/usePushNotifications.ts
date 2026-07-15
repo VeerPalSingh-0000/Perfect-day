@@ -55,8 +55,8 @@ export function usePushNotifications(userId?: string) {
                 payload.notification.title || "Perfect Day",
                 {
                   body: payload.notification.body || "You have a new notification",
-                  icon: payload.notification.image || "/logo.png",
-                  badge: "/logo.png",
+                  icon: payload.notification.image || "/logo.svg",
+                  badge: "/logo.svg",
                   tag: payload.data?.tag || "foreground",
                 },
               );

@@ -723,3 +723,4 @@ html.light .img-shimmer {
   );
   background-size: 200% 100%;
 }
+@utility task-list-optimize { content-visibility: auto; contain-intrinsic-size: auto 100px; }

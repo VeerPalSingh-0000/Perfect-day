@@ -12,6 +12,10 @@ import {
   onSnapshot,
   writeBatch,
   Unsubscribe,
+  QuerySnapshot,
+  DocumentSnapshot,
+  DocumentData,
+  DocumentChange
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { Task, DayRecord, UserProfile, LearningTarget } from "../types";
@@ -45,14 +49,14 @@ function createResilientListener<T>(
   name: string,
   setupListener: (
     onSuccess: (data: T) => void,
-    onError: (error: any) => void,
+    onError: (error: Record<string, unknown> | Error) => void,
   ) => Unsubscribe,
   callback: (data: T) => void,
 ): Unsubscribe {
   let isActive = true;
   let unsubscribe: Unsubscribe | null = null;
   let errorCount = 0;
-  const maxErrors = 5;
+  const maxErrors = 8; // Increased max errors for auth delays
 
   const setupWithErrorHandling = () => {
     if (!isActive) return;
@@ -63,13 +67,16 @@ function createResilientListener<T>(
           errorCount = 0; // Reset error count on success
           callback(data);
         },
-        (error) => {
-          // Handle network errors gracefully
+        (error: any) => {
           if (error?.code === "permission-denied") {
+            errorCount++;
             console.debug(
-              `🔐 [${name}] Permission denied (expected during auth)`,
+              `🔐 [${name}] Permission denied (${errorCount}/${maxErrors}). Retrying in 1s...`,
             );
-            return; // Silently ignore permission errors
+            if (errorCount < maxErrors && isActive) {
+              setTimeout(setupWithErrorHandling, 1000);
+            }
+            return;
           }
 
           if (
@@ -112,7 +119,13 @@ function createResilientListener<T>(
 
   return () => {
     isActive = false;
-    if (unsubscribe) unsubscribe();
+    if (unsubscribe) {
+      try {
+        unsubscribe();
+      } catch (e) {
+        console.error(`Error unsubscribing ${name}:`, e);
+      }
+    }
   };
 }
 
@@ -124,29 +137,16 @@ export const listenToUserProfile = (
   if (!userId) return () => {};
 
   const userRef = doc(db, "users", userId);
-  return onSnapshot(
-    userRef,
-    (snapshot) => {
+  return createResilientListener(
+    "UserProfile",
+    (onSuccess, onError) => onSnapshot(userRef, onSuccess, onError),
+    (snapshot: DocumentSnapshot<DocumentData>) => {
       if (snapshot.exists()) {
         callback(snapshot.data() as UserProfile);
       } else {
         callback(null);
       }
-    },
-    (error: any) => {
-      // Silently ignore permission-denied errors (expected before auth is ready)
-      if (error?.code === "permission-denied") {
-        console.debug(
-          "⏳ Waiting for authentication before fetching profile...",
-        );
-        return;
-      }
-      logError(
-        "profileOperation",
-        error,
-        createSafeErrorMessage("profileOperation"),
-      );
-    },
+    }
   );
 };
 
@@ -496,12 +496,13 @@ export const listenToTasksByDate = (
   const tasksRef = collection(db, "users", userId, "tasks");
   const q = query(tasksRef, where("date", "==", date));
 
-  return onSnapshot(
-    q,
-    (snapshot) => {
+  return createResilientListener(
+    "TasksByDate",
+    (onSuccess, onError) => onSnapshot(q, onSuccess, onError),
+    (snapshot: QuerySnapshot<DocumentData>) => {
       const tasks: Task[] = [];
       const seenIds = new Set<string>();
-      snapshot.forEach((docSnap) => {
+      snapshot.forEach((docSnap: DocumentSnapshot<DocumentData>) => {
         const taskData = docSnap.data() as Task;
         if (taskData && !seenIds.has(taskData.id)) {
           seenIds.add(taskData.id);
@@ -509,15 +510,7 @@ export const listenToTasksByDate = (
         }
       });
       callback(tasks.sort((a, b) => (a.order || 0) - (b.order || 0)));
-    },
-    (error: any) => {
-      // Silently ignore permission-denied errors (expected before auth is ready)
-      if (error?.code === "permission-denied") {
-        console.debug("⏳ Waiting for authentication before fetching tasks...");
-        return;
-      }
-      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
-    },
+    }
   );
 };
 
@@ -530,48 +523,40 @@ export const listenToDayRecords = (
 
   const recordsRef = collection(db, "users", userId, "dayRecords");
 
-  return onSnapshot(
-    recordsRef,
-    (snapshot) => {
+  return createResilientListener(
+    "DayRecords",
+    (onSuccess, onError) => onSnapshot(recordsRef, onSuccess, onError),
+    (snapshot: QuerySnapshot<DocumentData>) => {
       const records: DayRecord[] = [];
-      snapshot.forEach((docSnap) => {
+      snapshot.forEach((docSnap: DocumentSnapshot<DocumentData>) => {
         const recordData = docSnap.data() as DayRecord;
         if (recordData) records.push(recordData);
       });
       callback(records.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
-    },
-    (error: any) => {
-      // Silently ignore permission-denied errors (expected before auth is ready)
-      if (error?.code === "permission-denied") {
-        console.debug(
-          "⏳ Waiting for authentication before fetching day records...",
-        );
-        return;
-      }
-      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
-    },
+    }
   );
 };
 
 // Listen to TrackIT sessions for a specific user ID
 export const listenToTrackItSessions = (
   trackerUid: string,
-  onNewSession: (session: any) => void,
+  onNewSession: (session: Record<string, unknown>) => void,
 ) => {
   if (!trackerUid) return () => {};
 
   // Track the last processed session time to only react to NEW sessions
   // We use a small 2-second buffer to make sure we don't skip sessions
   // that were saved right as the listener was starting.
-  let lastProcessedTime = Date.now() - 2000;
+  const lastProcessedTime = Date.now() - 2000;
 
   const sessionsRef = collection(trackerDb, "sessions");
   const q = query(sessionsRef, where("userId", "==", trackerUid));
 
-  return onSnapshot(
-    q,
-    (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
+  return createResilientListener(
+    "TrackItSessions",
+    (onSuccess, onError) => onSnapshot(q, onSuccess, onError),
+    (snapshot: QuerySnapshot<DocumentData>) => {
+      snapshot.docChanges().forEach((change: DocumentChange<DocumentData>) => {
         if (change.type === "added") {
           const session = change.doc.data();
           const sessionTime = session.createdAt?.toMillis() || Date.now();
@@ -591,17 +576,7 @@ export const listenToTrackItSessions = (
           }
         }
       });
-    },
-    (error: any) => {
-      // Silently ignore permission-denied errors (expected before auth is ready)
-      if (error?.code === "permission-denied") {
-        console.debug(
-          "⏳ Waiting for authentication before fetching TrackIT sessions...",
-        );
-        return;
-      }
-      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
-    },
+    }
   );
 };
 
@@ -620,10 +595,10 @@ export const getTrackItProjects = async (trackerUid: string) => {
 export const getTrackItTopics = async (trackerUid: string) => {
   if (!trackerUid) return [];
   const projects = await getTrackItProjects(trackerUid);
-  const items: any[] = [];
-  projects.forEach((proj: any) => {
+  const items: Record<string, unknown>[] = [];
+  projects.forEach((proj: Record<string, unknown>) => {
     if (proj.topics && Array.isArray(proj.topics)) {
-      proj.topics.forEach((topic: any) => {
+      proj.topics.forEach((topic: Record<string, unknown>) => {
         items.push({
           id: topic.id,
           name: topic.name,
@@ -631,7 +606,7 @@ export const getTrackItTopics = async (trackerUid: string) => {
           projectName: proj.name,
         });
         if (topic.subTopics && Array.isArray(topic.subTopics)) {
-          topic.subTopics.forEach((sub: any) => {
+          topic.subTopics.forEach((sub: Record<string, unknown>) => {
             items.push({
               id: sub.id,
               name: sub.name,
@@ -780,11 +755,12 @@ export const listenToTargets = (
 
   console.log("🎯 Setting up real-time listener for targets, userId:", userId);
   const targetsRef = collection(db, "users", userId, "targets");
-  return onSnapshot(
-    targetsRef,
-    (snapshot) => {
+  return createResilientListener(
+    "Targets",
+    (onSuccess, onError) => onSnapshot(targetsRef, onSuccess, onError),
+    (snapshot: QuerySnapshot<DocumentData>) => {
       const targets: LearningTarget[] = [];
-      snapshot.forEach((docSnap) => {
+      snapshot.forEach((docSnap: DocumentSnapshot<DocumentData>) => {
         targets.push(docSnap.data() as LearningTarget);
       });
       console.log(
@@ -792,19 +768,8 @@ export const listenToTargets = (
         targets.length,
         "targets",
       );
-      // Sort oldest first or however they were created
       callback(targets.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)));
-    },
-    (error: any) => {
-      // Silently ignore permission-denied errors (expected before auth is ready)
-      if (error?.code === "permission-denied") {
-        console.debug(
-          "⏳ Waiting for authentication before fetching targets...",
-        );
-        return;
-      }
-      logError("dataFetch", error, createSafeErrorMessage("dataFetch"));
-    },
+    }
   );
 };
 

@@ -22,6 +22,8 @@
     "@capacitor/android": "^5.7.0",
     "@capacitor/app": "^5.0.8",
     "@capacitor/core": "^5.7.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "clsx": "^2.1.0",
     "firebase": "^10.8.0",
     "firebase-admin": "^13.7.0",
@@ -30,6 +32,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "^2.2.1",
+    "three": "^0.185.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
@@ -38,6 +41,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.185.1",
     "autoprefixer": "^10.4.27",
     "cross-env": "^10.1.0",
     "eslint": "^9",

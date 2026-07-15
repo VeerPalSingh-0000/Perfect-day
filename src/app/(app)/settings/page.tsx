@@ -75,7 +75,7 @@ export default function SettingsPage() {
   const user = useAuthStore((state) => state.user);
   const profile = useAuthStore((state) => state.profile);
   const updateProfileInStore = useAuthStore((state) => state.updateProfile);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdating] = useState(false);
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
   const [isDataProtocolsOpen, setIsDataProtocolsOpen] = useState(false);
   const [isPriorityInfoOpen, setIsPriorityInfoOpen] = useState(false);
@@ -122,6 +122,7 @@ export default function SettingsPage() {
     if (storedHaptics === "false") {
       setIsHapticsEnabled(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const triggerHaptic = () => {
@@ -1014,7 +1015,7 @@ export default function SettingsPage() {
                 </li>
                 <li>
                   When adding a task, tap{" "}
-                  <span className="text-[#E2E2E2]">"Link TrackIT Project"</span>{" "}
+                  <span className="text-[#E2E2E2]">&quot;Link FocusFlow Project&quot;</span>{" "}
                   and pick your project
                 </li>
                 <li>

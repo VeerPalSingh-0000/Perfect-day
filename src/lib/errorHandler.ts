@@ -23,10 +23,6 @@ export const logError = (
 
   // Sanitized logging in production
   const timestamp = new Date().toISOString();
-  const isFirebaseError =
-    error instanceof Error &&
-    (error.message.includes("Firebase") || error.message.includes("Firestore"));
-
   // Log to console (will be captured by error tracking service)
   console.error(`[${timestamp}] ${context}: ${userMessage}`);
 
@@ -56,7 +52,7 @@ export const createSafeErrorMessage = (context: ErrorContext): string => {
  * Wraps an async function with error handling and logging
  */
 export const withErrorHandling =
-  <T extends any[], R>(fn: (...args: T) => Promise<R>, context: ErrorContext) =>
+  <T extends unknown[], R>(fn: (...args: T) => Promise<R>, context: ErrorContext) =>
   async (...args: T): Promise<R | null> => {
     try {
       return await fn(...args);

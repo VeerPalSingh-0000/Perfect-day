@@ -76,7 +76,7 @@ export const metadata: Metadata = {
       "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
     images: [
       {
-        url: "/logo.png",
+        url: "/logo.svg",
         width: 1200,
         height: 630,
         alt: "SIRA App Logo",
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
     title: "SIRA - Daily Routine and Aesthetic Productivity App",
     description:
       "Build unstoppable daily routines. Track habits, rate your days, and master your time with SIRA.",
-    images: ["/logo.png"],
+    images: ["/logo.svg"],
   },
   verification: {
     google: "-eNrtVYxyV2gNmynl2ofvHkBfBw5BRMyxGHhGuq_0-U",
@@ -99,7 +99,7 @@ export const metadata: Metadata = {
       { url: "/icon.png", sizes: "32x32", type: "image/png" },
       { url: "/icon.png", sizes: "16x16", type: "image/png" },
     ],
-    apple: { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    apple: { url: "/logo.svg", sizes: "180x180", type: "image/svg+xml" },
     shortcut: { url: "/favicon.ico" },
   },
   manifest: "/manifest.json",
@@ -116,7 +116,7 @@ const jsonLd = {
   description:
     "A sleek and minimal aesthetic habit tracker that helps you plan your day, track your routines, and visualize your progress with stunning analytics. Developed for peak performance.",
   url: "https://dayisperfect.netlify.app",
-  image: "https://dayisperfect.netlify.app/logo.png",
+  image: "https://dayisperfect.netlify.app/logo.svg",
   author: {
     "@type": "Person",
     name: "Veer Pal Singh",
@@ -135,7 +135,7 @@ const jsonLd = {
     "Automatic Day Ratings",
     "Cloud Sync across devices",
   ],
-  screenshot: "https://dayisperfect.netlify.app/logo.png",
+  screenshot: "https://dayisperfect.netlify.app/logo.svg",
   aggregateRating: {
     "@type": "AggregateRating",
     ratingValue: "4.9",

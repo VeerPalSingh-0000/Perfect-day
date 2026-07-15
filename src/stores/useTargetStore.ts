@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { LearningTarget, DayStep, TargetStatus } from "@/types";
+import { LearningTarget, DayStep } from "@/types";
 import {
   saveTarget,
   removeTargetFromCloud,
@@ -41,7 +41,6 @@ export const getTargetAnalysis = (target: LearningTarget) => {
   const daysElapsed = Math.min(currentDay, target.totalDays);
 
   const completedCount = target.completedDays.length;
-  const targetCompletedCount = Math.min(daysElapsed, target.totalDays);
   const velocity = daysElapsed > 0 ? (completedCount / daysElapsed) * 100 : 0;
 
   const daysRemaining = Math.max(0, target.totalDays - completedCount);

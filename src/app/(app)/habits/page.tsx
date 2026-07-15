@@ -152,7 +152,7 @@ export default function HabitsPage() {
     }
 
     try {
-      const updates: any = {
+      const updates: Partial<Task> = {
         title: taskData.title,
         category: taskData.category,
         isHabit: true,
@@ -167,7 +167,7 @@ export default function HabitsPage() {
         if (taskData.targetTime) {
           updates.targetTime = taskData.targetTime;
         } else {
-          updates.targetTime = deleteField();
+          updates.targetTime = deleteField() as any;
         }
       }
 
@@ -175,7 +175,7 @@ export default function HabitsPage() {
         if (taskData.linkedTrackItIds && taskData.linkedTrackItIds.length > 0) {
           updates.linkedTrackItIds = taskData.linkedTrackItIds;
         } else {
-          updates.linkedTrackItIds = deleteField();
+          updates.linkedTrackItIds = deleteField() as any;
         }
       }
 
@@ -203,7 +203,7 @@ export default function HabitsPage() {
 
       snap.forEach((docSnap) => {
         const taskDoc = docSnap.data() as Task;
-        let finalUpdates = { ...updates };
+        const finalUpdates = { ...updates };
         
         if (taskDoc.date >= todayDateStr && !taskDoc.isCompleted) {
           const mergedTask = { ...taskDoc, ...updates } as Task;

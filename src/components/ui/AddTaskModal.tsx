@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTrackerStore } from "@/stores/useTrackerStore";
 import { Modal } from "./Modal";
 import { Task, TaskCategory, HabitFrequency, TaskPriority } from "@/types";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { cn } from "@/lib/utils";
+
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -223,7 +224,7 @@ export function AddTaskModal({ isOpen, onClose, onSubmit, initialData }: AddTask
               Minutes to completion
             </span>
           </div>
-          <span className="text-[9px] text-[#464555] italic">Set to 0 or leave empty for "Any duration"</span>
+          <span className="text-[9px] text-[#464555] italic">Set to 0 or leave empty for &quot;Any duration&quot;</span>
         </div>
 
         {isTrackerLinked && (projects.length > 0 || topics.length > 0) && (

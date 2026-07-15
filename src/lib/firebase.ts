@@ -5,7 +5,6 @@ import {
   initializeFirestore,
   Firestore,
   persistentLocalCache,
-  connectFirestoreEmulator,
 } from "firebase/firestore";
 
 const firebaseConfig = {

@@ -298,7 +298,7 @@ const initializeWebMessaging = async (): Promise<string | null> => {
           tokenError instanceof Error ? tokenError.message : String(tokenError);
         const errorCode =
           tokenError instanceof Error
-            ? (tokenError as any).code || "UNKNOWN"
+            ? (tokenError as { code?: string }).code || "UNKNOWN"
             : "UNKNOWN";
 
         console.error(
@@ -432,8 +432,8 @@ export const sendTestNotification = (): void => {
   if (Notification.permission === "granted") {
     new Notification("Perfect Day Notification Test", {
       body: "If you see this, push notifications are working! 🎉",
-      icon: "/logo.png",
-      badge: "/logo.png",
+      icon: "/logo.svg",
+      badge: "/logo.svg",
       tag: "test-notification",
     });
   }

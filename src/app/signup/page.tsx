@@ -18,6 +18,7 @@ export default function SignupPage() {
 
   // Ensure client-only rendering to prevent hydration mismatch
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

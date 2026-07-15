@@ -27,14 +27,11 @@ export function Sidebar() {
       {/* Logo */}
       <div className="flex items-center gap-2 mb-12 px-2">
         <OptimizedImage
-          src="/logo.png"
+          src="/logo.svg"
           alt="SIRA Logo"
-          className="w-12 h-12 scale-[2] object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+          className="w-10 h-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.15)]"
           priority
         />
-        <span className="font-['Plus_Jakarta_Sans'] font-black tracking-[0.2em] text-lg text-[#E2E2E2] uppercase">
-          SIRA
-        </span>
       </div>
 
       {/* Profile Summary */}

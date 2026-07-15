@@ -309,7 +309,7 @@ export const useDataStore = create<DataState>()(
             );
 
             matchingTasks.forEach((task) => {
-              const sessionDurationMinutes = (session.duration || 0) / 60000;
+              const sessionDurationMinutes = (Number((session as any).duration) || 0) / 60000;
               const targetMinutes = task.targetTime || 0;
 
               console.log(

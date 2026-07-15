@@ -1,39 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAchievementStore } from "@/stores/useAchievementStore";
-import { Achievement } from "@/types";
 
 export function AchievementCelebration() {
   const { achievements, markAchievementViewed } = useAchievementStore();
-  const [currentQueue, setCurrentQueue] = useState<Achievement[]>([]);
-  const [isShowing, setIsShowing] = useState(false);
-
-  useEffect(() => {
-    const unviewed = achievements.filter((a) => !a.isViewed);
-    if (unviewed.length > 0 && !isShowing) {
-      setCurrentQueue(unviewed);
-      setIsShowing(true);
-    }
-  }, [achievements, isShowing]);
+  
+  // Derive the queue directly from the store
+  const unviewed = achievements.filter((a) => !a.isViewed);
+  const achievement = unviewed[0];
 
   const handleDismiss = () => {
-    if (currentQueue.length > 0) {
-      const achievement = currentQueue[0];
+    if (achievement) {
       markAchievementViewed(achievement.id);
-      setCurrentQueue((prev) => prev.slice(1));
-    }
-    if (currentQueue.length <= 1) {
-      setIsShowing(false);
     }
   };
 
-  const achievement = currentQueue[0];
-
   return (
     <AnimatePresence>
-      {isShowing && achievement && (
+      {achievement && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 50 }}

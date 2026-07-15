@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Deep Stealth Metallic Gradient (Matte Black / Graphite) -->
+    <linearGradient id="stealthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D2D3A" />
+      <stop offset="50%" stop-color="#14141E" />
+      <stop offset="100%" stop-color="#05050A" />
+    </linearGradient>
+
+    <!-- Subtle Edge Bevel Highlight (Polished Silver edge catching the light) -->
+    <linearGradient id="bevelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#5A5A6A" stop-opacity="0.3" />
+    </linearGradient>
+
+    <!-- Deep Ambient Glow (Subtle Brand Aura) -->
+    <filter id="darkGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="24" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <g transform="translate(256, 256) scale(0.85) translate(-256, -256)">
+    <!-- Layer 1: Dark Ambient Purple Glow Aura -->
+    <path d="M 360 150 
+             C 360 50, 152 50, 152 150 
+             C 152 256, 360 256, 360 362 
+             C 360 462, 152 462, 152 362" 
+          stroke="#4F44E2" stroke-width="72" stroke-linecap="round" fill="none" filter="url(#darkGlow)" opacity="0.4" />
+
+    <!-- Layer 2: Polished Silver Rim Highlight -->
+    <path d="M 360 150 
+             C 360 50, 152 50, 152 150 
+             C 152 256, 360 256, 360 362 
+             C 360 462, 152 462, 152 362" 
+          stroke="url(#bevelGrad)" stroke-width="64" stroke-linecap="round" fill="none" />
+
+    <!-- Layer 3: Stealth Matte Dark Core -->
+    <path d="M 360 150 
+             C 360 50, 152 50, 152 150 
+             C 152 256, 360 256, 360 362 
+             C 360 462, 152 462, 152 362" 
+          stroke="url(#stealthGrad)" stroke-width="58" stroke-linecap="round" fill="none" />
+
+    <!-- Layer 4: Deep Aerodynamic Center Groove -->
+    <path d="M 360 150 
+             C 360 50, 152 50, 152 150 
+             C 152 256, 360 256, 360 362 
+             C 360 462, 152 462, 152 362" 
+          stroke="#05050A" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.8" />
+
+    <!-- Elegant Floating 4-Point Star Accent in Dark Metal -->
+    <g transform="translate(420, 110)">
+      <!-- Star Glow -->
+      <path d="M 0 -36 Q 0 0 36 0 Q 0 0 0 36 Q 0 0 -36 0 Q 0 0 0 -36" fill="#4F44E2" filter="url(#darkGlow)" opacity="0.6" />
+      <!-- Star Polished Bevel Edge -->
+      <path d="M 0 -26 Q 0 0 26 0 Q 0 0 0 26 Q 0 0 -26 0 Q 0 0 0 -26" fill="url(#bevelGrad)" />
+      <!-- Star Matte Dark Core -->
+      <path d="M 0 -22 Q 0 0 22 0 Q 0 0 0 22 Q 0 0 -22 0 Q 0 0 0 -22" fill="url(#stealthGrad)" />
+    </g>
+  </g>
+</svg>

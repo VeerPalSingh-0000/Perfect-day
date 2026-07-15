@@ -17,6 +17,7 @@ export default function LoginPage() {
 
   // Ensure client-only rendering to prevent hydration mismatch
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -62,14 +63,11 @@ export default function LoginPage() {
       <nav className="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-xl border-b border-[#464555]/15 flex items-center px-6 h-16 justify-center">
         <div className="flex items-center gap-2">
           <OptimizedImage
-            src="/logo.png"
+            src="/logo.svg"
             alt="SIRA Logo"
             className="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]"
             priority
           />
-          <span className="text-[#E2E2E2] font-black tracking-[0.2em] uppercase text-base sm:text-lg font-headline">
-            SIRA
-          </span>
         </div>
       </nav>
       <main className="relative z-10 h-dvh w-full flex flex-col items-center justify-center pt-20 pb-8 px-6 bg-black overflow-hidden">

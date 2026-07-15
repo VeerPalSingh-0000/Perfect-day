@@ -10,13 +10,15 @@ interface TaskTimerProps {
 
 export function TaskTimer({ task, onUpdate, onComplete }: TaskTimerProps) {
   const [localSpent, setLocalSpent] = useState(task.timeSpent || 0);
+  const [prevTaskTime, setPrevTaskTime] = useState(task.timeSpent);
 
-  useEffect(() => {
-    // Sync local state if db updates it directly or component remounts
+  // Derive state during render safely
+  if (task.timeSpent !== prevTaskTime) {
+    setPrevTaskTime(task.timeSpent);
     if (!task.isRunning) {
-       setLocalSpent(task.timeSpent || 0);
+      setLocalSpent(task.timeSpent || 0);
     }
-  }, [task.timeSpent, task.isRunning]);
+  }
 
   useEffect(() => {
     if (!task.isRunning || !task.lastStartedAt) return;

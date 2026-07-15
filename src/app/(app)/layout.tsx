@@ -35,6 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Ensure client-only render
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

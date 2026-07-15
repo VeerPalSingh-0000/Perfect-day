@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getApp, getApps, initializeApp } from "firebase/app";
+import { getApps, initializeApp } from "firebase/app";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -189,8 +189,8 @@ interface TrackerStore {
   linkDifferentTrackerAccount: () => Promise<void>;
   unlinkTrackerAccount: () => Promise<void>;
   initTrackerAuth: () => void;
-  projects: any[];
-  topics: any[];
+  projects: Record<string, unknown>[];
+  topics: Record<string, unknown>[];
   fetchTrackItData: () => Promise<void>;
   clearLinkError: () => void;
 }
