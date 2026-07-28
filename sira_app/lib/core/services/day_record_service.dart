@@ -46,7 +46,10 @@ class DayRecordService {
     final todayStr = StatsCalculator.getTodayDateString();
     
     // Only care about tasks scheduled for today
-    final todayTasks = allTasks.where((t) => t.date == todayStr).toList();
+    final todayTasks = allTasks.where((t) {
+      return t.date == todayStr;
+    }).toList();
+
     if (todayTasks.isEmpty) return;
 
     final totalTasks = todayTasks.length;

@@ -27,7 +27,6 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              prefetch={false}
               className={cn(
                 "flex flex-col items-center justify-center transition-all duration-200 active:scale-90 p-1 sm:p-2",
                 isActive

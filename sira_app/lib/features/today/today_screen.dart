@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/stats_calculator.dart';
 import '../../core/utils/habit_helper.dart';
 import '../../data/models/day_record.dart';
+import '../../data/models/task.dart';
 import '../../core/services/haptic_service.dart';
 
 import 'package:intl/intl.dart';
@@ -14,6 +15,57 @@ import 'widgets/quote_card.dart';
 import 'widgets/day_status_card.dart';
 import 'widgets/metric_card.dart';
 import 'widgets/task_list_item.dart';
+
+void _seedMissingHabits(WidgetRef ref, List<TaskModel> allTasks, String todayStr) {
+  final currentTodayTasks = allTasks.where((t) => t.date == todayStr).toList();
+  final existingTitles = currentTodayTasks.map((t) => "${t.title}__${t.category.name}").toSet();
+
+  final allHabits = allTasks.where((t) => t.isHabit && (t.isPaused != true)).toList();
+  allHabits.sort((a, b) => b.date.compareTo(a.date));
+  
+  final uniqueHabits = <String, TaskModel>{};
+  for (final h in allHabits) {
+    final key = "${h.title}__${h.category.name}";
+    if (!uniqueHabits.containsKey(key)) {
+      uniqueHabits[key] = h;
+    }
+  }
+
+  final newHabits = uniqueHabits.values.where((h) {
+    if (existingTitles.contains("${h.title}__${h.category.name}")) return false;
+    return HabitValidityHelper.isHabitValidForDate(h, todayStr);
+  }).toList();
+
+  if (newHabits.isNotEmpty) {
+    final db = ref.read(firestoreProvider);
+    final user = ref.read(authStateProvider).value;
+    if (user != null) {
+      final batch = db.batch();
+      final tasksCollection = db.collection('users').doc(user.uid).collection('tasks');
+      int orderOffset = currentTodayTasks.length;
+      for (final h in newHabits) {
+        final id = tasksCollection.doc().id;
+        final newTask = TaskModel(
+          id: id,
+          userId: user.uid,
+          title: h.title,
+          category: h.category,
+          isCompleted: false,
+          isHabit: true,
+          date: todayStr,
+          order: orderOffset++,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+          frequency: h.frequency,
+          priority: h.priority,
+          targetTime: h.targetTime,
+          linkedTrackItIds: h.linkedTrackItIds,
+        );
+        batch.set(tasksCollection.doc(id), newTask.toJson());
+      }
+      batch.commit().catchError((e) => debugPrint('Error seeding habits: $e'));
+    }
+  }
+}
 
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
@@ -64,12 +116,13 @@ class TodayScreen extends ConsumerWidget {
           return tasksAsyncValue.when(
             data: (allTasks) {
               final todayStr = StatsCalculator.getTodayDateString();
+              
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _seedMissingHabits(ref, allTasks, todayStr);
+              });
+
               final tasks = allTasks.where((t) {
-                if (t.date != todayStr) return false;
-                if (t.isHabit) {
-                  return HabitValidityHelper.isHabitValidForDate(t, todayStr);
-                }
-                return true;
+                return t.date == todayStr;
               }).toList();
 
               final totalTasks = tasks.length;

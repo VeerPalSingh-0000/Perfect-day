@@ -3,10 +3,14 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useDataStore } from "@/stores/useDataStore";
 import { useTrackerStore } from "@/stores/useTrackerStore";
-import { Task } from "@/types";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useSettingsStore } from "@/stores/useSettingsStore";
+import { Task, DayRecord } from "@/types";
+import { updateTask, saveDayRecord } from "@/lib/db";
+import { calculateDayRating, calculateCompletionPercentage } from "@/lib/utils";
 import { TopAppBar } from "@/components/layout/TopAppBar";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteField } from "firebase/firestore";
 import { trackerDb } from "@/lib/tracker-db";
 
 function formatMinutes(mins: number): string {
@@ -19,6 +23,8 @@ function formatMinutes(mins: number): string {
 export default function HistoryPage() {
   const records = useDataStore((s) => s.records);
   const trackerStore = useTrackerStore();
+  const user = useAuthStore((s) => s.user);
+  const priorityMode = useSettingsStore((s) => s.priorityMode);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [expandedDate, setExpandedDate] = useState<string | null>(
@@ -133,6 +139,58 @@ export default function HistoryPage() {
       }
     });
     return maxDuration;
+  };
+
+  const handleTogglePastTask = async (record: DayRecord, task: Task) => {
+    if (!user) return;
+    
+    // Prevent toggling tasks for the current day from History (should use Focus page)
+    const today = new Date().toLocaleDateString("en-CA");
+    if (record.date === today) return;
+
+    try {
+      const newCompletedState = !task.isCompleted;
+      const dbUpdates: any = { isCompleted: newCompletedState };
+      
+      if (newCompletedState) {
+        dbUpdates.completedAt = Date.now();
+      } else {
+        dbUpdates.completedAt = deleteField();
+      }
+      
+      // Update task in DB
+      await updateTask(user.uid, task.id, dbUpdates);
+      
+      // Compute new record locally
+      const updatedTasks = record.tasks.map(t => {
+        if (t.id === task.id) {
+          const newTaskObj = { ...t, isCompleted: newCompletedState };
+          if (newCompletedState) {
+            newTaskObj.completedAt = dbUpdates.completedAt;
+          } else {
+            delete newTaskObj.completedAt;
+          }
+          return newTaskObj;
+        }
+        return t;
+      });
+      
+      const completedTasks = updatedTasks.filter(t => t.isCompleted).length;
+      const completionPercentage = calculateCompletionPercentage(updatedTasks, priorityMode);
+      
+      const updatedRecord: DayRecord = {
+        ...record,
+        tasks: updatedTasks,
+        completedTasks,
+        completionPercentage,
+        rating: calculateDayRating(completionPercentage),
+      };
+      
+      // Update DayRecord in DB
+      await saveDayRecord(updatedRecord);
+    } catch (err) {
+      console.error("Failed to retroactively toggle task:", err);
+    }
   };
 
   return (
@@ -352,7 +410,11 @@ export default function HistoryPage() {
                         return (
                           <div
                             key={task.id || idx}
-                            className={`group flex items-center justify-between ${!done ? "opacity-40" : ""}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePastTask(record, task);
+                            }}
+                            className={`group flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 -mx-2 rounded-lg transition-colors ${!done ? "opacity-40 hover:opacity-70" : ""}`}
                           >
                             <div className="flex items-center gap-4">
                               <div

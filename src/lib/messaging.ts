@@ -114,6 +114,7 @@ const initializeWebMessaging = async (): Promise<string | null> => {
               console.warn(
                 "[messaging] SW config delivery timeout, proceeding anyway",
               );
+              swReady = true;
               resolve();
             }, 2000);
 
